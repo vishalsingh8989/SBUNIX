@@ -8,6 +8,6 @@ int puts(const char *s);
 int printf(const char *format, ...);
 int strcmp(const char * str1, const char * str2);
 
-char *readline(const char *prompt);
+char *gets(char *s);
 
 #endif

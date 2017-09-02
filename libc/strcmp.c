@@ -6,6 +6,8 @@ int strcmp(const char * str1, const char * str2) {
     int result = 1;
     int idx = 0;
 
+    printf("I am strcmp!");
+
     //TODO: change to do while
     while (cmp1 != '\0' && cmp2 != '\0' && result != 0) {
         cmp1 = str1[idx];

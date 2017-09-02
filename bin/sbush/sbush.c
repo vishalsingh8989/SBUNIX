@@ -1,48 +1,79 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #define MAX_INPUT 512
 
-char scmd[512];
-char tpath[512];
-int err;
+char  scmd[MAX_INPUT];
+char  tpath[MAX_INPUT]; //TODO: can use scmd instead.
+char* tokens[MAX_INPUT];
+char  prompt[MAX_INPUT] = "sbush> ";
 
-int strcmp(const char * str1, const char * str2);
+int   err;
+char* perr;
+
+//Functions to be implemented for part 2.
+//1. gets
+//2. strtok
+//3. strcmp
 
 int main(int argc, char* argv[]) {
+
+  int idx = 0;
+
   for(;;) {
-    puts("sbush> ");
-    gets(scmd);
-    if (~strcmp(scmd, "exit")) {
-        return 0;
-    }
-    else if (~strcmp(scmd, "pwd")) {
-        getcwd(tpath, (size_t) MAX_INPUT);
-        puts(tpath);
-    }
-    else if (scmd[0] == 'c' && scmd[1] == 'd') {
-        chdir(scmd+3);
-    }
-  }
-}
+      puts(prompt);
 
-int strcmp(const char * str1, const char * str2) {
-    char cmp1 = 1, cmp2 = 1;
-    int result = 1;
-    int idx = 0;
+      perr = gets(scmd);
+      idx = 0;
 
-    //TODO: change to do while
-    while (cmp1 != '\0' && cmp2 != '\0' && result != 0) {
-        cmp1 = str1[idx];
-        cmp2 = str2[idx];
-        result = (cmp1 == cmp2);
-
-        if (cmp1 == '\0' && cmp2 != '\0') result = 0;
-        if (cmp2 == '\0' && cmp1 != '\0') result = 0;
-
+      tokens[idx] = strtok(scmd, " =");
+      while (tokens[idx] != NULL) {
         idx++;
-    }
+        tokens[idx] = strtok(NULL, " =");
+      }
 
-    return ~result;
+      if (perr == NULL) printf("gets failed\n");
 
+      if (!strcmp(tokens[0], "exit")) {
+          return 0;
+      }
+      else if (!strcmp(tokens[0], "pwd")) {
+          perr = getcwd(tpath, (size_t) MAX_INPUT);
+          puts(tpath);
+      }
+      else if (!strcmp(tokens[0], "cd")) {
+          err = chdir(tokens[1]);
+      }
+      else if (!strcmp(tokens[0], "echo")) {
+         if (tokens[1][0] == '&') {
+            //check for PATH and PS1 and echo them else print error message 
+         }
+         else {
+            for(int i = 1; i < idx; i++)
+               puts(tokens[i]); //TODO: can implement something which doesn't add new line
+         }
+      }
+      else if (!strcmp(tokens[0], "PATH")) {
+         printf("TODO PATH\n");
+      }
+      else if (!strcmp(tokens[0], "PS1")) {
+         printf("TODO PS1\n");
+      }
+      else {
+          //TODO: open a file and read first line. Differentiate between shell script and executable.
+
+          if (1/*SHELL*/) {
+          }
+          else if (tokens[idx-1][0] == '&') {
+             //Use fork with execvpe
+          }
+          else {
+             //Loop throught he tokens to see if pipes are there.
+          }
+      }
+  }
+
+  return 0;
 }
+
