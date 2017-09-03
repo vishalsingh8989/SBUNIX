@@ -1,6 +1,4 @@
-#!sbush
-pwd
-cd /Users/
+#!rootfs/bin/sbush
 pwd
 ls -al
 
