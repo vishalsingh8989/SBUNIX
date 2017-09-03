@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
         }
         //TODO: check for PATH.
         else if (!strcmp(tokens[0], "PS1")) {
-            printf("Token 1 %s, Token 2 %s\n",tokens[0], tokens[1]);
             int cidx = 0;
             while (tokens[1][cidx] != '\0') {
                 prompt[cidx] = tokens[1][cidx];
