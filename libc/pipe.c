@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int waitpid(int fd, int *status) {
+int pipe(int *pipe) {
    int temp = 0;
 
    return temp;

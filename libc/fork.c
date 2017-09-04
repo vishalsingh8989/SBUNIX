@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int waitpid(int fd, int *status) {
+int fork() {
    int temp = 0;
 
    return temp;

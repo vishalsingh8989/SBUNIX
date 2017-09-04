@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int waitpid(int fd, int *status) {
+int close(int fd) {
    int temp = 0;
 
    return temp;

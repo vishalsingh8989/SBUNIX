@@ -132,7 +132,10 @@ int execute(char* cmd, int pos, char * envp[]) {
 }
 
 int main(int argc, char* argv[], char* envp[]) {
-
+    
+    puts("Main is invoked!");
+    return 0;
+    
     if(argc == 1) {
         while (TRUE) {
 
