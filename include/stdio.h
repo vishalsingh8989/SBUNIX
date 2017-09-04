@@ -7,7 +7,8 @@ int putchar(int c);
 int puts(const char *s);
 int printf(const char *format, ...);
 int strcmp(const char * str1, const char * str2);
+char* strtok(char * str1, const char * str2);
 
-char *gets(char *s);
+char* gets(char *s);
 
 #endif

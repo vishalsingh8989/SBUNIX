@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
+#include <sys/defs.h>
+//#include <sys/wait.h>
+//#include <fcntl.h>
 
 #define MAX_INPUT 512
 #define TRUE 1
@@ -17,6 +18,17 @@ char* tokens[64];
 
 int   err;
 char* perr;
+
+char* getenv(const char * var) {
+    //TODO:
+    char * temp = "Hello";
+    return temp;
+}
+
+void setenv(const char * var_name, const char * var_value, int overwrite) {
+    //TODO:
+}
+
 
 //TODO: do some more processing here.
 void setprompt() {
@@ -42,7 +54,7 @@ void setprompt() {
     puts(prompt);
 }
 
-int execute(char* cmd, int pos) {
+int execute(char* cmd, int pos, char * envp[]) {
 
     int pipe_ids[2];
     static int pipe_prev;
@@ -87,7 +99,7 @@ int execute(char* cmd, int pos) {
             dup2(pipe_prev, 0);
         }
 
-        err = execvp(tokens[0], tokens);
+        err = execvpe(tokens[0], tokens, envp);
         if (err == -1) {
             puts("Invalid command!");
             exit(1);
@@ -98,7 +110,7 @@ int execute(char* cmd, int pos) {
         puts("Failed to fork!");
     }
     else {
-        if (bp == FALSE) waitpid(pid, &status, 0);
+        if (bp == FALSE) waitpid(pid, &status);
     }
 
     if (pos == 0) {
@@ -119,7 +131,7 @@ int execute(char* cmd, int pos) {
     return 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[], char* envp[]) {
 
     if(argc == 1) {
         while (TRUE) {
@@ -145,7 +157,7 @@ int main(int argc, char* argv[]) {
                     else 
                         pos = 1;
 
-                    execute(pipes[i], pos);
+                    execute(pipes[i], pos, envp);
                 }
             }
         }
@@ -179,7 +191,7 @@ int main(int argc, char* argv[]) {
 
                 int pid = fork();
                 if (pid == 0) {
-                    err = execvp(tokens[0], tokens);
+                    err = execvpe(tokens[0], tokens, envp);
                     if (err == -1) {
                         puts("Invalid command!");
                         return 1;
@@ -191,7 +203,7 @@ int main(int argc, char* argv[]) {
                 }
                 else {
                     int status;
-                    waitpid(pid, &status, 0);
+                    waitpid(pid, &status);
                 }
             }
         }
