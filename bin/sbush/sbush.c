@@ -10,6 +10,7 @@
 #define TRUE 1
 #define FALSE 0
 
+//char  environ[2][MAX_INPUT];
 char  str_buf[MAX_INPUT];
 char  prompt[MAX_INPUT];
 char  path[MAX_INPUT];
@@ -20,9 +21,8 @@ int   err;
 char* perr;
 
 char* getenv(const char * var) {
-    //TODO:
-    char * temp = "Hello";
-    return temp;
+   //TODO
+   return NULL;
 }
 
 void setenv(const char * var_name, const char * var_value, int overwrite) {
@@ -134,13 +134,15 @@ int execute(char* cmd, int pos, char * envp[]) {
 int main(int argc, char* argv[], char* envp[]) {
     
     puts("Main is invoked!");
-    return 0;
     
     if(argc == 1) {
         while (TRUE) {
 
             setprompt();
             perr = gets(str_buf);
+
+            puts(str_buf);
+            return 0;
             
             int idx = 0;
             pipes[idx] = strtok(str_buf, "|");

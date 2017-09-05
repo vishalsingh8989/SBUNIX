@@ -4,6 +4,7 @@
 static const int EOF = -1;
 
 int putchar(int c);
+int getchar();
 int puts(const char *s);
 int printf(const char *format, ...);
 int strcmp(const char * str1, const char * str2);

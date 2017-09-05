@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <sys/defs.h>
+#include <sys/syscall.h>
 
 int fork() {
-   int temp = 0;
-
-   return temp;
+   uint64_t out;
+   out = syscall_0(__NR_fork);
+   return (int) out;
 }
