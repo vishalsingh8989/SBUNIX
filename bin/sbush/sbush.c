@@ -102,7 +102,7 @@ int execute(char* cmd, int pos, char * envp[]) {
         int err = execvpe(tokens[0], tokens, envp);
 
         //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
-        if (err == -2) {
+        if (err == -2 || err == -1) {
             puts("Invalid command!");
             exit(1);
         }
@@ -186,15 +186,17 @@ int main(int argc, char* argv[], char* envp[]) {
                 str_buf[cidx] = '\0';
 
                 int idx = 0;
-                tokens[idx] = strtok(str_buf, " =");
+                tokens[idx] = strtok(str_buf, " ");
                 while (tokens[idx] != NULL) {
-                    tokens[++idx] = strtok(NULL, " =");
+                    tokens[++idx] = strtok(NULL, " ");
                 }
+
+                if (idx == 0) continue;
 
                 int pid = fork();
                 if (pid == 0) {
                     err = execvpe(tokens[0], tokens, envp);
-                    if (err == -1) {
+                    if (err == -1 || err == -2) {
                         puts("Invalid command!");
                         return 1;
                     }
