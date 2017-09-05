@@ -98,9 +98,11 @@ int execute(char* cmd, int pos, char * envp[]) {
         else {
             dup2(pipe_prev, 0);
         }
+        
+        int err = execvpe(tokens[0], tokens, envp);
 
-        err = execvpe(tokens[0], tokens, envp);
-        if (err == -1) {
+        //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
+        if (err == -2) {
             puts("Invalid command!");
             exit(1);
         }
@@ -133,17 +135,12 @@ int execute(char* cmd, int pos, char * envp[]) {
 
 int main(int argc, char* argv[], char* envp[]) {
     
-    puts("Main is invoked!");
-    
     if(argc == 1) {
         while (TRUE) {
 
             setprompt();
             perr = gets(str_buf);
 
-            puts(str_buf);
-            return 0;
-            
             int idx = 0;
             pipes[idx] = strtok(str_buf, "|");
             while (pipes[idx] != NULL) {
