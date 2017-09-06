@@ -5,6 +5,8 @@
 #include<envp.h>
 #include<malloc.h>
 
+#define PRENOTBLANK     0
+#define PREBLANK        1
 
 #define MAX_INPUT 512
 #define TRUE  1
@@ -20,6 +22,61 @@ char* pipes[64];
 char* tokens[64];
 int   err;
 char* perr;
+
+void print_welcome_message(){
+    puts("###################################################################################\n");
+    puts("# SBUSH  \n");
+    puts("# author :  Vishal Jasrotia , jvishal@cs.stonybrook.edu\n");
+    puts("# term   :  Fall 2017 , cse 506.\n");
+    puts("#\n");
+    puts("# Help-->\n");
+    puts("# cd : change currect working directory Example : cd ~ is got to home, cd ../jvishal/workdir ,  cd /home/jvishal/workdir.\n");
+    puts("# ls : list the content of directory. Example : ls = show content of curr dir. ls path.\n");
+    
+    puts("# pwd : print present working directory.\n");
+    puts("# exit : exit sbush\n");
+    puts("####################################################################################\n");
+
+
+}
+
+int readline(char *line, int count){
+    int i = 0 ;
+    int c ; 
+    int enc = PRENOTBLANK;
+    line[0]='\0';//if line length is 0 -vj
+    
+    //read and remove multiple whitespaces -vj
+    while((c = getchar())!= EOF && c !='\n' && i < count-1){ //count -1 because null char is required in end -vj
+        if(c == ' ' && enc == PRENOTBLANK){
+            //puts(c); for testing -vj
+            line[i] = c;
+            i++;
+            enc = PREBLANK;
+        }
+        else if(c == ' ' && enc == PREBLANK){
+            //skip if second :/vsjwhitespace
+        }else{
+            line[i] = c;
+            i++;
+            //puts(c); //for testing -vj
+            enc = PRENOTBLANK;
+        }
+    
+    }
+    //check is last char is white spaces . "ls " , "cd " fails is last char is whitespace.
+    if(line[i-1] == ' ')
+        --i;
+    line[i] = '\0'; //missed this line and cried for 2 hours.
+    i++;
+
+    return i;
+
+}
+
+
+
+
 
 
 char* getenv(env_var *head,const char * var) {
@@ -92,6 +149,11 @@ int execute(char* cmd, int pos, env_var *head) {
             //
         }
         return 0;
+    }else if(strends(tokens[0] ,".sh")){
+        puts("Script detected\n");
+        
+    }else{
+        return 0;
     }
 
     int bp, status;
@@ -102,7 +164,7 @@ int execute(char* cmd, int pos, env_var *head) {
         bp = FALSE;
     }
 
-    int pid = fork();
+    int pid =  fork();
     
     if (pid == 0) {
 
@@ -130,7 +192,7 @@ int execute(char* cmd, int pos, env_var *head) {
         puts("Failed to fork!\n");
     }
     else {
-        if (bp == FALSE) waitpid(pid, &status);
+       if (bp == FALSE)waitpid(pid, &status);
     }
 
     if (pos == 0) {
@@ -151,32 +213,38 @@ int execute(char* cmd, int pos, env_var *head) {
     return 0;
 }
 
-int main(int argc, char* argv[], char* envp[]) {
-        
-    env_var  *head;
-    head =NULL;
-    int *a = (int *) malloc(sizeof(int));    
-    int *b = (int *) malloc(sizeof(int));    
-    int *c = (int *) malloc(sizeof(int));    
-  
-    if(a==NULL || b ==NULL ||c == NULL){};
 
+
+
+/*
+main function
+*/
+
+int main(int argc, char* argv[], char* envp[]) {        
+//    char str_buf[MAX_INPUT];
+    env_var  *head;
+    head = NULL;
     head = setenv(head,"PS1", "sbush>");
     head = setenv(head,"PS2", ">");    
     
-
+    print_welcome_message();
+    
+     strends("Hello" , "lo");
+    setprompt(head);
     if(argc == 1) {
-        while (TRUE) {
-
+        while(TRUE) {
+            //int read_count =readline(str_buf, MAX_INPUT-1);
+            gets(str_buf);
             setprompt(head);
-            perr = gets(str_buf);
-
+            //if(read_count==1 ){continue;};
             int idx = 0;
+            
             pipes[idx] = strtok(str_buf, "|");
             while (pipes[idx] != NULL) {
                 pipes[++idx] = strtok(NULL, "|");
             }
-
+            
+            //puts("Hello\n");
             if(!strcmp(pipes[0], "exit")) return 0;
             else {
                 for(int i = 0; i < idx; i++) {
