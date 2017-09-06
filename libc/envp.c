@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-int compare_string(char *str_one, char *str_two){
+int compare_string(const char *str_one, const char *str_two){
 
     int i = 0;
     while(str_one[i] == str_two[i] ){
@@ -14,92 +14,92 @@ int compare_string(char *str_one, char *str_two){
     }
     return 0;
 }
-void update_env(env_var *head,char *var_name, char *var_value){
-    env_var *temp;
-    temp = head;
-    while(temp !=NULL){
-        //puts("Found  :");
-        //puts(temp->key);
-            
 
-        //puts(temp->value);
-        if(compare_string(temp->key, var_name)){
-            temp->value = var_value;
-            return;  
-        }
-       temp = temp->next; 
-    }
-    return;
-
-} 
-
-char *get_value(env_var *head, const char *key){
-    while(head !=NULL){
-        if(!strcmp(head->key , key)){
-           return head->value;
-        }
-        head=head->next;
-     }
-    return NULL;
-
-
-}
-
-int env_list_length(env_var  *head){
-    int count = 0;
-    while(head!=NULL){
+int env_list_length(env_var *head){
+    int count;
+    env_var *current=head;
+    while(current!=NULL){
         count++;
-        head=head->next;
+        current=current->next;
     }
     return count;
 }
 
-
-void insert_env(env_var **head, char *key, char *value,int position){
-    
-    if(position){};
-
-    env_var *p, *new_env;
-    new_env = (env_var *)malloc(sizeof(env_var));
-    if(!new_env){
-        //printf("Not able to get free memory");
-        return ;
-    }
-    new_env->key    = key;
-    new_env->value  = value;
-    new_env->next   = NULL;
-    
-    if(*head ==NULL){
-        *head = new_env;
-     }else{
-        p = *head;
-        //puts("Head\n");
+char *get_value(env_var *head, const char *key){
+    while(head !=NULL){
+        puts(head->key);
+        puts("\n");
+        if(compare_string(head->key , key)){
         
-        while(p->next!=NULL){
-           // puts("one more\n");
-            p=p->next;
+           return head->value;
         }
-        p->next = new_env;
-        new_env->prev = p;
+        head=head->next;
+     }
+    puts("return NULL from get_value\n");
+    return NULL;
+
+
+}
+char * strcopy (char * dest, char * src) {
+
+    if (!dest || !src) return NULL;
+
+    char * tmp = dest;
+
+    while (*dest != '\0' || *src != '\0') {
+        *dest = *src;
+        dest++;
+        src++;
     }
-    
-    
+    *(++dest)='\0';
+    return tmp;
 }
 
 
-//only for debugging
+int get_length(env_var *head){
+    int count;
+    env_var *curr=head;
+    while(curr!=NULL){
+        count++;
+        curr=curr->next;
+    }
+    return count;
+}
+void insert_env(env_var **head, int pos, char *key, char *value){
+    int k=1;
+    env_var *q,*p;
+    env_var *new_env=(env_var* ) malloc(sizeof(env_var));
+    if(!new_env){
+        puts("Memory Error\n");
+        return;
+    }
+
+    new_env->key=(char *)malloc(sizeof(char)*50);
+    new_env->value=(char *)malloc(sizeof(char)*50);
+    strcopy(new_env->key ,key);
+    strcopy(new_env->value ,value);
+
+    p=*head;
+    if(pos==1 || p==NULL){
+        new_env->next=*head;
+        *head=new_env;
+    }
+    else{
+        while(p!=NULL && (k<pos)){
+            k++;
+            q=p;
+            p=p->next;
+        }
+        new_env->next=q->next;
+        q->next=new_env;
+    }
+}
+
 void print_env_var(env_var *head){
-    puts("*****  env variables test *****\n");
     while(head!=NULL){
-        puts("Key   :");
         puts(head->key);
-        puts(",");
-        puts("\n");
-        puts("Value :");
         puts(head->value);
-        puts(",");
-        puts("\n");
-        puts("***********************\n");
         head=head->next;
     }
+    puts("\n");
 }

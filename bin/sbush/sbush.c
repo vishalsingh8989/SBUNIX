@@ -11,9 +11,16 @@
 #define MAX_INPUT 512
 #define TRUE  1
 #define FALSE 0
-#define DEBUG 1
+#define DEBUG TRUE
 
 
+#define LS      100
+#define CAT     101
+#define EXPORT  102
+#define CD      103
+#define SCRIPT  104
+
+#define EXIT    110
 
 char  str_buf[MAX_INPUT];
 char  prompt[MAX_INPUT];
@@ -37,6 +44,33 @@ void print_welcome_message(){
     puts("# exit : exit sbush\n");
     puts("####################################################################################\n");
 
+
+}
+
+int is_valid_command(char *tokens[]){
+
+        if(!strcmp("cd" , tokens[0])){
+            puts("cmd is cd\n");
+            return CD;
+        }else if(!strcmp("exit" , tokens[0])){
+            puts("cmd is exit\n");
+            return EXIT;
+        }else if(!strcmp("export" ,tokens[0])){
+            puts("cmd is export\n");
+            return EXPORT;
+        }else if(!strcmp("ls" , tokens[0])){
+            puts("cmd is ls\n");
+            return LS;
+        }else if(!strcmp("cat" , tokens[0])){
+            puts("cmd is cat\n");
+            return CAT;
+        }else if(strends(tokens[0] , ".sh")){
+            puts("script detected\n");
+            return SCRIPT;
+        }
+        
+
+    return FALSE;
 
 }
 
@@ -67,7 +101,7 @@ int readline(char *line, int count){
     //check is last char is white spaces . "ls " , "cd " fails is last char is whitespace.
     if(line[i-1] == ' ')
         --i;
-    line[i] = '\0'; //missed this line and cried for 2 hours.
+    line[i] = '\0'; 
     i++;
 
     return i;
@@ -76,30 +110,27 @@ int readline(char *line, int count){
 
 
 
-
-
-
 char* getenv(env_var *head,const char * var) {
    return get_value(head,var);
 }
 
-env_var* setenv(env_var *head,char * var_name, char * var_value) {
+env_var*  setenv(env_var *head,char * var_name, char * var_value) {
     
-    char  *exist;
-    exist = get_value(head,var_name);    
-    if(exist == NULL){
-        insert_env(&head, var_name, var_value, env_list_length(head) + 1);// always insert at head.
-    }else{
-        puts("Already exists. Overwrite - y or n?");
-        char response =  getchar();
-        if(response == 'y'){    
-            update_env(head,var_name, var_value);    
-        }else{
-            puts("Abort export!!i\n");
-        }    
+    //char  *exist;
+    //exist = get_value(head,var_name);    
+    //if(exist == NULL){
+    insert_env(&head ,1, var_name, var_value);// always insert at head.
+    //}else{
+     //   puts("Already exists. Overwrite - y or n?");
+      //  char response =  getchar();
+       // if(response == 'y'){    
+      // //     update_env(head,var_name, var_value);    
+      //  }else{
+      //      puts("Abort export!!i\n");
+      //  }    
 
-     }
-    
+     //}
+    print_env_var(head);
     return head;
 }
 
@@ -107,55 +138,92 @@ env_var* setenv(env_var *head,char * var_name, char * var_value) {
 void setprompt(env_var *head) {
 
     char *temp;
-    temp = getenv(head,"PS1");
+//    puts("in setprompt\n"); 
+    temp = get_value(head,"PS1");
     if(temp == NULL) {
         puts("sbush>");
+        puts("NULL\n");
     }
     else {
+        puts("not null\n");
         puts(temp);
     }
 }
 
-int execute(char* cmd, int pos, env_var *head) {
+int execute(char* cmd, int pos, env_var **head , env_var **paths) {
 
+    //env_var  *env_head = NULL;
+    //env_head = *head;
     int pipe_ids[2];
     static int pipe_prev;
-    
+    int command_type;
+
     err = pipe(pipe_ids);
 
     int idx = 0;
     tokens[idx] = strtok(cmd, " ");
     while (tokens[idx] != NULL) { 
-        tokens[++idx] = strtok(NULL, " ");
+          //temp_cmd = strtok(NULL, " ");
+          //puts(temp_cmd);
+          //puts("**************\n");
+          tokens[++idx] = strtok(NULL, " ");
+    }
+    command_type = is_valid_command(tokens);
+/*
+    if(){
+        puts("Invalid command!!\n");
+        return -1;
     }
 
+*/ 
+    switch(command_type){
+            case LS:
+            case CD:
+            case CAT:
+                //other binaries.
+            
+                return 0;
+            case EXPORT:
+                puts("export cmd detected\n");
+                char *export_var[2];
+                export_var[0] = strtok(tokens[1] , "=");
+                export_var[1] = strtok(NULL , "=");
+                if(export_var[0] == NULL || export_var[1] ==NULL){
+                    puts("Export null\n");        
+                }else{
+                    puts("Export not null\n");
+                    insert_env(head ,1, export_var[0] ,export_var[1]);
+                     //if(DEBUG){print_env_var(env_head);}; 
+                }
+                return 0;
+  
+          case SCRIPT:
+            case EXIT:
+                
+            default:
+                puts("Invalid command\n");
+
+
+        }  
+
+  
     if (!strcmp(tokens[0], "cd")) {
         err = chdir(tokens[1]);
         return 0;
     }
     else if (!strcmp(tokens[0], "export")) {
         
-        puts("export cmd detected\n");
-        char *export_var[2];
-        export_var[0] = strtok(tokens[1] , "=");
-        export_var[1] = strtok(NULL , "=");
-        if(export_var[0] == NULL || export_var[1] ==NULL){
-            puts("Export null\n");        
-        }else{
-            puts("Export not null\n");
-            head = setenv(head , export_var[0] ,export_var[1]);
-            if(DEBUG)
-                print_env_var(head); 
-            //
-        }
-        return 0;
-    }else if(strends(tokens[0] ,".sh")){
+           }
+
+   /*
+    else if(strends(tokens[0] ,".sh")){
         puts("Script detected\n");
         
     }else{
+        puts("Invalid command!!\n");
         return 0;
     }
-
+   */
     int bp, status;
     if(tokens[idx-1][0] == '&') {
         bp = TRUE;
@@ -178,8 +246,12 @@ int execute(char* cmd, int pos, env_var *head) {
         else {
             dup2(pipe_prev, 0);
         }
-        
-        int err = execvpe(tokens[0], tokens, head);
+       
+         
+        env_var *temp_path_head = *paths;
+        int err;
+        for(;temp_path_head !=NULL;temp_path_head = temp_path_head->next)
+             err = execvpe(tokens[0], tokens, temp_path_head->value);
 
         //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
         if (err == -2) {
@@ -221,22 +293,39 @@ main function
 */
 
 int main(int argc, char* argv[], char* envp[]) {        
-//    char str_buf[MAX_INPUT];
+    
     env_var  *head;
+    env_var  *paths;
+   
+
+    //set key value pairs;    
     head = NULL;
-    head = setenv(head,"PS1", "sbush>");
-    head = setenv(head,"PS2", ">");    
     
+    insert_env(&head, 1, "PS1", "sbush>");// always insert at head.
+    insert_env(&head, 1, "PS2", "continue-->");// always insert at head.
+        
+    insert_env(&head, 1, "PS3", "atif>");// always insert at head.
+//head =  setenv(head,"PS1", "sbush>");
+   // head = setenv(head,"PS2", ">");    
+    
+    //set patths , only values required.
+    paths = NULL;
+
+    insert_env(&paths, 1, "bindir", "/home/jvishal/gitbucket/rootfs/bin");// always insert at head.
+    insert_env(&paths, 1, "sysbin",  "/usr/bin");// always insert at head.
+    //paths = setenv(paths , "bindir" , "/home/jvishal/gitbucket/rootfs/bin");
+   // paths = setenv(paths, "sysbin" , "");
+    //print_env_var(head);
+    //print_env_var(paths);
     print_welcome_message();
-    
-     strends("Hello" , "lo");
-    setprompt(head);
+    //puts("hello1\n");
+//    setprompt(head);
     if(argc == 1) {
         while(TRUE) {
-            //int read_count =readline(str_buf, MAX_INPUT-1);
-            gets(str_buf);
             setprompt(head);
-            //if(read_count==1 ){continue;};
+            puts("\n");
+            gets(str_buf);
+            //puts("\n");
             int idx = 0;
             
             pipes[idx] = strtok(str_buf, "|");
@@ -244,7 +333,7 @@ int main(int argc, char* argv[], char* envp[]) {
                 pipes[++idx] = strtok(NULL, "|");
             }
             
-            //puts("Hello\n");
+    //        puts("Hello\n");
             if(!strcmp(pipes[0], "exit")) return 0;
             else {
                 for(int i = 0; i < idx; i++) {
@@ -256,8 +345,8 @@ int main(int argc, char* argv[], char* envp[]) {
                         pos = 0;
                     else 
                         pos = 1;
-
-                    execute(pipes[i], pos, head);
+                   
+                    execute(pipes[i], pos, &head ,&paths);
                 }
             }
         }
@@ -291,7 +380,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
                 int pid = fork();
                 if (pid == 0) {
-                    err = execvpe(tokens[0], tokens, head);
+                    err = execvpe(tokens[0], tokens, paths->value);
                     if (err == -1) {
                         puts("Invalid command!\n");
                         return 1;
