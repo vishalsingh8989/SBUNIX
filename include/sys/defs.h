@@ -8,6 +8,22 @@
 #define O_RDWR		0x0002
 #define O_ACCMODE	0x0003
 
+
+#define __NR_read        0
+#define __NR_write       1
+#define __NR_open        2
+#define __NR_close       3
+#define __NR_pipe       22
+#define __NR_dup2       33
+#define __NR_fork       57
+#define __NR_execve     59
+#define __NR_exit       60
+#define __NR_wait4      61
+#define __NR_getcwd     79
+#define __NR_chdir      80
+
+
+
 typedef unsigned long  uint64_t;
 typedef          long   int64_t;
 typedef unsigned int   uint32_t;
@@ -23,5 +39,23 @@ typedef int64_t ssize_t;
 typedef uint64_t off_t;
 
 typedef uint32_t pid_t;
+
+typedef int bool;
+
+typedef struct env_var{
+    char *key;
+    char *value;
+    struct env_var *next;
+    struct env_var *prev;
+} env_var;
+
+
+typedef struct  {
+    size_t size;
+    struct block_info *next;
+    struct block_info *prev;
+    bool  state; // 0 = not free/ not available  and 1 = free/available
+} block_info;
+
 
 #endif

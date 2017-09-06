@@ -1,71 +1,74 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
 #include <unistd.h>
 #include <sys/defs.h>
-//#include <sys/wait.h>
-//#include <fcntl.h>
+#include<envp.h>
+#include<malloc.h>
 
-//THIS is vj's
 
 #define MAX_INPUT 512
-#define TRUE 1
+#define TRUE  1
 #define FALSE 0
+#define DEBUG 1
 
-//char  environ[2][MAX_INPUT];
+
+
 char  str_buf[MAX_INPUT];
 char  prompt[MAX_INPUT];
 char  path[MAX_INPUT];
 char* pipes[64];
 char* tokens[64];
-
 int   err;
 char* perr;
 
-char* getenv(const char * var) {
-   //TODO
-   return NULL;
+
+char* getenv(env_var *head,const char * var) {
+   return get_value(head,var);
 }
 
-void setenv(const char * var_name, const char * var_value, int overwrite) {
-    //TODO:
+env_var* setenv(env_var *head,char * var_name, char * var_value) {
+    
+    char  *exist;
+    exist = get_value(head,var_name);    
+    if(exist == NULL){
+        insert_env(&head, var_name, var_value, env_list_length(head) + 1);// always insert at head.
+    }else{
+        puts("Already exists. Overwrite - y or n?");
+        char response =  getchar();
+        if(response == 'y'){    
+            update_env(head,var_name, var_value);    
+        }else{
+            puts("Abort export!!i\n");
+        }    
+
+     }
+    
+    return head;
 }
 
 
-//TODO: do some more processing here.
-void setprompt() {
+void setprompt(env_var *head) {
+
     char *temp;
-    temp = getenv("PS1");
-
+    temp = getenv(head,"PS1");
     if(temp == NULL) {
-       prompt[0] = 's';
-       prompt[1] = 'b';
-       prompt[2] = 'u';
-       prompt[3] = 's';
-       prompt[4] = 'h';
-       prompt[5] = '>';
-       prompt[6] = '\0';
+        puts("sbush>");
     }
     else {
-    	int idx = 0;
-    	while(temp[idx] != '\0') {
-    	    prompt[idx] = temp[idx];
-    	    idx++;
-    	}
+        puts(temp);
     }
-    puts(prompt);
 }
 
-int execute(char* cmd, int pos, char * envp[]) {
+int execute(char* cmd, int pos, env_var *head) {
 
     int pipe_ids[2];
     static int pipe_prev;
-
+    
     err = pipe(pipe_ids);
 
     int idx = 0;
     tokens[idx] = strtok(cmd, " ");
-    while (tokens[idx] != NULL) {
+    while (tokens[idx] != NULL) { 
         tokens[++idx] = strtok(NULL, " ");
     }
 
@@ -74,7 +77,20 @@ int execute(char* cmd, int pos, char * envp[]) {
         return 0;
     }
     else if (!strcmp(tokens[0], "export")) {
-        setenv(tokens[1], tokens[2], 1);
+        
+        puts("export cmd detected\n");
+        char *export_var[2];
+        export_var[0] = strtok(tokens[1] , "=");
+        export_var[1] = strtok(NULL , "=");
+        if(export_var[0] == NULL || export_var[1] ==NULL){
+            puts("Export null\n");        
+        }else{
+            puts("Export not null\n");
+            head = setenv(head , export_var[0] ,export_var[1]);
+            if(DEBUG)
+                print_env_var(head); 
+            //
+        }
         return 0;
     }
 
@@ -101,17 +117,17 @@ int execute(char* cmd, int pos, char * envp[]) {
             dup2(pipe_prev, 0);
         }
         
-        int err = execvpe(tokens[0], tokens, envp);
+        int err = execvpe(tokens[0], tokens, head);
 
         //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
         if (err == -2) {
-            puts("Invalid command!");
+            puts("Invalid command!\n");
             exit(1);
         }
 
     }
     else if (pid < 0) {
-        puts("Failed to fork!");
+        puts("Failed to fork!\n");
     }
     else {
         if (bp == FALSE) waitpid(pid, &status);
@@ -136,11 +152,23 @@ int execute(char* cmd, int pos, char * envp[]) {
 }
 
 int main(int argc, char* argv[], char* envp[]) {
+        
+    env_var  *head;
+    head =NULL;
+    int *a = (int *) malloc(sizeof(int));    
+    int *b = (int *) malloc(sizeof(int));    
+    int *c = (int *) malloc(sizeof(int));    
+  
+    if(a==NULL || b ==NULL ||c == NULL){};
+
+    head = setenv(head,"PS1", "sbush>");
+    head = setenv(head,"PS2", ">");    
     
+
     if(argc == 1) {
         while (TRUE) {
 
-            setprompt();
+            setprompt(head);
             perr = gets(str_buf);
 
             int idx = 0;
@@ -161,7 +189,7 @@ int main(int argc, char* argv[], char* envp[]) {
                     else 
                         pos = 1;
 
-                    execute(pipes[i], pos, envp);
+                    execute(pipes[i], pos, head);
                 }
             }
         }
@@ -195,14 +223,14 @@ int main(int argc, char* argv[], char* envp[]) {
 
                 int pid = fork();
                 if (pid == 0) {
-                    err = execvpe(tokens[0], tokens, envp);
+                    err = execvpe(tokens[0], tokens, head);
                     if (err == -1) {
-                        puts("Invalid command!");
+                        puts("Invalid command!\n");
                         return 1;
                     }
                 }
                 else if (pid < 0) {
-                    puts("Failed to fork!");
+                    puts("Failed to fork!\n");
                     return 1;
                 }
                 else {
@@ -212,7 +240,7 @@ int main(int argc, char* argv[], char* envp[]) {
             }
         }
         else {
-            puts("File is not a valid sbush shell script!");
+            puts("File is not a valid sbush shell script!\n");
         }
         close(fd);
     }
