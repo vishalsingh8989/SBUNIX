@@ -62,6 +62,8 @@ int execute(char* cmd, int pos, char * envp[]) {
         tokens[++idx] = strtok(NULL, " ");
     }
 
+    if (idx == 0) return 0;
+
     if (!strcmp(tokens[0], "cd")) {
         err = chdir(tokens[1]);
         return 0;
@@ -128,6 +130,33 @@ int execute(char* cmd, int pos, char * envp[]) {
     return 0;
 }
 
+int execute_line(char* cmd, char* envp[]) {
+
+   int idx = 0;
+   pipes[idx] = strtok(str_buf, "|");
+   while (pipes[idx] != NULL) {
+       pipes[++idx] = strtok(NULL, "|");
+   }
+   
+   if(!strcmp(pipes[0], "exit")) exit(0);
+   else {
+       for(int i = 0; i < idx; i++) {
+           int pos;
+   
+           if (i == idx-1) 
+               pos = 2;
+           else if (i == 0)
+               pos = 0;
+           else 
+               pos = 1;
+   
+           execute(pipes[i], pos, envp);
+       }
+   }
+
+   return 0;
+}
+
 int main(int argc, char* argv[], char* envp[]) {
     
     if(argc == 1) {
@@ -136,27 +165,7 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
             perr = gets(str_buf);
 
-            int idx = 0;
-            pipes[idx] = strtok(str_buf, "|");
-            while (pipes[idx] != NULL) {
-                pipes[++idx] = strtok(NULL, "|");
-            }
-
-            if(!strcmp(pipes[0], "exit")) return 0;
-            else {
-                for(int i = 0; i < idx; i++) {
-                    int pos;
-
-                    if (i == idx-1) 
-                        pos = 2;
-                    else if (i == 0)
-                        pos = 0;
-                    else 
-                        pos = 1;
-
-                    execute(pipes[i], pos, envp);
-                }
-            }
+            execute_line(str_buf, envp);
         }
     }
     else {
@@ -165,19 +174,14 @@ int main(int argc, char* argv[], char* envp[]) {
         fd = open(argv[1], O_RDONLY);
         err = read(fd, str_buf, 18*sizeof(char));
 
-        if(err == -1) {
-           puts("File Not Found");
-           return -1;
-        }
-
         if (!strcmp(str_buf, "#!rootfs/bin/sbush")) { //check if file is executable.
 
             int temp;
             err = read(fd, &temp, 1*sizeof(char));
 
+            err = read(fd, &temp, 1*sizeof(char));
             while (err != 0) {
                 int cidx = 0;
-                err = read(fd, &temp, 1*sizeof(char));
 
                 while (temp != '\n' && err != 0) {
                     str_buf[cidx++] = (char) temp;
@@ -185,30 +189,8 @@ int main(int argc, char* argv[], char* envp[]) {
                 }
                 str_buf[cidx] = '\0';
 
-                int idx = 0;
-                tokens[idx] = strtok(str_buf, " ");
-                while (tokens[idx] != NULL) {
-                    tokens[++idx] = strtok(NULL, " ");
-                }
-
-                if (idx == 0) continue;
-
-                pid_t pid = fork();
-                if (pid == 0) {
-                    err = execvpe(tokens[0], tokens, envp);
-                    if (err == -1 || err == -2) {
-                        puts("Invalid command!");
-                        return 1;
-                    }
-                }
-                else if (pid < 0) {
-                    puts("Failed to fork!");
-                    return 1;
-                }
-                else {
-                    int status;
-                    waitpid(pid, &status);
-                }
+                execute_line(str_buf, envp);
+                err = read(fd, &temp, 1*sizeof(char));
             }
         }
         else {
@@ -218,6 +200,5 @@ int main(int argc, char* argv[], char* envp[]) {
     }
 
     return 0;
-
 }
 
