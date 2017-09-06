@@ -170,6 +170,11 @@ int main(int argc, char* argv[], char* envp[]) {
         fd = open(argv[1], O_RDONLY);
         err = read(fd, str_buf, 18*sizeof(char));
 
+        if(err == -1) {
+           puts("File Not Found");
+           return -1;
+        }
+
         if (!strcmp(str_buf, "#!rootfs/bin/sbush")) { //check if file is executable.
 
             int temp;

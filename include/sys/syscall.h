@@ -13,6 +13,7 @@
 #define __NR_execve     59
 #define __NR_exit       60
 #define __NR_wait4      61
+#define __NR_getdents   78
 #define __NR_getcwd     79
 #define __NR_chdir      80
 

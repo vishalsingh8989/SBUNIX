@@ -8,6 +8,8 @@
 #define O_RDWR		0x0002
 #define O_ACCMODE	0x0003
 
+#define O_DIRECTORY	0100000	/* must be a directory */
+
 typedef unsigned long  uint64_t;
 typedef          long   int64_t;
 typedef unsigned int   uint32_t;
