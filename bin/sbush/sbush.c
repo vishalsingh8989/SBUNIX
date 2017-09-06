@@ -1,19 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
 #include <unistd.h>
 #include <sys/defs.h>
-//#include <sys/wait.h>
-//#include <fcntl.h>
 
 #define MAX_INPUT 512
 #define TRUE 1
 #define FALSE 0
 
-//char  environ[2][MAX_INPUT];
 char  str_buf[MAX_INPUT];
 char  prompt[MAX_INPUT];
-char  path[MAX_INPUT];
 char* pipes[64];
 char* tokens[64];
 
@@ -84,7 +79,7 @@ int execute(char* cmd, int pos, char * envp[]) {
         bp = FALSE;
     }
 
-    int pid = fork();
+    pid_t pid = fork();
     
     if (pid == 0) {
 
@@ -198,7 +193,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
                 if (idx == 0) continue;
 
-                int pid = fork();
+                pid_t pid = fork();
                 if (pid == 0) {
                     err = execvpe(tokens[0], tokens, envp);
                     if (err == -1 || err == -2) {
