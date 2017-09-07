@@ -25,17 +25,18 @@ int env_list_length(env_var *head){
     return count;
 }
 
-char *get_value(env_var *head, const char *key){
-    while(head !=NULL){
-        puts(head->key);
-        puts("\n");
-        if(compare_string(head->key , key)){
-        
-           return head->value;
+char *get_value(env_var **head, const char *key){
+    env_var *temp;
+    temp =*head;
+     while(temp !=NULL){
+       // puts(temp->key);
+       // puts("\n");
+        if(compare_string(temp->key , key)){
+           return temp->value;
         }
-        head=head->next;
+        temp=temp->next;
      }
-    puts("return NULL from get_value\n");
+    //puts("return NULL from get_value\n");
     return NULL;
 
 
@@ -96,9 +97,12 @@ void insert_env(env_var **head, int pos, char *key, char *value){
 }
 
 void print_env_var(env_var *head){
+    puts("********************\n");
     while(head!=NULL){
         puts(head->key);
+        puts("   : ");
         puts(head->value);
+        puts("\n");
         head=head->next;
     }
     puts("\n");
