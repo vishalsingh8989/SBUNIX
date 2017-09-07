@@ -20,6 +20,7 @@
 #define CD      103
 #define SCRIPT  104
 #define PWD     105
+#define ECHO    106  
 #define EXIT    110
 
 char  str_buf[MAX_INPUT];
@@ -69,6 +70,8 @@ int is_valid_command(char *tokens[]){
             return SCRIPT;
         }else if(!strcmp(tokens[0], "pwd")|| !strcmp(tokens[0] ,"PWD")){
             return PWD;
+        }else if(!strcmp(tokens[0], "echo")){
+            return ECHO;        
         }
         
 
@@ -149,6 +152,14 @@ int execute(char* cmd, int pos, env_var **head , env_var **paths) {
                 puts(get_value(head,"PWD"));
                 puts("\n");
                 return 0; 
+            case ECHO:
+                {
+                    const char *key;
+                    key = ++tokens[1];
+                    puts(get_value(head, key));
+                    puts("\n");
+                    return 0;
+                }
             case EXPORT:
                 {
                     char* export_var[2];
