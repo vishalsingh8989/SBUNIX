@@ -17,6 +17,7 @@ int execvpe(const char *file, char *const argv[], char *const envp[]);
 pid_t wait(int *status);
 int waitpid(int pid, int *status);
 int dup2(int old_fd, int new_fd);
+int access(const char *pathname, int mode);
 
 unsigned int sleep(unsigned int seconds);
 
