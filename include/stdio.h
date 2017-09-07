@@ -12,6 +12,11 @@ char* strtok(char * str1, const char * str2);
 int strlen(char *string);
 
 int strends(char *string , char *pattern);
+
+char *strconcat(char *dst, char *src);
+
+
+
 char* gets(char *s);
 
 #endif

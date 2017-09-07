@@ -7,7 +7,7 @@
 #define O_WRONLY	0x0001
 #define O_RDWR		0x0002
 #define O_ACCMODE	0x0003
-
+#define O_DIRECTORY     0100000 
 
 #define __NR_read        0
 #define __NR_write       1
@@ -21,9 +21,8 @@
 #define __NR_wait4      61
 #define __NR_getcwd     79
 #define __NR_chdir      80
-
-
-
+#define __NR_getdents   78
+#define __NR_symlinkat  266 //symlink for . and ..
 typedef unsigned long  uint64_t;
 typedef          long   int64_t;
 typedef unsigned int   uint32_t;

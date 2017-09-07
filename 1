@@ -69,7 +69,7 @@ int is_valid_command(char *tokens[]){
         }else if(strends(tokens[0] , ".sh")){
             //puts("script detected\n");
             return SCRIPT;
-        }else if(!strcmp(tokens[0], "pwd")|| !strcmp(tokens[0] ,"PWD")|| !strcmp(tokens[0],"pwd\n")){
+        }else if(!strcmp(tokens[0], "pwd")|| !strcmp(tokens[0] ,"PWD")){
             return PWD;
         }else if(!strcmp(tokens[0], "echo")){
             return ECHO;        
@@ -135,7 +135,6 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
     static int pipe_prev;
     int command_type;
 
-    const char *bin;
     err = pipe(pipe_ids);
 
     int idx = 0;
@@ -147,42 +146,23 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
  
     switch(command_type){
             case LS:
-                bin =  "ls";
-                break;
             case CD:
-               // bin = "cd";
-                  if(tokens[1]!=NULL){
-                        chdir(tokens[1]);
-                    }
-                return 0;  
-                //break; 
             case CAT:
-                puts("cat det\n");
-                bin = "cat"; 
+            
                 break;
             case WHOAMI:
                 puts(get_value(head, "USER"));
                 puts("\n");
                 return 0;
             case PWD:
-                {
-                    char dir_path[4096];
-                    getcwd(dir_path, (size_t) 4097);
-                    puts(dir_path);
-                    puts("\n");
-                    return 0;
-                } 
+                puts(get_value(head,"PWD"));
+                puts("\n");
+                return 0; 
             case ECHO:
                 {
                     const char *key;
-                    if(tokens[1]==NULL){
-                        puts("!! <usage>  echo $KEY\n");
-                        return 0;
-                    }
                     key = ++tokens[1];
-                    char *echo =  get_value(head, key);
-                    if(echo ==NULL){puts("Environment variable not found!!");}else{puts(echo);}
-                   // puts(get_value(head, key));
+                    puts(get_value(head, key));
                     puts("\n");
                     return 0;
                 }
@@ -191,7 +171,7 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
                     char* export_var[2];
                     export_var[0] = strtok(tokens[1] , "=");
                     export_var[1] = strtok(NULL , "=");
-                    if(tokens[1] ==NULL || export_var[0] == NULL || export_var[1] ==NULL){
+                    if(export_var[0] == NULL || export_var[1] ==NULL){
                         puts("Error in export command!! usage.  export KEY=VALUE \n");        
                     }else{
                         //puts("Export not null\n");
@@ -204,7 +184,8 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
             case EXIT:
                 exit(0);
             default:
-                bin = cmd;//user is provinf full path with command.  
+                puts("Invalid command\n");
+            
         }  
 
   
@@ -250,13 +231,13 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
        
     //other binaries.
             
-        //puts("In CASE:\n");
+        puts("In CASE:\n");
+        const char * bin = "/home/jvishal/gitbucket/rootfs/bin/ls";
                         //for(;temp_path_head !=NULL;temp_path_head = temp_path_head->next)
-        //puts()
-        err = execvpe(bin,head, argv, envp);
-        //putchar(err);
+        err = execvpe(bin, argv, envp);
+        putchar(err);
 
-        //exit(0);
+        exit(0);
                 //return 0;
        //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
         if (err == -2) {
@@ -317,14 +298,7 @@ int main(int argc, char* argv[], char* envp[]) {
         insert_env(&head, 1, key, value);
         env_idx++;
     }        
-
-
-    value = strconcat("/home/jvishal/gitbucket/rootfs/bin",strconcat(":",get_value(&head, "PATH")));
-    
-    insert_env(&head, 1, "PATH", value);
-    //puts("new path\n");
-    //puts(value);
-    //puts("\n");
+    insert_env(&head, 1, "PS3", "atif>");// always insert at head.
     
     paths = NULL;
 
@@ -359,7 +333,7 @@ int main(int argc, char* argv[], char* envp[]) {
                     else 
                         pos = 1;
                    
-                    execute(pipes[i], pos, &head,tokens , envp);
+                    execute(pipes[i], pos, &head ,argv , envp);
                 }
             }
         }
@@ -393,7 +367,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
                 int pid = fork();
                 if (pid == 0) {
-                    err = execvpe(tokens[0],&head, argv, envp);
+                    err = execvpe(tokens[0], argv, envp);
                     if (err == -1) {
                         puts("Invalid command!\n");
                         return 1;

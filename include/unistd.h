@@ -13,7 +13,7 @@ int chdir(const char *path);
 char *getcwd(char *buf, size_t size);
 
 pid_t fork();
-int execvpe(const char *file, char *const argv[], char *head);
+int execvpe(const char *bin_name,env_var **head, char *const argv[], char *envp[]);
 pid_t wait(int *status);
 int waitpid(int pid, int *status);
 int dup2(int old_fd, int new_fd);
