@@ -16,7 +16,7 @@ int compare_string(const char *str_one, const char *str_two){
 }
 
 int env_list_length(env_var *head){
-    int count;
+    int count = 0;
     env_var *current=head;
     while(current!=NULL){
         count++;
@@ -58,7 +58,7 @@ char * strcopy (char * dest, char * src) {
 
 
 int get_length(env_var *head){
-    int count;
+    int count= 0;
     env_var *curr=head;
     while(curr!=NULL){
         count++;

@@ -1,5 +1,4 @@
 #!rootfs/bin/sbush
+ls
 pwd
-ls -al
-cat README | /bin/grep the
-
+echo $HOME

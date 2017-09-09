@@ -31,7 +31,7 @@ char* pipes[64];
 char* tokens[64];
 int   err;
 char* perr;
-
+int execute_script(int fd , env_var **head , char *argv[],char * envp[]);
 void print_welcome_message(){
     puts("###################################################################################\n");
     puts("# SBUSH  \n");
@@ -60,8 +60,8 @@ int is_valid_command(char *tokens[]){
         }else if(!strcmp("export" ,tokens[0])){
             //puts("cmd is export\n");
             return EXPORT;
-        }else if(!strcmp("ls" , tokens[0])){
-            //puts("cmd is ls\n");
+        }else if(!strcmp("ls" , tokens[0]) || !strcmp("ls\n",tokens[0])){
+           // puts("cmd is ls\n");
             return LS;
         }else if(!strcmp("cat" , tokens[0])){
            // puts("cmd is cat\n");
@@ -201,6 +201,12 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
                     return 0;
                 }
             case SCRIPT:
+                {
+                    //puts("Script detected\n");
+                    int fd = open(tokens[0], O_RDONLY);
+                    execute_script(fd , head ,argv,envp);
+                    return 0;
+                }
             case EXIT:
                 exit(0);
             default:
@@ -255,7 +261,7 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
         //puts()
         err = execvpe(bin,head, argv, envp);
         //putchar(err);
-        //exit(err);
+        exit(err);
         if(err == 0){
             puts("err is 0\n");
             exit(0);
@@ -296,8 +302,60 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
 }
 
 
+ 
+int execute_script(int fd , env_var **head , char *argv[],char * envp[]){
+         
 
+        //fd = open(argv[1], O_RDONLY);
+        int count = 0;
+        count = read(fd, str_buf, 18*sizeof(char));
+        if (!strcmp(str_buf, "#!rootfs/bin/sbush")) { //check if file is executable.
+        
+            int temp;
+            count = read(fd, &temp, 1*sizeof(char));
 
+            while (count != 0) {
+                int cidx = 0;
+                int idx  = 0;
+                count = read(fd, &temp, 1*sizeof(char));
+                while( count != 0) {
+                    if((char)temp == '\n'){ break ;}
+                    str_buf[cidx++] = (char) temp;
+                    count = read(fd, &temp, 1*sizeof(char));
+                }
+                str_buf[cidx] = '\0';
+                 
+                pipes[idx] = strtok(str_buf, "|");
+                while (pipes[idx] != NULL) {
+                    pipes[++idx] = strtok(NULL, "|");
+                }
+            
+                 if(!strcmp(pipes[0], "exit")) return 0;
+                else {
+                    for(int i = 0; i < idx; i++) {
+                    int pos;
+
+                    if (i == idx-1) 
+                        pos = 2;
+                    else if (i == 0)
+                        pos = 0;
+                    else 
+                        pos = 1;
+                   
+                    execute(pipes[i], pos, head,tokens , envp);
+                }
+                
+                 }
+            }
+            
+        }
+        else {
+            puts("File is not a valid sbush shell script!\n");
+        }
+        close(fd);
+
+    return 1;
+}
 /*
 main function
 */
@@ -306,7 +364,8 @@ int main(int argc, char* argv[], char* envp[]) {
     
     env_var  *head;
     env_var  *paths;
-       
+    
+               
 
     //set key value pairs;    
     head = NULL;
@@ -389,7 +448,10 @@ int main(int argc, char* argv[], char* envp[]) {
                     err = read(fd, &temp, 1*sizeof(char));
                 }
                 str_buf[cidx] = '\0';
+                if(temp != '\n'){puts("temp not\n");}else{puts("temp\n ");}
 
+                if(err != 0 ){puts("error not\n");}else{puts("error\n ");}
+                
                 int idx = 0;
                 tokens[idx] = strtok(str_buf, " =");
                 while (tokens[idx] != NULL) {
