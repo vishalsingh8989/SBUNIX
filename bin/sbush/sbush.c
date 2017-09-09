@@ -255,13 +255,18 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
         //puts()
         err = execvpe(bin,head, argv, envp);
         //putchar(err);
-
+        //exit(err);
+        if(err == 0){
+            puts("err is 0\n");
+            exit(0);
+        }else if(err ==-1){ puts("error is -1\n");exit(-1);}
+        else if(err == 1) {puts("error is 1\n"); exit(1);}
         //exit(0);
                 //return 0;
        //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
         if (err == -2) {
             puts("Invalid command!\n");
-            exit(1);
+            exit(-2);
         }
 
     }
