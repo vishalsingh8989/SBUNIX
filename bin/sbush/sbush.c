@@ -202,9 +202,10 @@ int execute(char* cmd, int pos, env_var **head , char *argv[],char * envp[]) {
                 }
             case SCRIPT:
                 {
-                    //puts("Script detected\n");
+                    puts("******************* Execute script ********************\n");
                     int fd = open(tokens[0], O_RDONLY);
                     execute_script(fd , head ,argv,envp);
+                    puts("************************ End *******************************\n");
                     return 0;
                 }
             case EXIT:
