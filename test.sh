@@ -1,4 +1,5 @@
 #!rootfs/bin/sbush
-pwd
-ls -al
+/bin/pwd
+/bin/ls -al
+/bin/cat README | /bin/grep the
 

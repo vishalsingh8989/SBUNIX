@@ -375,9 +375,9 @@ int main(int argc, char* argv[], char* envp[]) {
             int temp;
             err = read(fd, &temp, 1*sizeof(char));
 
+            err = read(fd, &temp, 1*sizeof(char));
             while (err != 0) {
                 int cidx = 0;
-                err = read(fd, &temp, 1*sizeof(char));
 
                 while (temp != '\n' && err != 0) {
                     str_buf[cidx++] = (char) temp;
@@ -416,6 +416,5 @@ int main(int argc, char* argv[], char* envp[]) {
     }
 
     return 0;
-
 }
 

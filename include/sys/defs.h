@@ -7,7 +7,6 @@
 #define O_WRONLY	0x0001
 #define O_RDWR		0x0002
 #define O_ACCMODE	0x0003
-#define O_DIRECTORY     0100000 
 
 #define __NR_read        0
 #define __NR_write       1
