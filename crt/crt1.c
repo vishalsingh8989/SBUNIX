@@ -3,10 +3,18 @@
 #include <unistd.h>
 #include <sys/defs.h>
 
-void _start(uint64_t arg_addr) {
+void _start() {
 
-  int offset = 102;
-  int argc = (int) *(&arg_addr+offset);
+  uint64_t *sp_addr;
+  uint64_t offset = 99; //103 for O0
+  
+  __asm__ __volatile__("movq %%rsp,  %0;"
+                       :"=r"(sp_addr)
+                       :
+                       :"rsp"
+                       );
+
+  int argc = (int) *(sp_addr+offset);
   char* argv[32] = {NULL};
   char* envp[64] = {NULL};
 
@@ -17,19 +25,16 @@ void _start(uint64_t arg_addr) {
   }
 
   for (int i = 0; i < argc; i++) {
-     argv[i] = (char *) *(&arg_addr+offset+i+1);
+     argv[i] = (char *) *(sp_addr+offset+i+1);
   }
 
-  char *temp = (char *) *(&arg_addr+offset+argc+2);
+  char *temp = (char *) *(sp_addr+offset+argc+2);
   int idx = 1;
   while (temp != 0 && idx < 64) {
      envp[idx-1] = temp;
      idx++;
-     temp = (char *) *(&arg_addr+offset+argc+idx+2);
+     temp = (char *) *(sp_addr+offset+argc+idx+2);
   }
-
-  //puts(argv[0]);
-  //puts(argv[1]);
 
   int return_code;
   return_code = main(argc, argv, envp);
