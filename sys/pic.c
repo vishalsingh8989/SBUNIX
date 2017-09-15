@@ -1,6 +1,14 @@
 #include <sys/pic.h>
+#include <sys/defs.h>
 
 //From osdev
+void pic_send_eoi(uint8_t irq) {
+    if(irq >= 8)
+        outb(0xa0, 0x20);
+    else
+        outb(0x20, 0x20);
+}
+
 void init_pic() {
     outb(0x11, 0x20);
     outb(0x11, 0xa0);
@@ -14,8 +22,4 @@ void init_pic() {
     /*Enables 8086/88 mode*/
     outb(0x01, 0x21);
     outb(0x01, 0xa1);
-    /*Disables all interrupts from IRQ0-IRQ7*/
-    outb(0xff, 0x21);
-    /*Disables all interrupts from IRQ8-IRQ15*/
-    outb(0xff, 0xa1);
 }
