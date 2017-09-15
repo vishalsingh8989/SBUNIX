@@ -48,7 +48,6 @@ void kprintf(const char *fmt, ...)
                     break;
                 case 'x' :
                     ntemp = va_arg(args, int); 
-                    pstring("0x");
                     pnum(ntemp, 16);
                     break;
                 case 's' :
@@ -73,7 +72,6 @@ void kprintf(const char *fmt, ...)
     }
 
     va_end(args);
-
     //pchar_xy ('H', BLUE, 0, 0); 
     //pchar_xy ('e', BLUE, 1, 0); 
     //pchar_xy ('l', GREEN, 2, 0); 
@@ -106,7 +104,7 @@ void pchar_xy (char value, char color, int x, int y)
 void pchar (char value) //TODO: support tab characters
 {
     if (value != '\n' &&
-        value != '\t') {
+        value != '\r') {
         pchar_xy(value, LIGHT_GRAY, x_cord, y_cord);
     }
 
@@ -121,6 +119,9 @@ void pchar (char value) //TODO: support tab characters
     else if(x_cord == MAX_X-1 || value == '\n') {
         x_cord = 0;
         y_cord++;
+    }
+    else if(value == '\r') {
+        x_cord = 0;
     }
     else {
         x_cord++;
