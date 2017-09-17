@@ -55,9 +55,9 @@ void keyboard_int_handler() {
 
     //kprintf("there was a key board interrupt, c: %c\n", c);
 
+    //c = inb(0x60);
     c = getchar();
     if (c != 0) {
-        //pchar(c);
         if (c == 17){
           pchar_xy('[', RED, 68, 24);
           pchar_xy('^', RED, 69, 24);

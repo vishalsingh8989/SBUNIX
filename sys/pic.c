@@ -2,7 +2,7 @@
 #include <sys/defs.h>
 
 //From osdev
-void pic_send_eoi(uint8_t irq) {
+void pic_send_eoi(unsigned char irq) {
     if(irq >= 8)
         outb(0xa0, 0x20);
     else
@@ -10,16 +10,22 @@ void pic_send_eoi(uint8_t irq) {
 }
 
 void init_pic() {
-    outb(0x11, 0x20);
-    outb(0x11, 0xa0);
-    /*Remaps IRQ0-IRQ7 to 0x20-0x27 in interrupt vector table*/
-    outb(0x20, 0x21); 
-    /*Remaps IRQ8-IRQ15 to 0x28-0x2F in interrupt vector table*/
-    outb(0x28, 0xa1);
-    /*PIC2 is connected to PIC1 via IRQ2*/
-    outb(0x04, 0x21);
-    outb(0x02, 0xa1);
-    /*Enables 8086/88 mode*/
-    outb(0x01, 0x21);
-    outb(0x01, 0xa1);
+
+    unsigned char a1, a2;
+
+    a1 = inb(0x21);
+    a2 = inb(0xa1);
+
+    outb(0x20, 0x11);
+    outb(0xa0, 0x11);
+    outb(0x21, 0x20); 
+    outb(0xa1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xa1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xa1, 0x01);
+
+    outb(0x21, a1);
+    outb(0xa1, a2);
+
 }

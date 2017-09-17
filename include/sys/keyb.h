@@ -17,10 +17,10 @@ char keymap[128] = {
    19, ' ', 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', 
    '4', '5', '6', '+', '1', '2', '3', '0', '.'};
 
-char kread() {
-   char c = 0;
+int kread() {
+   unsigned int c = 0;
    do {
-       if(inb(0x60) != c) {
+       if(inb(0x64) & 0x1) {
            c = inb(0x60);
            if (c > 0) return c;
        }
@@ -29,12 +29,13 @@ char kread() {
 }
 
 char getchar() {
-   static int lk_pressed = 0;
    static int shift_pressed = 0;
    static int caps_pressed = 0;
    static int caps_on = 0;
 
    int c = kread();
+   //kprintf("c: %d\n", c);
+
    char result;
 
    switch (c) {
@@ -66,12 +67,10 @@ char getchar() {
            result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
            shift_pressed = 0;
    }
-
-   lk_pressed = !lk_pressed;
-
-   if (lk_pressed)
-      return result;
+   
+   if (c & 0x80)
+       return 0;
    else
-      return 0;
+       return result;
 }
 
