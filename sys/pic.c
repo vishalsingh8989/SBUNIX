@@ -1,11 +1,12 @@
 #include <sys/pic.h>
 #include <sys/defs.h>
-
+#include<sys/kprintf.h>
 //From osdev
 void pic_send_eoi(uint8_t irq) {
+    //kprintf("int %d !!", irq); 
     if(irq >= 8)
         outb(0xa0, 0x20);
-    else
+     else
         outb(0x20, 0x20);
 }
 

@@ -28,50 +28,36 @@ char kread() {
    while(1);
 }
 
-char getchar() {
-   static int lk_pressed = 0;
-   static int shift_pressed = 0;
-   static int caps_pressed = 0;
-   static int caps_on = 0;
+char getchar(int c) {
+    static int shift_pressed = 0;
+    static int caps_on = 0;
 
-   int c = kread();
-   char result;
-
-   switch (c) {
-       case 0x2A:
-       case 0x36:
-           shift_pressed = 1;
-           return 0;
-           break;
-
-       case 0xAA:
-       case 0xB6:
-           shift_pressed = 0;
-           return 0;
-           break;
-
-       case 0x3A:
-       case 0xBA:
-           caps_pressed++;
-           if (!(caps_pressed % 2))
-               caps_on = !caps_on;
-           return 0;
-           break;
-
-       case 0x1D:
-       case 0x9D:
-           return keymap[29];
-       
+    char result;
+    switch (c) {
+       case 42:
+            shift_pressed = 1;
+            return 0;
+       case 170:
+            shift_pressed = 0;
+            return 0;
+       case 58:
+            return 0;
+       case 186:
+            caps_on = !caps_on;
+            return 0;
+       case 29: //control key
+       case 157:
+            return keymap[29];
        default:
-           result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
-           shift_pressed = 0;
-   }
+            //for debugging
+            //kprintf("  indefault !!");
+            //if(shift_pressed){kprintf("  shift_pressed!! ");}else{kprintf("  shift_not pressed !! ");}
+            
+            //if(caps_on){kprintf("  caps_pressed!! ");}else{kprintf("  caps_on_not pressed !! ");}
+            
+            result = (shift_pressed || caps_on) ? keymap[c-128]-32 : keymap[c-128];
+    }
 
-   lk_pressed = !lk_pressed;
-
-   if (lk_pressed)
-      return result;
-   else
-      return 0;
+    return result;
 }
 
