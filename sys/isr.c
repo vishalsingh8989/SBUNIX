@@ -1,4 +1,5 @@
 #include <sys/kprintf.h>
+#include <sys/keyb.h>
 #include <sys/defs.h>
 #include <sys/pic.h>
 
@@ -47,4 +48,33 @@ void div0_int_handler() {
    static int i = 0;
    kprintf("Div0 Interrupt Fired!...%d\n", i);
    i++;
+}
+
+void keyboard_int_handler() {
+    char c;
+
+    //kprintf("there was a key board interrupt, c: %c\n", c);
+
+    c = getchar();
+    if (c != 0) {
+        //pchar(c);
+        if (c == 17){
+          pchar_xy('[', RED, 68, 24);
+          pchar_xy('^', RED, 69, 24);
+          pchar_xy('C', RED, 70, 24);
+          pchar_xy(']', RED, 71, 24);
+        }
+        else {
+          pchar_xy('[', RED, 68, 24);
+          pchar_xy(' ', RED, 69, 24);
+          pchar_xy(c  , RED, 70, 24);
+          pchar_xy(']', RED, 71, 24);
+        }
+    }
+
+    pic_send_eoi(1);
+}
+
+void default_int_handler() {
+    kprintf("Some unknown interrupt hapenned");
 }

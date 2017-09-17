@@ -1,5 +1,7 @@
 .globl _isr0
 .globl _isr32
+.globl _isr33
+.globl _isrxx
 .align 4
 
 .macro pushad
@@ -50,6 +52,22 @@ _isr32:
 	cli
 	pushad
 	call timer_int_handler
+	popad
+	sti
+	iretq
+
+_isr33:
+	cli
+	pushad
+	call keyboard_int_handler
+	popad
+	sti
+	iretq
+
+_isrxx:
+	cli
+	pushad
+	call default_int_handler
 	popad
 	sti
 	iretq

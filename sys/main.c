@@ -28,6 +28,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
   //__asm__("int $0");
   //__asm__("int $32");
+  //__asm__("int $40");
 
   __asm__("sti");
   while(1);

@@ -23,6 +23,8 @@ static struct idtr_t idtr = {sizeof(idt), (uint64_t)idt};
 
 extern void _isr0();
 extern void _isr32();
+extern void _isr33();
+extern void _isrxx();
 
 void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
     idt[intr_no].offset_1  = (func >>  0) & 0x0000ffff;
@@ -36,8 +38,13 @@ void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
 
 void init_idt() {
 
+    for(int i = 0; i < 256; i++) {
+       set_idt(i, (uint64_t) &_isrxx  , 0x8e); 
+    }
+
     set_idt(  0, (uint64_t) &_isr0  , 0x8e); 
     set_idt( 32, (uint64_t) &_isr32 , 0x8e); 
+    set_idt( 33, (uint64_t) &_isr33 , 0x8e); 
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
 }
 
