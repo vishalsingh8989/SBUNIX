@@ -69,6 +69,9 @@ int get_length(env_var *head){
 void insert_env(env_var **head, int pos, char *key, char *value){
     int k=1;
     env_var *q,*p;
+    p = NULL;
+
+    q = NULL;
     env_var *new_env=(env_var* ) malloc(sizeof(env_var));
     if(!new_env){
         puts("Memory Error\n");

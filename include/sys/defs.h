@@ -8,8 +8,12 @@
 #define O_RDWR		0x0002
 #define O_ACCMODE	0x0003
 
-#define O_DIRECTORY     00200000
+#define R_OK  4               /* Test for read permission.  */
+#define W_OK  2               /* Test for write permission.  */
+#define X_OK  1               /* Test for execute permission.  */
+#define F_OK  0               /* Test for existence.  */
 
+#define O_DIRECTORY	0100000	/* must be a directory */
 
 #define __NR_read        0
 #define __NR_write       1

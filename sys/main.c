@@ -1,5 +1,7 @@
 #include <sys/defs.h>
 #include <sys/gdt.h>
+#include <sys/idt.h>
+#include <sys/pic.h>
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
@@ -23,14 +25,22 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+
+  //__asm__("int $0");
+  //__asm__("int $32");
+  //__asm__("int $40");
+
+  __asm__("sti");
+  while(1);
 }
 
 void boot(void)
 {
   // note: function changes rsp, local stack variables can't be practically used
-  register char *temp1, *temp2;
+  register char *temp2;
 
   for(temp2 = (char*)0xb8001; temp2 < (char*)0xb8000+160*25; temp2 += 2) *temp2 = 7 /* white */;
+
   __asm__(
     "cli;"
     "movq %%rsp, %0;"
@@ -38,16 +48,17 @@ void boot(void)
     :"=g"(loader_stack)
     :"r"(&initial_stack[INITIAL_STACK_SIZE])
   );
+
   init_gdt();
+  init_idt();
+  init_pic();
+
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
     (uint64_t*)(uint64_t)loader_stack[4]
   );
-  for(
-    temp1 = "!!!!! start() returned !!!!!", temp2 = (char*)0xb8000;
-    *temp1;
-    temp1 += 1, temp2 += 2
-  ) *temp2 = *temp1;
+
+  kprintf("!!!!! start() returned !!!!!\n");
   while(1);
 }

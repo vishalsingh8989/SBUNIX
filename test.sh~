@@ -1,0 +1,14 @@
+#!rootfs/bin/sbush
+<<<<<<< HEAD
+ls
+pwd
+echo $HOME
+=======
+/bin/pwd
+/bin/ls -al
+/bin/cat README | /bin/grep the
+ls
+cat README | /bin/grep the
+pwd
+
+>>>>>>> vjw2
