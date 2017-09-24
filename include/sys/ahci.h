@@ -30,6 +30,16 @@
 #define MAX_CMD_SLOT_CNT 32
 #define MAX_PORT_CNT     32
 
+#define AHCI_BASE	0x400000  //somewhere in docs 0x800000 which is not working -vj
+
+
+#define ACHI_NO_DEVICE  0
+#define ACHI_SATA_NUM   1
+#define ACHI_SATA_API   2
+#define ACHI_SATA_SEMB  3
+#define ACHI_SATA_PEM   4
+
+
 typedef enum {
   FIS_TYPE_REG_H2D = 0x27,   // Register FIS - host to device
   FIS_TYPE_REG_D2H = 0x34,   // Register FIS - device to host
@@ -333,5 +343,7 @@ typedef volatile struct {
   // 0x100 - 0x10FF, Port control registers
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
+
+int scan_ahci();
 
 #endif
