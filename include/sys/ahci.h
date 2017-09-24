@@ -334,4 +334,9 @@ typedef volatile struct {
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
 
+
+void probe_port(hba_mem_t *abar);
+int disk_rw(hba_port_t * port, uint32_t startl, uint32_t starth, uint16_t count, uint64_t *buf, uint8_t rw);
+
+
 #endif

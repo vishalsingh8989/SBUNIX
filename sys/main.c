@@ -2,9 +2,14 @@
 #include <sys/gdt.h>
 #include <sys/idt.h>
 #include <sys/pic.h>
+#include <sys/pci.h>
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
+
+extern uint64_t *abar;
+//extern uint64_t *sata_port;
+uint64_t disk_buf[1024];
 
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
@@ -31,6 +36,18 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   //__asm__("int $40");
 
   __asm__("sti");
+
+  hba_mem_t * abar_t = (hba_mem_t *) abar;
+  probe_port(abar_t);
+  for(int i = 0; i < 1024; i++)
+      disk_buf[i] = 0x0101010101010101;
+  disk_rw(&abar_t->ports[0], 0, 1, 1, disk_buf, 1);
+  for(int i = 0; i < 1024; i++)
+      disk_buf[i] = 0x0;
+  disk_rw(&abar_t->ports[0], 0, 1, 1, disk_buf, 0);
+  for(int i = 0; i < 10; i++)
+      kprintf("disk_buf: %x\n", disk_buf[i]);
+
   while(1);
 }
 
@@ -52,6 +69,7 @@ void boot(void)
   init_gdt();
   init_idt();
   init_pic();
+  init_pci();
 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),

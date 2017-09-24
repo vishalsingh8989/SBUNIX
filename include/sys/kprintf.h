@@ -1,6 +1,8 @@
 #ifndef __KPRINTF_H
 #define __KPRINTF_H
 
+#include <sys/defs.h>
+
 #define BLACK            0
 #define BLUE             1
 #define GREEN            2
@@ -24,7 +26,7 @@
 void pchar_xy (char value, char color, int x, int y);
 void pchar (char value);
 void pstring (char* value);
-void pnum (int value, int base);
+void pnum (uint64_t value, int base);
 
 void kprintf(const char *fmt, ...);
 
