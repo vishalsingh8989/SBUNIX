@@ -2,6 +2,7 @@
 #include <sys/gdt.h>
 #include <sys/idt.h>
 #include <sys/pic.h>
+#include <sys/pci.h>
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
@@ -32,7 +33,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
-  scan_ahci();
+
   //init_kernel_memory();
   //__asm__("int $0");
   //__asm__("int $32");
@@ -60,6 +61,7 @@ void boot(void)
   init_gdt();
   init_idt();
   init_pic();
+  scan_pci();
 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),

@@ -32,13 +32,8 @@
 
 #define AHCI_BASE	0x400000  //somewhere in docs 0x800000 which is not working -vj
 
-
-#define ACHI_NO_DEVICE  0
-#define ACHI_SATA_NUM   1
-#define ACHI_SATA_API   2
-#define ACHI_SATA_SEMB  3
-#define ACHI_SATA_PEM   4
-
+#define AHCI_CLASS		0x01
+#define AHCI_SUBCLASS  	0x06
 
 typedef enum {
   FIS_TYPE_REG_H2D = 0x27,   // Register FIS - host to device
