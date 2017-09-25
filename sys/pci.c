@@ -69,20 +69,21 @@ uint16_t pci_read(uint8_t bus, uint8_t slot,
 
 void get_device_config(int bus, int dev, int func) {
 
+
     int base_class;
     int sub_class;
-//    int sec_bus;
+    //int sec_bus;
 
     base_class = pci_read(bus, dev, func, PCI_CLASS_OFFSET) >> 8;
     sub_class  = pci_read(bus, dev, func, PCI_SUB_CLASS_OFFSET) & 0xff;
 
-    //kprintf("CLASS: %x, SUB_CLASS: %x\n", base_class, sub_class);
+    kprintf("bus : %p device: %p ,  function : %p\n", bus, dev, func);
 
     if(base_class == 0x01 && sub_class == 0x06) {
         kprintf("AHCI Found!!\n");
+
         uint32_t address = (uint32_t)((bus << 16) | (dev << 11) |
                            (func << 8) | 0x24 | ((uint32_t)0x80000000));
-        kprintf("address %p\n", address);
         outl(PCI_CONFIG_ADDR, address);
         volatile uint64_t bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
         kprintf("BAR before Remap: %p\n", bar);
@@ -224,14 +225,14 @@ void scan_device(uint8_t bus, uint8_t device) {
      for(uint8_t function = 0;  function <  num_of_function ;function++){
     	 	  uint16_t device_id = pci_read(bus, device, function, PCI_DEVICE_ID_OFFSET);
     	 	  if(device_id == PCI_INVALID_DID){
-    	 		  	 continue;
+    	 		  	 break;
     	 	  }
-    	      uint16_t vendor_id = pci_read(bus, device, function, PCI_VENDOR_ID_OFFSET);
-    	      kprintf("PCI bus %p : Vendor id : %p , Device id : %p. Function : %p \n",bus, vendor_id, device_id, function);
+    	      //uint16_t vendor_id = pci_read(bus, device, function, PCI_VENDOR_ID_OFFSET);
+    	      //kprintf("PCI bus %p : Vendor id : %p , Device id : %p. Function : %p \n",bus, vendor_id, device_id, function);
 
-    	    	  get_bar(bus, device, function);
+    	    	  //get_bar(bus, device, function);
 
-    	      //get_device_config(bus, device, function);
+    	      get_device_config(bus, device, function);
     	      }
 
 
