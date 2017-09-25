@@ -9,7 +9,8 @@
 
 extern uint64_t *abar;
 //extern uint64_t *sata_port;
-uint64_t disk_buf[1024];
+//uint8_t dwr_buf[1024];
+//uint8_t drd_buf[1024];
 
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
@@ -39,14 +40,28 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
   hba_mem_t * abar_t = (hba_mem_t *) abar;
   probe_port(abar_t);
-  for(int i = 0; i < 1024; i++)
-      disk_buf[i] = 0x0101010101010101;
-  disk_rw(&abar_t->ports[0], 0, 1, 1, disk_buf, 1);
-  for(int i = 0; i < 1024; i++)
-      disk_buf[i] = 0x0;
-  disk_rw(&abar_t->ports[0], 0, 1, 1, disk_buf, 0);
-  for(int i = 0; i < 10; i++)
-      kprintf("disk_buf: %x\n", disk_buf[i]);
+
+  uint8_t * dwr_buf = (uint8_t *) 0x1000000;
+  uint8_t * drd_buf = (uint8_t *) 0x1100000;
+
+  for(int j = 0; j < 100; j++) {
+
+    for(int i = 0; i < 4096; i++)
+        dwr_buf[i] = j;
+
+    kprintf("Writing Sector: %d\n", j);
+    kprintf("dwr_buf[0]: %d\n", dwr_buf[0]);
+    kprintf("dwr_buf[1023]: %d\n", dwr_buf[1023]);
+    kprintf("dwr_buf[4095]: %d\n", dwr_buf[4095]);
+
+    disk_rw(&abar_t->ports[1], j*8, 0, 8, dwr_buf, 1);
+    disk_rw(&abar_t->ports[1], j*8, 0, 8, drd_buf, 0);
+
+    kprintf("Reading Sector: %d\n", j);
+    kprintf("drd_buf[0]: %d\n", drd_buf[0]);
+    kprintf("drd_buf[1023]: %d\n", drd_buf[1023]);
+    kprintf("drd_buf[4095]: %d\n", drd_buf[4095]);
+  }
 
   while(1);
 }

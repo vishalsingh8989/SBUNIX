@@ -38,21 +38,11 @@ void pci_check_func(int bus, int dev, int func) {
 
     if(base_class == 0x01 && sub_class == 0x06) {
         kprintf("AHCI Found!!\n");
-        volatile uint64_t bar_p0 = pic_read(bus, dev, func, 0x25); 
-        volatile uint64_t bar_p1 = pic_read(bus, dev, func, 0x27); 
-        volatile uint64_t bar_p2 = pic_read(bus, dev, func, 0x21); 
-        volatile uint64_t bar_p3 = pic_read(bus, dev, func, 0x23); 
-        volatile uint64_t bar4 = (bar_p2 | (bar_p3 << 16)) & 0xfffffff0;
-        volatile uint64_t bar5 = (bar_p0 | (bar_p1 << 16)) & 0xffffffff;
-        //volatile uint64_t bar = bar4 + (bar5 << 32);
-        //volatile uint64_t oneGB = 1024*1024*1024;
-        //volatile uint64_t bar =  bar5 >> 16;
-        //volatile uint64_t bar = bar5; 
         uint32_t address = (uint32_t)((bus << 16) | (dev << 11) |
                            (func << 8) | 0x24 | ((uint32_t)0x80000000));
         outl(PCI_CONFIG_ADDR, address);
         volatile uint64_t bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
-        kprintf("BAR: %p\n", bar);
+        kprintf("BAR before Remap: %p\n", bar);
 
         bar = 0xffffffff;
         outl(PCI_CONFIG_ADDR, address);
@@ -60,24 +50,12 @@ void pci_check_func(int bus, int dev, int func) {
         bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
         kprintf("BAR Range: %p\n", bar);
 
-        bar = 0x10010000;
+        //bar = 0x10010000;
+        bar = 0x30000000;
         outl(PCI_CONFIG_ADDR, address);
         outl(PCI_CONFIG_DATA, bar);
         bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
-        kprintf("BAR: %p\n", bar);
-        //uint32_t address = (uint32_t)((bus << 16) | (dev << 11) |
-        //                     (func << 8) | 0x25 | ((uint32_t)0x80000000));
-        //outl(PCI_CONFIG_ADDR, address);
-        //outl(PCI_CONFIG_DATA, 0xbf10);
-        //address = (uint32_t)((bus << 16) | (dev << 11) |
-        //                     (func << 8) | 0x27 | ((uint32_t)0x80000000));
-        //outl(PCI_CONFIG_ADDR, address);
-        //outl(PCI_CONFIG_DATA, 0x003e);
-        bar_p0 = pic_read(bus, dev, func, 0x25); 
-        bar_p1 = pic_read(bus, dev, func, 0x27); 
-        bar5 = (bar_p0 | (bar_p1 << 16)) & 0xffffffff;
         abar = (uint64_t *) bar;
-        kprintf("bar4: %p, bar5: %p, bar: %p\n", bar4, bar5, bar);
         kprintf("ABAR: %p\n", abar);
     }
 
