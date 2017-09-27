@@ -37,7 +37,7 @@ void pci_check_func(int bus, int dev, int func) {
     kprintf("CLASS: %x, SUB_CLASS: %x\n", base_class, sub_class);
 
     if(base_class == 0x01 && sub_class == 0x06) {
-        kprintf("AHCI Found!!\n");
+        kprintf("AHCI Found!!, bus: %x, dev: %x, func: %x\n", bus, dev, func);
         uint32_t address = (uint32_t)((bus << 16) | (dev << 11) |
                            (func << 8) | 0x24 | ((uint32_t)0x80000000));
         outl(PCI_CONFIG_ADDR, address);
@@ -51,7 +51,8 @@ void pci_check_func(int bus, int dev, int func) {
         kprintf("BAR Range: %p\n", bar);
 
         //bar = 0x10010000;
-        bar = 0x30000000;
+        bar = 0xa6000; 
+        //bar = 0xfc20400; 
         outl(PCI_CONFIG_ADDR, address);
         outl(PCI_CONFIG_DATA, bar);
         bar = inl(PCI_CONFIG_DATA) & 0xffffffff;

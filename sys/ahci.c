@@ -53,27 +53,28 @@ void stop_cmd(hba_port_t *port)
 
 int check_type(hba_port_t *port) 
 {
-    uint32_t ssts = port->ssts;
+    //uint32_t ssts = port->ssts;
 
-    uint8_t ipm = (ssts >> 8) & 0x0f;
-    uint8_t det = ssts & 0x0f;
+    //uint8_t ipm = (ssts >> 8) & 0x0f;
+    //uint8_t det = ssts & 0x0f;
 
-    if(det != 3)
-        return -1;
-    if(ipm != 1)
-        return -1;
+    //if(det != 3)
+    //    return -1;
+    //if(ipm != 1)
+    //    return -1;
 
     return port->sig;
 }
 
 void port_rebase(hba_port_t *port, int portno) {
 
-    abar->ghc = (uint32_t) (1);       //Reset HBA
-    abar->ghc = (uint32_t) (1 << 31); //Enable AHCI
-    abar->ghc = (uint32_t) (1 << 1);  //Enable interrupts
+    abar->ghc |= (uint32_t) (1 << 31); //Enable AHCI
+    abar->ghc |= (uint32_t) (1);       //Reset HBA
+    abar->ghc |= (uint32_t) (1 << 31); //Enable AHCI
+    abar->ghc |= (uint32_t) (1 << 1);  //Enable interrupts
 
     kprintf("Host Capabilities: %x, Global Host Control: %x\n", abar->cap, abar->ghc);
-    kprintf("PI: %x, CAP: %x, CMD: %x\n", abar->pi, abar->cap, port->cmd);
+    kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
     
     stop_cmd(port);
 
@@ -84,8 +85,6 @@ void port_rebase(hba_port_t *port, int portno) {
 
     port->fb = AHCI_BASE + (32<<10) + (portno<<8);
     memset((void*)(port->fb), 0, 256);
-
-    port->serr_rwc = -1;
 
     kprintf("CMD: %x\n", port->cmd);
 
@@ -98,6 +97,23 @@ void port_rebase(hba_port_t *port, int portno) {
     }
 
     start_cmd(port);
+
+    kprintf("New change");
+    port->sctl = 0x301;
+    for(int i = 0; i < 10000000; i++);
+        for(int j = 0; j < 10000000; j++);
+    port->sctl = 0x300;
+
+    //if(abar->cap & HBA_MEM_CAP_SSS)
+    //{
+        port->cmd |= (HBA_PxCMD_SUD | HBA_PxCMD_POD | HBA_PxCMD_ICC);
+        for(int i = 0; i < 10000000; i++);
+            for(int j = 0; j < 10000000; j++);
+    //}
+
+    port->cmd |= HBA_PxCMD_FRE;
+    port->serr_rwc = -1;
+    port->is_rwc = -1;
 }
 
 void probe_port(hba_mem_t *abar)
@@ -115,7 +131,7 @@ void probe_port(hba_mem_t *abar)
             if(dt == AHCI_DEV_SATA) {
                 kprintf("SATA Drive found at port %d\n", i);
                 sata_port[i] = &abar->ports[i];
-                if (i == 1) {
+                if (i == 0) {
                     port_rebase((hba_port_t *) &abar->ports[i], i);
                     kprintf("port rebase done\n");
                     return;
@@ -131,12 +147,14 @@ void probe_port(hba_mem_t *abar)
                 kprintf("PM Drive found at port %d\n", i);
             }
             else {
-                kprintf("No Drive found at port %d\n", i);
+               //kprintf("No Drive found at port %d\n", i);
+               kprintf("x ");
             }
         }
         pi >>= 1;
         i++;
     }
+    kprintf("\n");
 }
 
 
@@ -156,6 +174,7 @@ int find_cmdslot(hba_port_t *port)
 
 int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw) 
 {
+    kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
     port->is_rwc = (uint32_t) -1; 
     int spin = 0;
     int slot = find_cmdslot(port);
@@ -177,13 +196,13 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
     {
         cmdtbl->prdt_entry[i].dba = (uint64_t) buf;
         cmdtbl->prdt_entry[i].dbc = 8*1024;
-        cmdtbl->prdt_entry[i].i   = 1;
+        cmdtbl->prdt_entry[i].i   = 0;
         buf += 4*1024;
         count -= 16;
     }
     cmdtbl->prdt_entry[i].dba = (uint64_t) buf;
     cmdtbl->prdt_entry[i].dbc = count<<9;
-    cmdtbl->prdt_entry[i].i   = 1;
+    cmdtbl->prdt_entry[i].i   = 0;
 
     fis_reg_h2d_t *cmdfis = (fis_reg_h2d_t *) (&cmdtbl->cfis);
 
@@ -200,13 +219,17 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
     cmdfis->device = 1<<6;
     cmdfis->count = count;
 
-    while((port->tfd & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) && spin < 1000000)
+    while((port->tfd & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) && spin < 3000000)
     {
         spin++;
     }
-    if(spin == 1000000)
+    if(spin == 3000000)
     {
-        kprintf("Port is hung\n");
+        kprintf("Error, SERR: %x, IS: %x\n", port->serr_rwc,  port->is_rwc);
+        if(rw)
+            kprintf("Port is hung in Write\n");
+        else
+            kprintf("Port is hung in Read\n");
         return 0;
     }
 

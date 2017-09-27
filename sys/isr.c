@@ -76,5 +76,5 @@ void keyboard_int_handler() {
 }
 
 void default_int_handler() {
-    kprintf("Some unknown interrupt hapenned");
+    //kprintf("Unknown interrupt hapenned\n");
 }

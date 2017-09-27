@@ -8,9 +8,6 @@
 #include <sys/ahci.h>
 
 extern uint64_t *abar;
-//extern uint64_t *sata_port;
-//uint8_t dwr_buf[1024];
-//uint8_t drd_buf[1024];
 
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
@@ -41,8 +38,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   hba_mem_t * abar_t = (hba_mem_t *) abar;
   probe_port(abar_t);
 
-  uint8_t * dwr_buf = (uint8_t *) 0x1000000;
-  uint8_t * drd_buf = (uint8_t *) 0x1100000;
+  uint8_t * dwr_buf = (uint8_t *) 0x10000000;
+  uint8_t * drd_buf = (uint8_t *) 0x90000000;
 
   for(int j = 0; j < 100; j++) {
 
@@ -54,8 +51,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("dwr_buf[1023]: %d\n", dwr_buf[1023]);
     kprintf("dwr_buf[4095]: %d\n", dwr_buf[4095]);
 
-    disk_rw(&abar_t->ports[1], j*8, 0, 8, dwr_buf, 1);
-    disk_rw(&abar_t->ports[1], j*8, 0, 8, drd_buf, 0);
+    disk_rw(&abar_t->ports[0], j*8, 0, 8, dwr_buf, 1);
+    disk_rw(&abar_t->ports[0], j*8, 0, 8, drd_buf, 0);
 
     kprintf("Reading Sector: %d\n", j);
     kprintf("drd_buf[0]: %d\n", drd_buf[0]);
