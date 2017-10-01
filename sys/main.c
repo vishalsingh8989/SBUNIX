@@ -38,8 +38,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   hba_mem_t * abar_t = (hba_mem_t *) abar;
   probe_port(abar_t);
 
-  uint8_t * dwr_buf = (uint8_t *) 0x10000000;
-  uint8_t * drd_buf = (uint8_t *) 0x90000000;
+  uint8_t * dwr_buf = (uint8_t *) 0x100000;
+  uint8_t * drd_buf = (uint8_t *) 0x900000;
 
   for(int j = 0; j < 100; j++) {
 

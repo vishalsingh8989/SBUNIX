@@ -100,16 +100,10 @@ void port_rebase(hba_port_t *port, int portno) {
 
     kprintf("New change");
     port->sctl = 0x301;
-    for(int i = 0; i < 10000000; i++);
-        for(int j = 0; j < 10000000; j++);
+    for(int i = 0; i < 20000000; i++);
     port->sctl = 0x300;
-
-    //if(abar->cap & HBA_MEM_CAP_SSS)
-    //{
-        port->cmd |= (HBA_PxCMD_SUD | HBA_PxCMD_POD | HBA_PxCMD_ICC);
-        for(int i = 0; i < 10000000; i++);
-            for(int j = 0; j < 10000000; j++);
-    //}
+    port->cmd |= (HBA_PxCMD_SUD | HBA_PxCMD_POD | HBA_PxCMD_ICC);
+    for(int i = 0; i < 20000000; i++);
 
     port->cmd |= HBA_PxCMD_FRE;
     port->serr_rwc = -1;
