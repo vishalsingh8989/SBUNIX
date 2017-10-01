@@ -98,18 +98,14 @@ void port_rebase(hba_port_t *port, int portno) {
 
     start_cmd(port);
 
-    kprintf("New change");
     port->sctl = 0x301;
     for(int i = 0; i < 10000000; i++);
         for(int j = 0; j < 10000000; j++);
     port->sctl = 0x300;
 
-    //if(abar->cap & HBA_MEM_CAP_SSS)
-    //{
-        port->cmd |= (HBA_PxCMD_SUD | HBA_PxCMD_POD | HBA_PxCMD_ICC);
-        for(int i = 0; i < 10000000; i++);
-            for(int j = 0; j < 10000000; j++);
-    //}
+    port->cmd |= (HBA_PxCMD_SUD | HBA_PxCMD_POD | HBA_PxCMD_ICC);
+    for(int i = 0; i < 10000000; i++);
+        for(int j = 0; j < 10000000; j++);
 
     port->cmd |= HBA_PxCMD_FRE;
     port->serr_rwc = -1;
@@ -174,7 +170,8 @@ int find_cmdslot(hba_port_t *port)
 
 int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw) 
 {
-    kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
+    if(rw) kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
+
     port->is_rwc = (uint32_t) -1; 
     int spin = 0;
     int slot = find_cmdslot(port);
