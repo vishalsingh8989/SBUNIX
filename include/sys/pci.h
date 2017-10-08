@@ -2,7 +2,7 @@
 #define _PCI_H
 
 
-#define PCI_BUS_COUNT			8 //255
+#define PCI_BUS_COUNT			4 // 255 bususes. but not required for project
 #define PCI_DEVICE_PER_BUS		32
 #define PCI_FUNC_PER_DEVICE		8
 #define PCI_CONFIG_ADDR  		0xCF8
@@ -27,5 +27,7 @@ uint16_t pci_read(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 int is_valid_device(uint8_t bus, uint8_t device, uint8_t function);
 void get_device_config(int bus, int dev, int func);
 void scan_device(uint8_t bus, uint8_t device);
+
+void dsleep();
 
 #endif

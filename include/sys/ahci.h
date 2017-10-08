@@ -11,6 +11,11 @@
 #define HBA_PxCMD_FR   (1U << 14)
 #define HBA_PxCMD_CR   (1U << 15)
 #define HBA_PxIS_TFES  (1U << 30)
+#define HBA_PxCMD_SUD  (1U << 1)
+#define HBA_PxCMD_POD  (1U << 2)
+#define HBA_PxCMD_ICC  (1U << 28)
+
+
 
 #define AHCI_DEV_SATA   0x00000101  // SATA drive
 #define AHCI_DEV_SATAPI 0xEB140101  // SATAPI drive
@@ -29,11 +34,6 @@
 
 #define MAX_CMD_SLOT_CNT 32
 #define MAX_PORT_CNT     32
-
-#define AHCI_BASE	0x400000  //somewhere in docs 0x800000 which is not working -vj
-
-#define AHCI_CLASS		0x01
-#define AHCI_SUBCLASS  	0x06
 
 typedef enum {
   FIS_TYPE_REG_H2D = 0x27,   // Register FIS - host to device
@@ -339,6 +339,9 @@ typedef volatile struct {
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
 
-int scan_ahci();
+
+void probe_port(hba_mem_t *abar);
+int disk_rw(hba_port_t * port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw);
+
 
 #endif

@@ -1,8 +1,23 @@
 #include <sys/kprintf.h>
+#include <sys/defs.h>
 #include <stdarg.h>
 
 static int x_cord = 0;
 static int y_cord = 0;
+
+/*
+ * clear screen
+ */
+void cls(){
+	char *disp;
+	for (int i = 0; i < MAX_Y; i++) {
+	        for (int j = 0; j < MAX_X; j++) {
+	        	disp = (char *) 0xb8000 + 2*(MAX_X*i + j);
+	        	*disp = ' ';
+	        	}
+	}
+
+}
 
 void scroll() {
     char *disp;
@@ -33,6 +48,7 @@ void kprintf(const char *fmt, ...)
         char ctemp;
         char *stemp;
         int ntemp;
+        uint64_t ptemp;
         
         if (temp1 == '%') {
             idx++;
@@ -44,20 +60,24 @@ void kprintf(const char *fmt, ...)
                     break;
                 case 'd' :
                     ntemp = va_arg(args, int); 
+                    if (ntemp < 0) {
+                        pchar('-');
+                        ntemp = -ntemp;
+                    }
                     pnum(ntemp, 10);
                     break;
                 case 'x' :
-                    ntemp = va_arg(args, int); 
-                    pnum(ntemp, 16);
+                    ptemp = va_arg(args, uint64_t);
+                    pnum(ptemp, 16);
                     break;
                 case 's' :
                     stemp = va_arg(args, char*); 
                     pstring(stemp);
                     break;
                 case 'p' :
-                    ntemp = va_arg(args, int); 
+                    ptemp = va_arg(args, uint64_t);
                     pstring("0x");
-                    pnum(ntemp, 16);
+                    pnum(ptemp, 16);
                     break;
                 default: 
                     pstring("Invalid Format String: ");
@@ -134,7 +154,7 @@ void pstring (char * value) {
     }
 }
 
-void pnum (int value, int base) {
+void pnum (uint64_t value, int base) {
     if (value <= (base-1)) {
         if (value < 10) pchar((char) (value+48));
         else pchar((char) (value+87));
