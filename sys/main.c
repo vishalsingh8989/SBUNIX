@@ -30,8 +30,6 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
   //__asm__("int $0");
-  //__asm__("int $32");
-  //__asm__("int $40");
 
   __asm__("sti");
 
