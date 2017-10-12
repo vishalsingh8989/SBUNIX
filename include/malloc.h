@@ -1,4 +1,7 @@
+#ifndef _MALLOC_H
+#define _MALLOC_H
 
+#include<sys/defs.h>
 #define PROT_READ      1
 #define PROT_WRITE     2
 #define MAP_PRIVATE    0x002
@@ -8,5 +11,6 @@
 
 
 
+void *malloc(size_t size);
 
-
+#endif

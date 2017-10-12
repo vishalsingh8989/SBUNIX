@@ -342,6 +342,6 @@ typedef volatile struct {
 
 void probe_port(hba_mem_t *abar);
 int disk_rw(hba_port_t * port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw);
-
+void disk_rw_test();
 
 #endif

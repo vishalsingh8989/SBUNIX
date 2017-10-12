@@ -10,7 +10,7 @@ uint64_t *abar;
 void dsleep()
 {
 	//inefficient sleep
-	for(uint64_t sl = 0 ; sl <6996999 ;sl++ );
+	for(uint64_t sl = 0 ; sl <1 ;sl++ );
 	}
 void write_to_data_port(uint32_t address, uint64_t val){
 

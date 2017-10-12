@@ -2,11 +2,13 @@
 #define SYSCALL_H
 
 #include <sys/defs.h>
+//#include<sys/kprintf.h>
 
 #define __NR_read        0
 #define __NR_write       1
 #define __NR_open        2
 #define __NR_close       3
+#define __NR_brk			12
 #define __NR_access     21
 #define __NR_pipe       22
 #define __NR_dup2       33
@@ -36,7 +38,7 @@ static inline uint64_t syscall_0(uint64_t s_no) {
 static inline uint64_t syscall_1(uint64_t s_no, uint64_t aa) {
 
     uint64_t out;   
-
+    //kprintf("syscall_1 called 1");
     __asm__ __volatile__("movq %1, %%rax;"
                          "movq %2, %%rdi;" 
                          "syscall;"
@@ -46,6 +48,7 @@ static inline uint64_t syscall_1(uint64_t s_no, uint64_t aa) {
                          :"r"(s_no), "r"(aa)
                          :"rax", "rdi"
                          );
+    //kprintf("syscall_1 called return");
     return out;
 } 
 
@@ -108,6 +111,8 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
 //vj
 static inline uint64_t syscall_6(uint64_t arg0,uint64_t arg1, uint64_t arg2, uint64_t arg3 ,uint64_t arg4 , uint64_t arg5, uint64_t arg6){
     uint64_t result;
+    //kprintf("syscall_1 called ");
+
         __asm volatile("movq %1, %%rax;"
                        "movq %2, %%rdi;"
                        "movq %3, %%rsi;"
@@ -121,7 +126,7 @@ static inline uint64_t syscall_6(uint64_t arg0,uint64_t arg1, uint64_t arg2, uin
                        :"r"(arg0), "r"(arg1), "r"(arg2), "r"(arg3), "r"(arg4), "r"(arg5), "r"(arg6)
                        :"rax" , "rdi", "rsi" , "rdx" , "r10", "r8", "r9"
                    );
-
+        //kprintf("syscall_1 called return");
     return result;
     
 }

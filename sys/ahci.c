@@ -2,6 +2,7 @@
 #include <sys/pci.h> 
 #include <sys/ahci.h>
 #include <sys/kprintf.h>
+#include <sys/lib_utils.h>
 
 #define ATA_CMD_READ_DMA_EX 0x25
 #define ATA_CMD_WRITE_DMA_EX 0x35
@@ -13,12 +14,7 @@
 hba_port_t * sata_port[32];
 hba_mem_t * abar;
 
-void memset(void* dest, int value, int count) 
-{
-    uint8_t *dest_t = (uint8_t *) dest;
-    for(int i = 0; i < count; i++)
-        *dest_t++ = value;
-}
+
 
 //Note: from OSdev
 void start_cmd(hba_port_t *port) {
@@ -68,10 +64,10 @@ int check_type(hba_port_t *port)
 
 void port_rebase(hba_port_t *port, int portno) {
 
-    abar->ghc |= (uint32_t) (1 << 31); //Enable AHCI
-    abar->ghc |= (uint32_t) (1);       //Reset HBA
-    abar->ghc |= (uint32_t) (1 << 31); //Enable AHCI
-    abar->ghc |= (uint32_t) (1 << 1);  //Enable interrupts
+    abar->ghc = (uint32_t) (1 << 31); //Enable AHCI
+    abar->ghc = (uint32_t) (1);       //Reset HBA
+    abar->ghc = (uint32_t) (1 << 31); //Enable AHCI
+    abar->ghc = (uint32_t) (1 << 1);  //Enable interrupts
 
     //kprintf("Host Capabilities: %x, Global Host Control: %x\n", abar->cap, abar->ghc);
     
@@ -114,6 +110,7 @@ void port_rebase(hba_port_t *port, int portno) {
 
     port->cmd |= HBA_PxCMD_FRE;
     port->serr_rwc = -1;
+
     port->is_rwc = -1;
 }
 
@@ -132,7 +129,7 @@ void probe_port(hba_mem_t *abar)
             if(dt == AHCI_DEV_SATA) {
                 kprintf("SATA Drive found at port %d\n", i);
                 sata_port[i] = &abar->ports[i];
-                if (i == 0) {
+                if (i == 1) {
                     port_rebase((hba_port_t *) &abar->ports[i], i);
                     kprintf("port rebase done\n");
                     return;
@@ -175,7 +172,7 @@ int find_cmdslot(hba_port_t *port)
 
 int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw) 
 {
-    if(rw)kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
+    //if(rw)kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
     port->is_rwc = (uint32_t) -1; 
     int spin = 0;
     int slot = find_cmdslot(port);
@@ -197,13 +194,13 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
     {
         cmdtbl->prdt_entry[i].dba = (uint64_t) buf;
         cmdtbl->prdt_entry[i].dbc = 8*1024;
-        cmdtbl->prdt_entry[i].i   = 0;
+        cmdtbl->prdt_entry[i].i   = 1;
         buf += 4*1024;
         count -= 16;
     }
     cmdtbl->prdt_entry[i].dba = (uint64_t) buf;
     cmdtbl->prdt_entry[i].dbc = count<<9;
-    cmdtbl->prdt_entry[i].i   = 0;
+    cmdtbl->prdt_entry[i].i   = 1;
 
     fis_reg_h2d_t *cmdfis = (fis_reg_h2d_t *) (&cmdtbl->cfis);
 
@@ -271,3 +268,4 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
 
     return 1;
 }
+

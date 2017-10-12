@@ -62,5 +62,5 @@ typedef struct  {
     bool  state; // 0 = not free/ not available  and 1 = free/available
 } block_info;
 
-
+#define PAGESIZE 4096
 #endif

@@ -1,4 +1,5 @@
 #include <sys/asm_utils.h>
+#include <sys/kprintf.h>
 
 //Note: for osdev
 // 27 - escape
@@ -16,6 +17,23 @@ char keymap[128] = {
    18, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 18, '*',
    19, ' ', 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', 
    '4', '5', '6', '+', '1', '2', '3', '0', '.'};
+
+
+/*
+ * os dev
+ *
+ */
+ void update_cursor(int row, int col)
+ {
+    unsigned short position=(row*MAX_X) + col;
+
+    // cursor LOW port to vga INDEX register
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (unsigned char)(position&0xFF));
+    // cursor HIGH port to vga INDEX register
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (unsigned char )((position>>8)&0xFF));
+ }
 
 char kread() {
    char c = 0;
@@ -48,6 +66,13 @@ char getchar(int c) {
        case 29: //control key
        case 157:
             return keymap[29];
+       case 0x48: //up arrow
+       case 0x4B://left arrow
+       case 0x4D: //right arrow
+       case 0x50://down arrow
+    	   	   //kprintf("  arrow key pressed !!\n");
+    	   	   //TODO update cursor on arrow key pressed
+    	   	   return 0;
        default:
             //for debugging
             //kprintf("  indefault !!");
