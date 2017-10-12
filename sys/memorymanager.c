@@ -31,6 +31,10 @@ void init_pages(page_desc **h, uint64_t mem_start, uint64_t size, uint64_t num_p
 
 
 
+
+
+
+
 	memset((void *) free_page_info, 0, num_pages * sizeof(list_node));
 	kprintf("Initialize physical memory....\n");
 
