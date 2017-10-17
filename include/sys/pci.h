@@ -28,6 +28,5 @@ int is_valid_device(uint8_t bus, uint8_t device, uint8_t function);
 void get_device_config(int bus, int dev, int func);
 void scan_device(uint8_t bus, uint8_t device);
 
-void dsleep();
 
 #endif

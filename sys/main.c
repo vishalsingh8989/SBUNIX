@@ -7,8 +7,12 @@
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
 #include <sys/data_utils.h>
+#include<sys/lib_utils.h>
 #include <sys/phy_mm.h>
 
+
+void test_free_frame_list();
+void disk_rw_test();
 
 //#define INITIAL_STACK_SIZE 4096  //Original value
 #define INITIAL_STACK_SIZE 4096
@@ -20,11 +24,14 @@ extern char kernmem, physbase;
 extern uint64_t *abar;
 extern uint64_t mem_start ;
 extern uint64_t size ;
-//extern uint64_t *phybase_ptr;
-
+extern uint64_t free_page_info;
+extern uint64_t *phyfree_ptr;
+extern uint64_t *phybase_ptr;
+extern page_desc* page_desc_head;
+extern page_desc* page_desc_end;
 
 uint64_t num_pages;
-page_desc *page_desc_head;
+page_desc *free_page_head;
 
 
 
@@ -33,7 +40,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	num_pages = 0;
 	uint64_t mem_start = 0;
 	uint64_t size = 0;
-	//phybase_ptr = physfree;
+	phybase_ptr = physbase;
+	phyfree_ptr = physfree;
+
 
 	struct smap_t {
 		uint64_t base, length;
@@ -44,12 +53,11 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
 		if (smap->type == 1 /* memory */ && smap->length != 0) {
 
-			if(smap->base !=0){
-				num_pages = num_pages + (smap->base+smap->length - (uint64_t)physfree)/PAGESIZE;
-			}
+
 			if(smap->length>size){
 				size = smap->length;
 				mem_start = smap->base;
+				num_pages = (smap->base+smap->length - (uint64_t)physfree)/PAGESIZE;
 			}
 			kprintf("Physical Memory [%p-%p] , length : %p , Available.\n", smap->base, smap->base + smap->length, smap->length);
 		}
@@ -64,64 +72,34 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 //		}
 	}
 
-	init_gdt();
+	//init_gdt();
 
-	init_idt();
+	//init_idt();
 
-	init_pic();
+	//init_pic();
 
-	scan_pci();
+	//scan_pci();
 
-	__asm__("sti");
-//
-	page_desc_head=NULL;
+	//__asm__("sti");
+
+	free_page_head=NULL;
 	kprintf("Memory start  :  %p\n", mem_start);
-	init_pages(&page_desc_head, mem_start, size, num_pages);
-	num_pages = get_length(page_desc_head);
+	//uint64_t page_desc_size = 2*num_pages*sizeof(page_desc);
 
-//
-	uint32_t cr0 = read_cr0();
-	uint32_t cr3 = read_cr3();
-	kprintf("CR0 VALUE - %p\n" , cr0);
-	//kprintf("CR0 VALUE - %p\n" , cr2);
-	kprintf("CR3 VALUE - %p\n" , cr3);
-	if(cr0 &0x80000000){
-		kprintf("Paging enabled\n");
-	}
+	free_page_info = mem_start;
+	init_pages(&free_page_head, mem_start, size, num_pages);
 
-
-
-
-
-	print_list(page_desc_head);
 //	kprintf("kernmem %p\n", (uint64_t)&kernmem);
 //	kprintf("kernmem %p\n", (uint64_t)kernmem);
-//	kprintf("physbase %p\n", (uint64_t)physbase);
-//	kprintf("physfree %p\n", (uint64_t)physfree);
-//	kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-//	kprintf("Num of pages :  %d\n", num_pages);
-//	kprintf("Biggest chunk available at  %p  , length %p\n", mem_start,size );
-//	kprintf("Num of frames in link list  %d \n", num_pages);
+	//kprintf("physbase %p\n", (uint64_t)physbase);
+	//kprintf("physfree %p\n", (uint64_t)physfree);
+	//kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+	kprintf("Num of pages :  %d\n", num_pages);
+	kprintf("Biggest chunk available at  %p  , length %p\n", mem_start,size );
+	kprintf("Num of frames in link list  %d \n", num_pages);
 
-	cr0 = read_cr0();
-	cr3 = read_cr3();
-	kprintf("CR0 VALUE - %p\n" , cr0);
-	//kprintf("CR0 VALUE - %p\n" , cr2);
-	kprintf("CR3 VALUE - %p\n" , cr3);
-	kprintf("Head of free list %p\n", page_desc_head->start);
-	int count = 0;
-	while(count<2){
-		page_desc *free_page = get_free_pages(&page_desc_head, 1);
-		kprintf("**********************************************************\n");
-		kprintf("Page got %p - %p\n", free_page->start , free_page->end);
-		kprintf("Head of free list %p\n", page_desc_head->start);
-		count++;
-		if(free_page){};
-	}
-	kprintf("**********************************************************\n");
-	kprintf("Head of free list %p\n", page_desc_head->start);
-	//disk_rw_test();
 
+	//test_free_frame_list();
 
 	// not a wise idea - vishal just for cls testing
 	kprintf("Reboot successfull....\n");
@@ -155,58 +133,97 @@ void boot(void)
   while(1);
 }
 
+void test_free_frame_list(){
 
 
-//void disk_rw_test(){
+	kprintf("Start free frames test....");
+	//num_pages = get_length();
+	print_frames();
+
 //
-//    hba_mem_t * abar_t = (hba_mem_t *) abar;
-//    for(int i = 0 ;i <  10 ; i++){
-//    			dsleep();
-//    }
-//    probe_port(abar_t);
-//
-//     //mworking only for drd_buf[0]
-//    //uint8_t * dwr_buf = (uint8_t *) 0x1100000;
-//    //uint8_t * drd_buf = (uint8_t *) 0x1700000;
-//
-//
-//
-//    uint8_t * dwr_buf = (uint8_t *) 0x100000000;
-//    uint8_t * drd_buf = (uint8_t *) 0x101000000;
-//    for(int j = 0; j < 4; j++) {
-//
-//      for(int i = 0; i < 4096; i++)
-//          dwr_buf[i] = j;
-//
-//      kprintf("Writing Sector: %d ", j);
-//      for(int i = 0 ;i < 4096 ; i = i + 300)
-//    	  	  kprintf("%d", dwr_buf[0]);
-//
-//      kprintf("\n");
-//      disk_rw(&abar_t->ports[1], j*8, 0, 8, dwr_buf, 1);
-//      disk_rw(&abar_t->ports[1], j*8, 0, 8, drd_buf, 0);
-//
-//
-//      kprintf("Reading Sector: %d ", j);
-//      for(int k = 0 ; k < 4096 ;  k = k + 300){
-//    	  	  kprintf("%d",drd_buf[k]);
-//
-//      }
-//      kprintf("\n");
-//      for(int l = 0 ;l <  2 ; l++){
-//          	  	    			dsleep();
-//        }
-//
-//		for(int k = 0 ; k < 4096 ;  k = k + 300){
-//			  kprintf("***");
-//
-//		}
-//		kprintf("\n");
-//      kprintf("drd_buf[1k]: %d ,", drd_buf[1023]);
-//      kprintf("drd_buf[4k]: %d\n", drd_buf[4095]);
-//    }
-//
-//
-//};
+	uint32_t cr0 = read_cr0();
+	uint32_t cr3 = read_cr3();
+	kprintf("CR0 VALUE - %p\n" , cr0);
+	//kprintf("CR0 VALUE - %p\n" , cr2);
+	kprintf("CR3 VALUE - %p\n" , cr3);
+	if(cr0 &0x80000000){
+		kprintf("Paging enabled\n");
+	}
+
+	print_list(free_page_head);
+	cr0 = read_cr0();
+	cr3 = read_cr3();
+	kprintf("CR0 VALUE - %p\n" , cr0);
+	//kprintf("CR0 VALUE - %p\n" , cr2);
+	kprintf("CR3 VALUE - %p\n" , cr3);
+	kprintf("Head of free list %p\n", free_page_head->start);
+	int count = 0;
+	while(count<2){
+		page_desc *free_page = get_free_pages(&free_page_head, 1);
+		kprintf("**********************************************************\n");
+		kprintf("Page got %p - %p\n", free_page->start , free_page->end);
+		kprintf("Head of free list %p\n", free_page_head->start);
+		count++;
+		if(free_page){};
+	}
+	kprintf("**********************************************************\n");
+	kprintf("Head of free list %p\n", free_page_head->start);
+	kprintf("End free frames test : successful\n");
+	//disk_rw_test();
+
+
+}
+
+void disk_rw_test(){
+
+    hba_mem_t * abar_t = (hba_mem_t *) abar;
+    for(int i = 0 ;i <  10 ; i++){
+    			dsleep();
+    }
+    probe_port(abar_t);
+
+     //mworking only for drd_buf[0]
+    //uint8_t * dwr_buf = (uint8_t *) 0x1100000;
+    //uint8_t * drd_buf = (uint8_t *) 0x1700000;
+
+
+
+    uint8_t * dwr_buf = (uint8_t *) 0x100000000;
+    uint8_t * drd_buf = (uint8_t *) 0x101000000;
+    for(int j = 0; j < 4; j++) {
+
+      for(int i = 0; i < 4096; i++)
+          dwr_buf[i] = j;
+
+      kprintf("Writing Sector: %d ", j);
+      for(int i = 0 ;i < 4096 ; i = i + 300)
+    	  	  kprintf("%d", dwr_buf[0]);
+
+      kprintf("\n");
+      disk_rw(&abar_t->ports[1], j*8, 0, 8, dwr_buf, 1);
+      disk_rw(&abar_t->ports[1], j*8, 0, 8, drd_buf, 0);
+
+
+      kprintf("Reading Sector: %d ", j);
+      for(int k = 0 ; k < 4096 ;  k = k + 300){
+    	  	  kprintf("%d",drd_buf[k]);
+
+      }
+      kprintf("\n");
+      for(int l = 0 ;l <  2 ; l++){
+          	  	    			dsleep();
+        }
+
+		for(int k = 0 ; k < 4096 ;  k = k + 300){
+			  kprintf("***");
+
+		}
+		kprintf("\n");
+      kprintf("drd_buf[1k]: %d ,", drd_buf[1023]);
+      kprintf("drd_buf[4k]: %d\n", drd_buf[4095]);
+    }
+
+
+};
 //
 //

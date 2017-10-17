@@ -18,6 +18,8 @@
 
 #define FREE_BLOCK			0
 #define ALLOCATED			1
+#define PAGE_SIZE			4096
+
 
 typedef struct pd {
 	uint32_t start;
@@ -29,7 +31,7 @@ typedef struct pd {
 
 
 
-void *memset_kernel(void *dest, int c, uint64_t count);
+void memset_kernel(void *dest, int c, uint64_t count);
 void load_cr3(uint64_t val);
 uint64_t read_cr0();
 uint64_t read_cr3();
@@ -37,6 +39,6 @@ uint64_t phys_address(uint64_t* address);
 page_desc* get_free_pages(page_desc** head,uint32_t num_of_pages);
 void init_pages(page_desc **h, uint64_t mem_start, uint64_t size, uint64_t num_pages);
 
-
-
+void* alloc_mem(uint64_t size);
+void print_frames();
 #endif

@@ -12,49 +12,6 @@ uint64_t free_page_info;
 /*
  * bump allocation
  */
-void* alloc_mem(uint64_t size){
-
-	uint64_t start = free_page_info;
-	if (size!=0)
-		free_page_info = free_page_info + size;
-		return (void *)start;
-
-}
-
-
-void add_page_desc(page_desc **head, int pos, uint64_t start, uint64_t end ){
-	page_desc *temp1,*temp2;
-
-    temp1 = temp2 = NULL;
-    int curr = 0;
-
-    page_desc *new_node=(page_desc* ) alloc_mem(sizeof(page_desc)); //using  bump allocation
-
-    if(!new_node){
-        kprintf("Memory Error\n");
-        return;
-    }
-    new_node->start = start;
-    new_node->end = end;
-    new_node->state = FREE_BLOCK; //0 for free
-    temp1=*head;
-
-    if(pos==1 || temp1==NULL){
-    		new_node->next=*head;
-        *head=new_node;
-
-    }
-    else{
-        while(temp1!=NULL && (curr<pos)){
-        		curr++;
-            temp2=temp1;
-            temp1=temp1->next;
-        }
-
-        new_node->next=temp2->next;
-        temp2->next=new_node;
-    }
-}
 
 
 int get_length(page_desc *head){

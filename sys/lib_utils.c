@@ -12,6 +12,12 @@ void *memset(void *dest, char val, size_t count)
 	return dest;
 }
 
+
+void dsleep()
+{
+	//inefficient sleep
+	for(uint64_t sl = 0 ; sl <99999999 ;sl++ );
+	}
 /*
  *
  * set mem to 'to'  not working
