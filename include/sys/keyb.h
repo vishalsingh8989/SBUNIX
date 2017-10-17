@@ -1,3 +1,6 @@
+
+#ifndef _KEYB_H
+#define _KEYB_H
 #include <sys/asm_utils.h>
 #include <sys/kprintf.h>
 
@@ -86,3 +89,4 @@ char getchar(int c) {
     return result;
 }
 
+#endif

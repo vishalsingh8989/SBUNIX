@@ -7,10 +7,13 @@
 uint64_t *abar;
 
 
+
+
+
 void dsleep()
 {
 	//inefficient sleep
-	for(uint64_t sl = 0 ; sl <1 ;sl++ );
+	for(uint64_t sl = 0 ; sl <99999999 ;sl++ );
 	}
 void write_to_data_port(uint32_t address, uint64_t val){
 
@@ -70,11 +73,11 @@ void get_device_config(int bus, int dev, int func) {
         volatile uint64_t bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
         kprintf("BAR before Remap: %p\n", bar);
 
-        //bar = 0x10000000;
-        bar = 0x8000000;
+        bar = 0x10000000;
+        //bar = 0x900000;
 
         /*
-         * any address between 640kb - 1mb
+         * any address between 640kb - 1mb for lab machine
          */
         //bar = 0xa5000;
         //bar  = 0xa6000;
@@ -104,7 +107,7 @@ void scan_device(uint8_t bus, uint8_t device) {
      for(uint16_t function = 0;  function <  num_of_function ;function++){
     	 	  uint16_t device_id = pci_read(bus, device, function, PCI_DEVICE_ID_OFFSET);
     	 	  if(device_id != PCI_INVALID_DID){  //legends has it that some functions are not contiguous.So, break removed and print added.
-    	 		 dsleep();
+
     	 		 uint16_t vendor_id = pci_read(bus, device, function, PCI_VENDOR_ID_OFFSET);
     	 		 kprintf("PCI bus : %x, Device: %x Function %x,", bus, device, function);
     	 		 kprintf("Vendor  : %p ,Device : %p\n" , vendor_id, device_id);

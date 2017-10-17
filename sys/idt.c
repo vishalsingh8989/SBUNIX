@@ -1,5 +1,6 @@
 #include <sys/defs.h>
 #include <sys/idt.h>
+#include <sys/pic.h>
 
 //Note: From OSdev.
 struct idte_t {
@@ -42,9 +43,9 @@ void init_idt() {
        set_idt(i, (uint64_t) &_isrxx  , 0x8e); 
     }
 
-    set_idt(  0, (uint64_t) &_isr0  , 0x8e); 
-    set_idt( 32, (uint64_t) &_isr32 , 0x8e); 
-    set_idt( 33, (uint64_t) &_isr33 , 0x8e); 
+    set_idt( PIC_DIV_ZERO_IRQ, (uint64_t) &_isr0  , 0x8e);
+    set_idt( PIC_TIMER_IRQ,    (uint64_t) &_isr32 , 0x8e);
+    set_idt( PIC_KEYBOARD_IRQ, (uint64_t) &_isr33 , 0x8e);
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
 }
 

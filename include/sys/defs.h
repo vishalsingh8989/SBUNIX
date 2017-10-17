@@ -45,7 +45,25 @@ typedef uint64_t off_t;
 
 typedef uint32_t pid_t;
 
-typedef int bool;
+typedef uint32_t pt_entry;
+typedef uint32_t pd_entry;
+
+typedef	uint64_t physical_addr;
+//struct ptable {
+//
+//	pt_entry m_entries[1024];
+//}ptable ;
+//
+////! page directory
+//struct pdirectory {
+//
+//	pd_entry m_entries[1024];
+//}pdirectory;
+//typedef int bool;
+enum b { false ,true };
+
+typedef enum b bool;
+
 
 typedef struct env_var{
     char *key;
@@ -55,12 +73,12 @@ typedef struct env_var{
 } env_var;
 
 
-typedef struct  {
-    size_t size;
-    struct block_info *next;
-    struct block_info *prev;
-    bool  state; // 0 = not free/ not available  and 1 = free/available
-} block_info;
+//typedef struct  {
+//    size_t size;
+//    struct block_info *next;
+//    struct block_info *prev;
+//    state  ; // 0 = not free/ not available  and 1 = free/available
+//} block_info;
 
 #define PAGESIZE 4096
 #endif
