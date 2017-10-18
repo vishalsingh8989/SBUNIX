@@ -2,6 +2,7 @@
 #include <sys/pci.h> 
 #include <sys/ahci.h>
 #include <sys/kprintf.h>
+#include <sys/utils.h>
 
 #define ATA_CMD_READ_DMA_EX 0x25
 #define ATA_CMD_WRITE_DMA_EX 0x35
@@ -13,34 +14,36 @@
 hba_port_t * sata_port[32];
 hba_mem_t * abar;
 
+/*
 void memset(void* dest, int value, int count) 
 {
     uint8_t *dest_t = (uint8_t *) dest;
     for(int i = 0; i < count; i++)
         *dest_t++ = value;
 }
+*/
 
 //Note: from OSdev
 void start_cmd(hba_port_t *port) {
 
-    kprintf("In start, CMD: %x\n", port->cmd);
+    //kprintf("In start, CMD: %x\n", port->cmd);
     while(port->cmd & HBA_PxCMD_CR)
         kprintf("In start, CMD: %x\n", port->cmd);
 
     port->cmd |= HBA_PxCMD_FRE;
     port->cmd |= HBA_PxCMD_ST;
         
-    kprintf("In start, CMD: %x\n", port->cmd);
+    //kprintf("In start, CMD: %x\n", port->cmd);
 }
 
 void stop_cmd(hba_port_t *port) 
 {
-    kprintf("In Stop, CMD: %x\n", port->cmd);
+    //kprintf("In Stop, CMD: %x\n", port->cmd);
     port->cmd &= ~HBA_PxCMD_ST;
 
     while(1)
     {
-        kprintf("In Stop, CMD: %x\n", port->cmd);
+        //kprintf("In Stop, CMD: %x\n", port->cmd);
         if(port->cmd & HBA_PxCMD_FR)
             continue;
         if(port->cmd & HBA_PxCMD_CR)
@@ -86,7 +89,7 @@ void port_rebase(hba_port_t *port, int portno) {
     port->fb = AHCI_BASE + (32<<10) + (portno<<8);
     memset((void*)(port->fb), 0, 256);
 
-    kprintf("CMD: %x\n", port->cmd);
+    //kprintf("CMD: %x\n", port->cmd);
 
     hba_cmd_header_t *cmdheader = (hba_cmd_header_t *) (port->clb);
     for(int i=0; i<32; i++)
@@ -98,7 +101,6 @@ void port_rebase(hba_port_t *port, int portno) {
 
     start_cmd(port);
 
-    kprintf("New change");
     port->sctl = 0x301;
     for(int i = 0; i < 20000000; i++);
     port->sctl = 0x300;
@@ -112,11 +114,11 @@ void port_rebase(hba_port_t *port, int portno) {
 
 void probe_port(hba_mem_t *abar)
 {
-    kprintf("ABAR: %p\n", abar);
+    //kprintf("ABAR: %p\n", abar);
 
     uint32_t pi = abar->pi;
 
-    kprintf("In probe port: %x, pi: %x\n", abar, pi);
+    //kprintf("In probe port: %x, pi: %x\n", abar, pi);
 
     int i = 0;
     while (i < 32) {
@@ -127,7 +129,7 @@ void probe_port(hba_mem_t *abar)
                 sata_port[i] = &abar->ports[i];
                 if (i == 0) {
                     port_rebase((hba_port_t *) &abar->ports[i], i);
-                    kprintf("port rebase done\n");
+                    //kprintf("port rebase done\n");
                     return;
                 }
             }
@@ -168,7 +170,7 @@ int find_cmdslot(hba_port_t *port)
 
 int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, uint8_t *buf, uint8_t rw) 
 {
-    kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
+    //kprintf("PI: %x, CAP: %x, CMD: %x, SSTS: %x, SERR: %x\n", abar->pi, abar->cap, port->cmd, port->ssts, port->serr_rwc);
     port->is_rwc = (uint32_t) -1; 
     int spin = 0;
     int slot = find_cmdslot(port);
@@ -227,11 +229,6 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
         return 0;
     }
 
-    //if(rw)
-    //    kprintf("Starting Write to disk\n");
-    //else
-    //    kprintf("Starting Read to disk\n");
-
     port->ci = 1<<slot;
 
     while(1)
@@ -256,11 +253,6 @@ int disk_rw(hba_port_t *port, uint32_t startl, uint32_t starth, uint16_t count, 
             kprintf("Read disk error, IS: %x\n", port->is_rwc);
         return 0;
     }
-
-    //if(rw)
-    //    kprintf("Finished Write from disk\n");
-    //else
-    //    kprintf("Finished Read from disk\n");
 
     return 1;
 }

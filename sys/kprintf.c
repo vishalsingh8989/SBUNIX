@@ -5,12 +5,14 @@
 static int x_cord = 0;
 static int y_cord = 0;
 
+static uint64_t video_p = 0xffffffff800b8000;
+
 void scroll() {
     char *disp;
 
     for (int i = 0; i < MAX_Y; i++) {
         for (int j = 0; j < MAX_X; j++) {
-            disp = (char *) 0xb8000 + 2*(MAX_X*i + j);
+            disp = (char *) (video_p + 2*(MAX_X*i + j));
             if (i == 2*MAX_Y-1) *(disp + 1) = BLACK;
             else {
                 *disp = *(disp + 2*MAX_X);
@@ -101,7 +103,7 @@ void kprintf(const char *fmt, ...)
 void pchar_xy (char value, char color, int x, int y) 
 {
     char *disp;
-    disp = (char *) 0xb8000 + 2*(MAX_X*y + x);
+    disp = (char *) (video_p + 2*(MAX_X*y + x));
 
     *disp     = value;
     *(disp+1) = color;

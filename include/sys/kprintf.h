@@ -21,7 +21,7 @@
 #define WHITE           15
 
 #define MAX_X   80
-#define MAX_Y   25
+#define MAX_Y   24
 
 void pchar_xy (char value, char color, int x, int y);
 void pchar (char value);
