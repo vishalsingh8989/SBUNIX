@@ -1,5 +1,6 @@
 #include<sys/defs.h>
 #include<sys/data_utils.h>
+#include<sys/lib_utils.h>
 #include<sys/pci.h>
 #include<sys/kprintf.h>
 
@@ -16,7 +17,7 @@ void *memset(void *dest, char val, size_t count)
 void dsleep()
 {
 	//inefficient sleep
-	for(uint64_t sl = 0 ; sl <99999999 ;sl++ );
+	for(uint64_t sl = 0 ; sl <999 ;sl++ );
 	}
 /*
  *

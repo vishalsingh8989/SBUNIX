@@ -18,7 +18,15 @@
 
 #define FREE_BLOCK			0
 #define ALLOCATED			1
+#define RESERVED				2 // for kernel video mem.
 #define PAGE_SIZE			4096
+#define KERNEL_MEM   0xffffffff80000000 //  - from linker script
+
+
+
+
+
+
 
 
 typedef struct pd {
@@ -31,14 +39,36 @@ typedef struct pd {
 
 
 
-void memset_kernel(void *dest, int c, uint64_t count);
-void load_cr3(uint64_t val);
+uint64_t num_pages;
+uint64_t *phyfree_ptr;
+uint64_t *phybase_ptr;
+uint64_t free_page_info;
+page_desc* page_desc_end;
+page_desc* page_desc_head;
+uint64_t *free_start_vir;
+page_desc *free_page_head;
+uint64_t alloc_pagedesc_start;
+
+
+
 uint64_t read_cr0();
 uint64_t read_cr3();
-uint64_t phys_address(uint64_t* address);
-page_desc* get_free_pages(page_desc** head,uint32_t num_of_pages);
-void init_pages(page_desc **h, uint64_t mem_start, uint64_t size, uint64_t num_pages);
-
-void* alloc_mem(uint64_t size);
 void print_frames();
+void load_cr3(uint64_t val);
+void* alloc_phys_mem(uint64_t size);
+int frame_count(page_desc** head);
+void *alloc_vir_mem(uint64_t size);
+uint64_t *phys_to_vir(uint64_t *addr);
+uint64_t *vir_to_phys(uint64_t *addr);
+void* alloc_phys_pagedesc(uint64_t size);
+uint64_t phys_address(uint64_t* address);
+page_desc* get_free_frame(page_desc** head);
+void* move_4k_up(uint64_t addr ,uint64_t alignat);
+void memset_kernel(void *dest, int c, uint64_t count);
+void init_pages(page_desc **h, uint64_t mem_start, uint64_t size, uint64_t num_pages);
+void add_page_desc(page_desc **head, int pos, uint64_t start, uint64_t end , uint8_t state);
+
+
+
+
 #endif

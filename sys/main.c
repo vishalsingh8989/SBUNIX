@@ -30,8 +30,8 @@ extern uint64_t *phybase_ptr;
 extern page_desc* page_desc_head;
 extern page_desc* page_desc_end;
 
-uint64_t num_pages;
-page_desc *free_page_head;
+extern uint64_t num_pages;
+extern page_desc *free_page_head;
 
 
 
@@ -57,7 +57,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 			if(smap->length>size){
 				size = smap->length;
 				mem_start = smap->base;
-				num_pages = (smap->base+smap->length - (uint64_t)physfree)/PAGESIZE;
+				num_pages = (smap->base + smap->length)/PAGESIZE;
 			}
 			kprintf("Physical Memory [%p-%p] , length : %p , Available.\n", smap->base, smap->base + smap->length, smap->length);
 		}
@@ -89,11 +89,10 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 	free_page_info = mem_start;
 	init_pages(&free_page_head, mem_start, size, num_pages);
 
-//	kprintf("kernmem %p\n", (uint64_t)&kernmem);
-//	kprintf("kernmem %p\n", (uint64_t)kernmem);
-	//kprintf("physbase %p\n", (uint64_t)physbase);
-	//kprintf("physfree %p\n", (uint64_t)physfree);
-	//kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+
+	kprintf("Kernel phy mem :  %p - %p\n", (uint64_t)physbase, (uint64_t)physfree);
+	kprintf("Kernel vir mem :  %p - %p\n",   phys_to_vir(physbase), phys_to_vir(physfree));
+	kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 	kprintf("Num of pages :  %d\n", num_pages);
 	kprintf("Biggest chunk available at  %p  , length %p\n", mem_start,size );
 	kprintf("Num of frames in link list  %d \n", num_pages);
@@ -138,37 +137,39 @@ void test_free_frame_list(){
 
 	kprintf("Start free frames test....");
 	//num_pages = get_length();
-	print_frames();
+	//print_frames();
 
 //
-	uint32_t cr0 = read_cr0();
-	uint32_t cr3 = read_cr3();
-	kprintf("CR0 VALUE - %p\n" , cr0);
-	//kprintf("CR0 VALUE - %p\n" , cr2);
-	kprintf("CR3 VALUE - %p\n" , cr3);
-	if(cr0 &0x80000000){
-		kprintf("Paging enabled\n");
-	}
+//	uint32_t cr0 = read_cr0();
+//	uint32_t cr3 = read_cr3();
+//	kprintf("CR0 VALUE - %p\n" , cr0);
+//	//kprintf("CR0 VALUE - %p\n" , cr2);
+//	kprintf("CR3 VALUE - %p\n" , cr3);
+//	if(cr0 &0x80000000){
+//		kprintf("Paging enabled\n");
+//	}
 
-	print_list(free_page_head);
-	cr0 = read_cr0();
-	cr3 = read_cr3();
-	kprintf("CR0 VALUE - %p\n" , cr0);
-	//kprintf("CR0 VALUE - %p\n" , cr2);
-	kprintf("CR3 VALUE - %p\n" , cr3);
-	kprintf("Head of free list %p\n", free_page_head->start);
+//	print_list(free_page_head);
+//	cr0 = read_cr0();
+//	cr3 = read_cr3();
+//	kprintf("CR0 VALUE - %p\n" , cr0);
+//	//kprintf("CR0 VALUE - %p\n" , cr2);
+//	kprintf("CR3 VALUE - %p\n" , cr3);
+//	kprintf("Head of free list %p\n", free_page_head->start);
 	int count = 0;
 	while(count<2){
-		page_desc *free_page = get_free_pages(&free_page_head, 1);
+		page_desc *free_page = get_free_frame(&free_page_head);
 		kprintf("**********************************************************\n");
 		kprintf("Page got %p - %p\n", free_page->start , free_page->end);
-		kprintf("Head of free list %p\n", free_page_head->start);
+		kprintf("New Head of free list %p\n", free_page_head->start);
 		count++;
 		if(free_page){};
+		num_pages = frame_count(&free_page_head);
+		kprintf("Nnumber of free frames %d\n",num_pages);
 	}
 	kprintf("**********************************************************\n");
 	kprintf("Head of free list %p\n", free_page_head->start);
-	kprintf("End free frames test : successful\n");
+//	kprintf("End free frames test : successful\n");
 	//disk_rw_test();
 
 
