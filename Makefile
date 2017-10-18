@@ -96,6 +96,14 @@ clean:
 	find $(ROOTLIB) $(ROOTBIN) -type f ! -name .gitkeep -print -delete
 	rm -rfv obj kernel tarfs $(USER).iso $(USER).img $(ROOTBOOT)/kernel/kernel
 
+csclean:
+	rm -vf cscope.out
+
+cscope.out:
+	cscope -bv crt/*.c include/*.h include/sys/*.h libc/*.c sys/*.c
+
+cscope: csclean cscope.out
+
 SUBMITTO=/submit
 submit: clean $(USER)-data.img
 	tar -czvf $(USER).tgz --exclude=.gitkeep --exclude=.*.sw? --exclude=*~ --ignore-failed-read LICENSE README Makefile Makefile.config sys bin crt libc include $(ROOTFS) $(USER)-data.img

@@ -3,6 +3,7 @@
 #include <sys/idt.h>
 #include <sys/pic.h>
 #include <sys/pci.h>
+#include <sys/vmm.h>
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
@@ -16,28 +17,28 @@ extern char kernmem, physbase;
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
-  struct smap_t {
-    uint64_t base, length;
-    uint32_t type;
-  }__attribute__((packed)) *smap;
-  while(modulep[0] != 0x9001) modulep += modulep[1]+2;
-  for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
-    if (smap->type == 1 /* memory */ && smap->length != 0) {
-      kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
-    }
-  }
-  kprintf("physfree %p\n", (uint64_t)physfree);
+  //struct smap_t {
+  //  uint64_t base, length;
+  //  uint32_t type;
+  //}__attribute__((packed)) *smap;
+  //while(modulep[0] != 0x9001) modulep += modulep[1]+2;
+  //for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
+  //  if (smap->type == 1 /* memory */ && smap->length != 0) {
+  //    kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+  //  }
+  //}
+  //kprintf("physfree %p\n", (uint64_t)physfree);
+
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-
-  //__asm__("int $0");
-  //__asm__("int $32");
-  //__asm__("int $40");
-
-  __asm__("sti");
 
   hba_mem_t * abar_t = (hba_mem_t *) abar;
   probe_port(abar_t);
 
+  vmm_init(modulep, physbase, physfree);
+
+  //__asm__("int $0");
+
+  /*
   uint8_t * dwr_buf = (uint8_t *) 0x100000;
   uint8_t * drd_buf = (uint8_t *) 0x900000;
 
@@ -60,7 +61,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("drd_buf[4095]: %d\n", drd_buf[4095]);
     kprintf("------Finished Test for Sector %d--------\n", j);
   }
+  */
 
+  __asm__("sti");
   while(1);
 }
 
