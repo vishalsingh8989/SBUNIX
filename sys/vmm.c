@@ -85,7 +85,7 @@ uint64_t page_alloc()
     return get_pa((uint64_t) page);
 }
 
-void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr) 
+void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint8_t test)
 {
     volatile struct page_table *ptable;
     volatile struct page_directory *pdir;
@@ -128,16 +128,24 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     entry = paddr;
     entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
     ptable->pte[PT_IDX(vaddr)] = entry;
+    if(test){
+        kprintf("entry : %p.\n",entry);
+        }
 
 }
 
-void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size) 
+
+void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size, uint8_t test)
 {
     uint64_t addrp, addrv;
     addrp = alignPage(paddr);
     addrv = alignPage(vaddr);
     for(int i = 0; i < size; i++) {
-        map_addr(pmap_l4, (uint64_t) addrp, addrv);
+    		if(test){
+    			map_addr(pmap_l4, (uint64_t) addrp, addrv, test);
+    		}else{
+    			map_addr(pmap_l4, (uint64_t) addrp, addrv, test);
+    		}
         addrp += PAGE_SIZE;
         addrv += PAGE_SIZE;
     }
@@ -194,38 +202,39 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
     size = (physfree - physbase)/PAGE_SIZE;
     kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
-    map_addr_range(pmap_l4, phy_addr, vir_addr, size);
+    map_addr_range(pmap_l4, phy_addr, vir_addr, size, 0);
 
-    for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
-        if (smap->type == 1 /* memory */ && (smap->length/PAGE_SIZE) != 0) { //TODO: fix this
-            if (smap->base > (uint64_t) physfree) {
-                phy_addr = smap->base;
-                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->length)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
-                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
-            }
-            else if (smap->base + smap->length > (uint64_t) physfree) {
-                phy_addr = (uint64_t) physfree;
-                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
-                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
-            }
-            else {
-                phy_addr = smap->base;
-                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->length)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
-                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
-            }
-        }
-    }
+    map_addr_range(pmap_l4, phy_addr, vir_addr, size, 1);
+//    for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
+//        if (smap->type == 1 /* memory */ && (smap->length/PAGE_SIZE) != 0) { //TODO: fix this
+//            if (smap->base > (uint64_t) physfree) {
+//                phy_addr = smap->base;
+//                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
+//                size = (smap->length)/PAGE_SIZE;
+//                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+//                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
+//            }
+//            else if (smap->base + smap->length > (uint64_t) physfree) {
+//                phy_addr = (uint64_t) physfree;
+//                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
+//                size = (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
+//                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+//                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
+//            }
+//            else {
+//                phy_addr = smap->base;
+//                vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
+//                size = (smap->length)/PAGE_SIZE;
+//                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+//                map_addr_range(pmap_l4, phy_addr, vir_addr, size);
+//            }
+//        }
+//    }
 
     //TODO: are two pages really needed?
-    map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 2);
+    map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 2, 0);
 
-    load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
+    //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
 
     kprintf("Page Table Setup Sucessfull\n");
 }
