@@ -30,11 +30,14 @@ void kpanic(const char *fmt, ...)
     kprintf(fmt);
     kprintf("\n");
     kprintf("Kernal is Panicking!!!\n");
-    kprintf("\t\t            \n");
-    kprintf("\t\t    X   *   \n");
-    kprintf("\t\t       *    \n");
-    kprintf("\t\t    X   *   \n");
-    kprintf("\t\t            \n");
+    kprintf("\t            _  _   \n");  
+    kprintf("\t      ___ (~ )( ~) \n");
+    kprintf("\t     /   \\_\\ \\/ /  \n");
+    kprintf("\t    |   D_ ]\\ \\/   \n");
+    kprintf("\t    |   D _]/\\ \\   \n");
+    kprintf("\t     \\___/ / /\\ \\  \n");
+    kprintf("\t          (_ )( _) ");
+    kprintf("\t    mark    ~  ~   ");
     while(1) {
         __asm__ __volatile__ ("hlt;");
     }
