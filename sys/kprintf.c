@@ -80,24 +80,6 @@ void kprintf(const char *fmt, ...)
     }
 
     va_end(args);
-    //pchar_xy ('H', BLUE, 0, 0); 
-    //pchar_xy ('e', BLUE, 1, 0); 
-    //pchar_xy ('l', GREEN, 2, 0); 
-    //pchar_xy ('l', GREEN, 3, 0); 
-    //pchar_xy ('o', RED, 4, 0); 
-    //pchar_xy ('!', RED, 5, 0); 
-
-    //char disp = '0';
-    //for(int i = 0; i < 80*24; i++) {
-    //    pchar(disp);
-    //    if (disp == '9') disp = '0';
-    //    else disp++;
-    //}
-
-    //pstring("Hello World\n");
-    //pnum(890, 10);
-    //pstring("\n");
-    //pnum(10, 16);
 }
 
 void pchar_xy (char value, char color, int x, int y) 
@@ -111,9 +93,18 @@ void pchar_xy (char value, char color, int x, int y)
 
 void pchar (char value) //TODO: support tab characters
 {
-    if (value != '\n' &&
-        value != '\r') {
+    if(value != '\n' &&
+       value != '\r') {
         pchar_xy(value, LIGHT_GRAY, x_cord, y_cord);
+    }
+
+    if(value == '\t') {
+        int temp = ((x_cord + 4) <= MAX_X) ? 4 : MAX_X - x_cord;
+        for(int i = 0; i < temp ; i++) {
+            pchar_xy(' ', LIGHT_GRAY, x_cord, y_cord);
+            x_cord++;
+        }
+        return;
     }
 
     if(x_cord == MAX_X-1 && y_cord == MAX_Y-1) {

@@ -2,6 +2,7 @@
 #include <sys/keyb.h>
 #include <sys/defs.h>
 #include <sys/pic.h>
+#include <sys/utils.h>
 
 void timer_int_handler() {
    static int i = 0, s = 0, m = 0, h = 0;
@@ -23,8 +24,6 @@ void timer_int_handler() {
        h = 0;
    }
 
-   //kprintf("i: %d, s: %d, m: %d, h:%d\n", i, s, m, h);
-
    char sl = (char) (s%10+48);
    char sh = (char) (s/10+48);
    char ml = (char) (m%10+48);
@@ -45,17 +44,12 @@ void timer_int_handler() {
 }
 
 void div0_int_handler() {
-   static int i = 0;
-   kprintf("Div0 Interrupt Fired!...%d\n", i);
-   i++;
+   kpanic("-- Div0 Interrupt Fired --\n");
 }
 
 void keyboard_int_handler() {
     char c;
 
-    //kprintf("there was a key board interrupt, c: %c\n", c);
-
-    //c = inb(0x60);
     c = getchar();
     if (c != 0) {
         if (c == 17){
@@ -75,6 +69,34 @@ void keyboard_int_handler() {
     pic_send_eoi(1);
 }
 
+void debug_excep_handler() {
+    kpanic("-- Debug Exception Fired --");
+}
+
+void overflow_handler() {
+    kpanic("-- Overflow Exception Fired --");
+}
+
+void invalid_opcode_handler() {
+    kpanic("-- Invalid Opcode Exception Fired --");
+}
+
+void double_fault_handler() {
+    kpanic("-- Double Fault Exception Fired --");
+}
+
+void stack_fault_handler() {
+    kpanic("-- Stack Fault Exception Fired --");
+}
+
+void alignment_check_handler() {
+    kpanic("-- Alignment Check Exception Fired --");
+}
+
+void page_fault_handler() {
+    kpanic("-- Page Fault Execption Fired --");
+}
+
 void default_int_handler() {
-    //kprintf("Unknown interrupt hapenned\n");
+    kpanic("-- Unknown Interrupt Fired --");
 }

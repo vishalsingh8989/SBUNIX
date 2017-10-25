@@ -36,7 +36,7 @@
 struct PageStat {
     struct PageStat *next;
     uint16_t ref;
-};
+}__attribute__((__packed__));
 
 typedef struct PageStat page_stat_t;
 
