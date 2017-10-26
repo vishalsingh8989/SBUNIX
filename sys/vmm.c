@@ -2,6 +2,7 @@
 #include <sys/defs.h>
 #include <sys/kprintf.h>
 #include <sys/utils.h>
+#include <sys/asm_utils.h>
 
 int num_pages;
 
@@ -9,7 +10,7 @@ page_stat_t* free_pages_list;
 page_stat_t* pages_list;
 
 //Allocator used before Virtual Memory Mapping
-uint64_t alignPage (uint64_t addr) 
+static uint64_t alignPage (uint64_t addr) 
 {
     uint64_t offset = ((uint64_t) addr % PAGE_SIZE);
 
@@ -52,7 +53,7 @@ void pages_init (void* physbase, void* physfree)
     }
 }
 
-uint64_t get_pa(uint64_t page) 
+static uint64_t get_pa(uint64_t page) 
 {
     int diff = (page - (uint64_t) pages_list) / sizeof(page_stat_t);
     //int diff = (page - (uint64_t) pages_list);
@@ -60,7 +61,7 @@ uint64_t get_pa(uint64_t page)
     return addr;
 }
 
-uint64_t get_va(uint64_t page) 
+static uint64_t get_va(uint64_t page) 
 {
     int diff = (page - (uint64_t) pages_list) / sizeof(page_stat_t);
     //int diff = (page - (uint64_t) pages_list);
@@ -196,11 +197,6 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
     }
 }
 
-void load_cr3(uint64_t lcr3)
-{
-    __asm__ __volatile__("movq %0, %%cr3;" :: "r"(lcr3));
-}
-
 void vmm_init(uint32_t* modulep, void* physbase, void* physfree) 
 {
     kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
@@ -217,13 +213,13 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
         if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
             kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             if (smap->base > (uint64_t) physfree) {
-                num_pages += (smap->length)/PAGE_SIZE;
+                num_pages += (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
-                num_pages += (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
+                num_pages += (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
             }
             else {
-                num_pages += (smap->length)/PAGE_SIZE;
+                num_pages += (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
             }
         }
     }
@@ -251,25 +247,25 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     map_addr_range(pmap_l4, phy_addr, vir_addr, size);
 
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
-        if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) { //TODO: fix this
+        if (smap->type == 1 && smap->length != 0) { //TODO: fix this
             if (smap->base > (uint64_t) physfree) {
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->length)/PAGE_SIZE;
+                size = (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
                 kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
                 phy_addr = (uint64_t) physfree;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
+                size = (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
                 kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else {
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-                size = (smap->length)/PAGE_SIZE;
+                size = (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
                 kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
@@ -278,10 +274,30 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 
     //TODO: are two pages really needed?
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 2);
-    kprintf("PML4: %p, PML4(PHY): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
+    kprintf("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
     
     uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     kprintf("Temp: %p\n", temp);
+
+    /*for(uint64_t addr = (uint64_t) physbase + KERNAL_BASE_ADDRESS; addr <= (uint64_t) physfree + KERNAL_BASE_ADDRESS; addr += 0x1000) {
+        uint64_t temp = get_mapping(pmap_l4, addr);
+        kprintf("V-ADDR: %p mapped to P-ADDR: %p\n", addr, temp);
+    }*/
+    //kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
+
+    volatile uint64_t cr0;
+    volatile uint64_t cr4;
+    volatile uint64_t ia32_efer;
+
+    __asm__ __volatile__("movq %%cr0, %0;":"=r"(cr0));
+    __asm__ __volatile__("movq %%cr4, %0;":"=r"(cr4));
+    cr4 = cr4 | (1 << 7);
+    cr4 = cr4 & 0xffffffffffffffef;
+    __asm__ __volatile__("movq %0, %%cr4;" :: "r"(cr4));
+    __asm__ __volatile__("movq %%cr4, %0;":"=r"(cr4));
+    ia32_efer = rdmsr(MSR_EFER);
+
+    kprintf("CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
     //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
     load_cr3((uint64_t) pmap_l4);

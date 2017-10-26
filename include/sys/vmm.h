@@ -42,19 +42,19 @@ typedef struct PageStat page_stat_t;
 
 struct page_table {
     uint64_t pte[512];
-};
+}__attribute__((aligned(0x1000)));
 
 struct page_directory {
     uint64_t pde[512];
-};
+}__attribute__((aligned(0x1000)));
 
 struct page_directory_pointer {
     uint64_t pdpe[512];
-};
+}__attribute__((aligned(0x1000)));
 
 struct page_map_level_4 {
     uint64_t pml4e[512];
-};
+}__attribute__((aligned(0x20)));
 
 void vmm_init(uint32_t *modulep, void *physbase, void *physfree);
 

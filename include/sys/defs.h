@@ -15,6 +15,8 @@
 
 #define O_DIRECTORY	0100000	/* must be a directory */
 
+#define MSR_EFER 0xC0000080 
+
 typedef unsigned long  uint64_t;
 typedef          long   int64_t;
 typedef unsigned int   uint32_t;

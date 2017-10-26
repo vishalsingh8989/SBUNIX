@@ -36,8 +36,8 @@ void kpanic(const char *fmt, ...)
     kprintf("\t    |   D_ ]\\ \\/   \n");
     kprintf("\t    |   D _]/\\ \\   \n");
     kprintf("\t     \\___/ / /\\ \\  \n");
-    kprintf("\t          (_ )( _) ");
-    kprintf("\t    mark    ~  ~   ");
+    kprintf("\t          (_ )( _) \n");
+    kprintf("\t            ~  ~   \n");
     while(1) {
         __asm__ __volatile__ ("hlt;");
     }
