@@ -31,6 +31,7 @@ struct task_struct {
     struct task_struct *next_run, *prev_run;
     struct task_struct *parent, *sibling, *child;
 
+    uint64_t pml4;
     uint64_t stack_p;
     uint64_t sleep_t;
 
@@ -39,5 +40,7 @@ struct task_struct {
 };
 
 typedef struct task_struct task_struct_t;
+
+task_struct_t* init_proc(const char *name);
 
 #endif
