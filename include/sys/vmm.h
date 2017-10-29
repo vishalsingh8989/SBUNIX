@@ -58,4 +58,6 @@ struct page_map_level_4 {
 
 void vmm_init(uint32_t *modulep, void *physbase, void *physfree);
 
+uint64_t *  kmalloc(uint64_t size);
+
 #endif 

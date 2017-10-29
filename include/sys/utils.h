@@ -7,5 +7,6 @@ void memset(void* dest, int value, int count);
 void clr_term(); 
 void print_welcome();
 void kpanic(const char *fmt, ...);
+char *strcpy(char *dst, const char *src);
 
 #endif

@@ -42,3 +42,14 @@ void kpanic(const char *fmt, ...)
         __asm__ __volatile__ ("hlt;");
     }
 }
+
+//string utility functions.
+char *strcpy(char *dst, const char *src) 
+{
+    char *dst_t = dst;
+
+    while(*src != '\0')
+        *dst++ = *src++;
+
+    return dst_t;
+}

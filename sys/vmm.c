@@ -53,18 +53,16 @@ void pages_init (void* physbase, void* physfree)
     }
 }
 
-static uint64_t get_pa(uint64_t page) 
+static uint64_t get_pa(page_stat_t* page) 
 {
-    int diff = (page - (uint64_t) pages_list) / sizeof(page_stat_t);
-    //int diff = (page - (uint64_t) pages_list);
+    uint64_t diff = (page - pages_list);
     uint64_t addr = diff * PAGE_SIZE;
     return addr;
 }
 
-static uint64_t get_va(uint64_t page) 
+static uint64_t get_va(page_stat_t* page) 
 {
-    int diff = (page - (uint64_t) pages_list) / sizeof(page_stat_t);
-    //int diff = (page - (uint64_t) pages_list);
+    uint64_t diff = (page - pages_list);
     uint64_t addr = KERNAL_BASE_ADDRESS + (diff * PAGE_SIZE);
     return addr;
 }
@@ -82,11 +80,11 @@ uint64_t page_alloc()
         free_pages_list = free_pages_list->next;
     }
 
-    uint64_t addr = get_va((uint64_t) page);
+    uint64_t addr = get_va(page);
     memset((void *) addr, 0, PAGE_SIZE);
     page->ref = 1;
 
-    return get_pa((uint64_t) page);
+    return get_pa(page);
 }
 
 uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
@@ -306,5 +304,33 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //kprintf("Temp: %p\n", temp);
 
     kprintf("Page Table Setup Sucessfull\n");
+}
+
+uint64_t * kmalloc(uint64_t size)
+{
+    if(!free_pages_list || size==0) {
+        return NULL;
+    }
+
+    uint64_t num_pages = alignPage(size)/PAGE_SIZE;
+
+    uint64_t * addr = (uint64_t *) get_va(free_pages_list);
+
+    for(int i = 0; i < num_pages; i++) {
+        if(page_alloc() == -1) 
+            return NULL;
+        else
+            memset((void *) addr, 0, PAGE_SIZE);
+    }
+
+    return addr;
+}
+
+void kfree(uint64_t * vaddr)
+{
+    page_stat_t* page = pages_list + ((uint64_t) vaddr - KERNAL_BASE_ADDRESS) / PAGE_SIZE;
+    page->ref = 0;
+    page->next = free_pages_list;
+    free_pages_list = page;
 }
 
