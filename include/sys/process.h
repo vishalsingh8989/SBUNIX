@@ -40,7 +40,8 @@ struct task_struct {
 };
 
 typedef struct task_struct task_struct_t;
+typedef struct mm_struct mm_struct_t;
 
-task_struct_t* init_proc(const char *name);
+task_struct_t* init_proc(const char *name, int type);
 
 #endif

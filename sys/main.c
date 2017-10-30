@@ -55,7 +55,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   vmm_init(modulep, physbase, physfree); //TODO: This has to be moved before clr_term
   print_welcome();
   //__asm__("int $0");
-  init_proc("init_process");
+  __asm__ __volatile("sti;");
+  init_proc("init_process", 0);
 
   __asm__ __volatile__("cli;");
 

@@ -9,6 +9,9 @@ uint64_t g_pid;
 
 task_struct_t *curr_task;
 task_struct_t *init_task;
+task_struct_t *kern_task;
+
+struct mm_struct *kern_mm;
 
 pid_t get_pid() {
     if(g_pid == MAX_PID)
@@ -18,6 +21,7 @@ pid_t get_pid() {
 
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
+    //TODO: does this have to be atomic.
     __asm__ __volatile__ ( 
         //"pushq %%rax;"
         //"pushq %%rbx;"
@@ -57,11 +61,26 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
     );
 }
 
+void add_to_queue(task_struct_t *task)
+{
+    task_struct_t *temp;
+    temp = curr_task->next_task;
+    curr_task->next_task = task;
+    task->next_task = temp;
+}
+
+task_struct_t *get_next_task()
+{
+    return curr_task->next_task;
+}
+
 void schedule()
 {
 
+    //TODO: shouldn't this be atomic? 
     task_struct_t *prev_task = curr_task;
-    curr_task = curr_task->next_task;
+    //curr_task = curr_task->next_task;
+    curr_task = get_next_task();
 
     //struct mm_struct *curr_mm, *prev_mm;
     //curr_mm = curr_task->mm;
@@ -74,15 +93,22 @@ void schedule()
         context_switch(prev_task, curr_task);
 }
 
+//TODO: this should come from main.
+void test_entry() 
+{
+    kprintf("Inside test process with pid: %d!!\n", curr_task->pid);
+    schedule();
+}
+
 void init_entry() 
 {
-    kprintf("Inside Init!!\n");
+    kprintf("Inside Init process!!\n");
     while(1) {
         schedule();
     }
 }
 
-task_struct_t *init_proc(const char *name)
+task_struct_t *init_proc(const char *name, int type)
 {
     task_struct_t *init_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
     if(!init_task) {
@@ -91,12 +117,20 @@ task_struct_t *init_proc(const char *name)
     }
     memset(init_task, 0, sizeof(task_struct_t *));
 
-    task_struct_t *kernel_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
-    if(!kernel_task) {
-        kpanic("Not able to allocate task struct for init\n");
-        return NULL;
+    if (type == 0) {
+        kern_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+        if(!kern_task) {
+            kpanic("Not able to allocate task struct for init\n");
+            return NULL;
+        }
+        memset(kern_task, 0, sizeof(task_struct_t *));
+
+        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE); 
+        if(!kern_mm) {
+            kpanic("Not able to allocate stack for init\n");
+            return NULL;
+        }
     }
-    memset(kernel_task, 0, sizeof(task_struct_t *));
 
     uint64_t * stack = (uint64_t *) kmalloc(PAGE_SIZE);
     if(!stack) {
@@ -104,15 +138,11 @@ task_struct_t *init_proc(const char *name)
         return NULL;
     }
 
-    *(stack + 510) = (uint64_t) &init_entry;
-
     init_task->state     = TASK_RUNNABLE;
     init_task->pid       = 0;
-    init_task->stack_p   = (uint64_t) &stack[510];
-    init_task->mm        = NULL; //TODO:
+    init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;
     init_task->pid       = get_pid();
-    init_task->next_task = init_task;
     init_task->prev_task = NULL;
     init_task->parent    = NULL;
     init_task->sibling   = NULL;
@@ -120,11 +150,26 @@ task_struct_t *init_proc(const char *name)
     strcpy(init_task->pcmd_name, "init");
     strcpy(init_task->cdir_name, "/bin");
 
-
-    curr_task = kernel_task;
-    kernel_task->next_task = init_task;
-
-    schedule();
+    if (type == 0) {
+        *(stack + 510) = (uint64_t) &init_entry;
+        init_task->stack_p   = (uint64_t) &stack[510];
+        init_task->next_task = init_task;
+        curr_task = kern_task;
+        kern_task->next_task = init_task;
+        //For testing.
+        //init_proc("test_proc_1", 1);
+        //init_proc("test_proc_2", 1);
+        schedule(); //TODO: remove this by taking tasks from schedular only.
+    }
+    else {
+        *(stack + 510) = (uint64_t) &test_entry;
+        init_task->stack_p   = (uint64_t) &stack[510];
+        add_to_queue(init_task);
+        //task_struct_t *temp;
+        //temp = curr_task->next_task;
+        //curr_task->next_task = init_task;
+        //init_task->next_task = temp;
+    }
 
     return init_task;
 }
