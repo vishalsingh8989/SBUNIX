@@ -1,16 +1,22 @@
 #ifndef _ELF64_H
 #define _ELF64_H
 
+#include <sys/process.h>
+
+#define IS_XE  0x1
+#define IS_WR  0x2
+#define IS_RD  0x4
+
 #define EI_NIDENT 16
 
-typedef Elf64_Addr   uint64_t;
-typedef Elf64_Half   uint16_t;
-typedef Elf64_Lword  uint64_t;
-typedef Elf64_Off    uint64_t;
-typedef Elf64_Sword  uint32_t;
-typedef Elf64_Sxword uint64_t;
-typedef Elf64_Word   uint32_t;
-typedef Elf64_Xword  uint64_t;
+typedef uint64_t Elf64_Addr;
+typedef uint16_t Elf64_Half;
+typedef uint64_t Elf64_Lword;
+typedef uint64_t Elf64_Off;
+typedef uint32_t Elf64_Sword;
+typedef uint64_t Elf64_Sxword;
+typedef uint32_t Elf64_Word;
+typedef uint64_t Elf64_Xword;
 
 typedef struct {
   unsigned char e_ident[EI_NIDENT];
@@ -39,5 +45,7 @@ typedef struct {
   Elf64_Xword   p_memsz;
   Elf64_Xword   p_align;
 } Elf64_Phdr;
+
+int load_elf(task_struct_t *task, const char *fname);
 
 #endif

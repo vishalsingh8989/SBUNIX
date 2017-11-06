@@ -4,6 +4,8 @@
 #include <sys/utils.h>
 #include <sys/process.h>
 #include <sys/kprintf.h>
+#include <sys/elf64.h>
+#include <sys/string.h>
 
 uint64_t g_pid;
 
@@ -103,6 +105,14 @@ void test_entry()
 void init_entry() 
 {
     kprintf("Inside Init process!!\n");
+    task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+    int ret = load_elf(temp_task, "bin/ls");
+
+    if(ret == 0) 
+        kprintf("loading exe sucessfull\n");
+    else
+        kprintf("error loading exe\n");
+
     while(1) {
         schedule();
     }

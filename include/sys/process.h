@@ -19,12 +19,12 @@ enum state {
     TASK_ZOMBIE   = 6
 };
 
-struct task_struct {
+typedef struct task_struct {
     int pid;
     int state;
     int exit_code;
     
-    struct mm_struct *mm;
+    mm_struct_t *mm;
     struct file_d *fd[MAX_FILES];
 
     struct task_struct *next_task, *prev_task;
@@ -32,15 +32,13 @@ struct task_struct {
     struct task_struct *parent, *sibling, *child;
 
     uint64_t pml4;
+    uint64_t rip;
     uint64_t stack_p;
     uint64_t sleep_t;
 
     char pcmd_name[MAX_NAME];
     char cdir_name[MAX_NAME];
-};
-
-typedef struct task_struct task_struct_t;
-typedef struct mm_struct mm_struct_t;
+} task_struct_t;
 
 task_struct_t* init_proc(const char *name, int type);
 

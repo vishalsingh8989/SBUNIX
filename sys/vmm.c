@@ -9,26 +9,16 @@ int num_pages;
 page_stat_t* free_pages_list;
 page_stat_t* pages_list;
 
-//Allocator used before Virtual Memory Mapping
-static uint64_t alignPage (uint64_t addr) 
-{
-    uint64_t offset = ((uint64_t) addr % PAGE_SIZE);
-
-    if (offset != 0) offset = PAGE_SIZE - offset;
-
-    return addr + offset;
-}
-
 static void * preinit_alloc (uint64_t physfree, int size) 
 {
     static char *nextfree;
     char *result;
 
     if(!nextfree) {
-        nextfree = (char *) alignPage(KERNAL_BASE_ADDRESS + physfree);
+        nextfree = (char *) align_up(KERNAL_BASE_ADDRESS + physfree);
     }
     else {
-        nextfree = (char *) alignPage((uint64_t) nextfree);
+        nextfree = (char *) align_up((uint64_t) nextfree);
     }
 
     result = nextfree;
@@ -186,8 +176,8 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
 void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size) 
 {
     uint64_t addrp, addrv;
-    addrp = alignPage(paddr);
-    addrv = alignPage(vaddr);
+    addrp = align_up(paddr);
+    addrv = align_up(vaddr);
     for(int i = 0; i < size; i++) {
         map_addr(pmap_l4, (uint64_t) addrp, addrv);
         addrp += PAGE_SIZE;
@@ -298,7 +288,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     kprintf("CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
     //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
-    load_cr3((uint64_t) pmap_l4);
+    write_cr3((uint64_t) pmap_l4);
 
     //temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
@@ -312,7 +302,7 @@ uint64_t * kmalloc(uint64_t size)
         return NULL;
     }
 
-    uint64_t num_pages = alignPage(size)/PAGE_SIZE;
+    uint64_t num_pages = align_up(size)/PAGE_SIZE;
 
     uint64_t * addr = (uint64_t *) get_va(free_pages_list);
 

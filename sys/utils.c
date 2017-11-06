@@ -1,6 +1,7 @@
-#include <sys/utils.h>
 #include <sys/defs.h>
+#include <sys/utils.h>
 #include <sys/kprintf.h>
+#include <sys/vmm.h>
 
 void memset(void* dest, int value, int count)
 {
@@ -27,6 +28,7 @@ void print_welcome()
 
 void kpanic(const char *fmt, ...)
 {
+    __asm__ __volatile__("cli;");
     kprintf(fmt);
     kprintf("\n");
     kprintf("Kernal is Panicking!!!\n");
@@ -43,13 +45,19 @@ void kpanic(const char *fmt, ...)
     }
 }
 
-//string utility functions.
-char *strcpy(char *dst, const char *src) 
+uint64_t align_up (uint64_t addr) 
 {
-    char *dst_t = dst;
+    uint64_t offset = ((uint64_t) addr % PAGE_SIZE);
 
-    while(*src != '\0')
-        *dst++ = *src++;
+    if (offset != 0) offset = PAGE_SIZE - offset;
 
-    return dst_t;
+    return addr + offset;
 }
+
+uint64_t align_down (uint64_t addr) 
+{
+    uint64_t offset = ((uint64_t) addr % PAGE_SIZE);
+
+    return addr - offset;
+}
+

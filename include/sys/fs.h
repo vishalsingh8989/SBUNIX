@@ -10,14 +10,19 @@ struct file_operations {
     ssize_t (*writed) (struct file *, const char *, size_t, off_t *);
 }
 
-struct file {
+typedef struct file_node {
     struct file_operations *f_op;
 
     uint64_t    f_count;
     uint64_t    f_flags;
     off_t       f_pos;
 
+    //uint64_t    f_size;
+    //uint64_t    f_pgoff;
+    //uint64_t    f_start;
+    //uint64_t    f_bss_size;
+
     void *private_data;
-}
+} file_node_t;
 
 #endif

@@ -7,6 +7,7 @@ void memset(void* dest, int value, int count);
 void clr_term(); 
 void print_welcome();
 void kpanic(const char *fmt, ...);
-char *strcpy(char *dst, const char *src);
+uint64_t align_up (uint64_t addr);
+uint64_t align_down (uint64_t addr);
 
 #endif

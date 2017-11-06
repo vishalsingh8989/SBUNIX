@@ -54,6 +54,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   clr_term();
   vmm_init(modulep, physbase, physfree); //TODO: This has to be moved before clr_term
   print_welcome();
+  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   //__asm__("int $0");
   __asm__ __volatile("sti;");
   init_proc("init_process", 0);
