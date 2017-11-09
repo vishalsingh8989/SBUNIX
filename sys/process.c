@@ -9,10 +9,6 @@
 
 uint64_t g_pid;
 
-task_struct_t *curr_task;
-task_struct_t *init_task;
-task_struct_t *kern_task;
-
 struct mm_struct *kern_mm;
 
 pid_t get_pid() {
@@ -105,13 +101,13 @@ void test_entry()
 void init_entry() 
 {
     kprintf("Inside Init process!!\n");
-    task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
-    int ret = load_elf(temp_task, "bin/ls");
+    //task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+    //int ret = load_elf(temp_task, "bin/init");
 
-    if(ret == 0) 
-        kprintf("loading exe sucessfull\n");
-    else
-        kprintf("error loading exe\n");
+    //if(ret == 0) 
+    //    kprintf("Loading Exe Sucessfull\n");
+    //else
+    //    kprintf("Error Loading Exe\n");
 
     while(1) {
         schedule();
@@ -167,12 +163,17 @@ task_struct_t *init_proc(const char *name, int type)
         curr_task = kern_task;
         kern_task->next_task = init_task;
         //For testing.
-        //init_proc("test_proc_1", 1);
+        init_proc("init_proc", 1);
         //init_proc("test_proc_2", 1);
         schedule(); //TODO: remove this by taking tasks from schedular only.
     }
     else {
-        *(stack + 510) = (uint64_t) &test_entry;
+        int ret = load_elf(init_task, "bin/init");
+        if(ret == 0) 
+            kprintf("Loading Exe Sucessfull\n");
+        else
+            kprintf("Error Loading Exe\n");
+        *(stack + 510) = (uint64_t) init_task->rip;
         init_task->stack_p   = (uint64_t) &stack[510];
         add_to_queue(init_task);
         //task_struct_t *temp;

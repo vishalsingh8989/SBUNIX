@@ -33,6 +33,13 @@
 #define PDE_IDX(a)      ((a >> 21) & 0x1FF)
 #define PT_IDX(a)       ((a >> 12) & 0x1FF)
 
+//Note: comments from osdev.
+#define PF_P   (1 << 0)  //When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
+#define PF_W   (1 << 1)  //When set, the page fault was caused by a page write. When not set, it was caused by a page read.
+#define PF_U   (1 << 2)  //When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
+#define PF_R   (1 << 3)  //When set, the page fault was caused by reading a 1 in a reserved field.
+#define PF_I   (1 << 4)  //When set, the page fault was caused by an instruction fetch.
+
 struct PageStat {
     struct PageStat *next;
     uint16_t ref;
@@ -59,8 +66,11 @@ struct page_map_level_4 {
 void vmm_init(uint32_t *modulep, void *physbase, void *physfree);
 
 void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size);
+
 void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr);
 
-uint64_t *  kmalloc(uint64_t size);
+void map_proc(uint64_t paddr, uint64_t vaddr);
+
+uint64_t * kmalloc(uint64_t size);
 
 #endif 

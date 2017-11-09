@@ -74,8 +74,14 @@ void allocate_heap(task_struct_t *task)
 {
     vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
 
-    task->mm->mmap->vm_next = vma;
-    task->mm->mmap = vma;
+    vm_area_struct_t *vma_temp = task->mm->mmap;
+    while(vma_temp->vm_next != NULL)
+        vma_temp = vma_temp->vm_next;
+    vma_temp->vm_next = vma;
+
+    //vma->vm_next = task->mm->mmap;
+    //task->mm->mmap = vma;
+
     task->mm->brk = HEAP_START;
 
     vma->vm_mm    = task->mm;
@@ -91,8 +97,14 @@ void allocate_stack(task_struct_t *task)
 {
     vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
 
-    task->mm->mmap->vm_next = vma;
-    task->mm->mmap = vma;
+    vm_area_struct_t *vma_temp = task->mm->mmap;
+    while(vma_temp->vm_next != NULL)
+        vma_temp = vma_temp->vm_next;
+    vma_temp->vm_next = vma;
+
+    //vma->vm_next = task->mm->mmap;
+    //task->mm->mmap = vma;
+
     task->mm->brk  = STACK_TOP;
 
     vma->vm_mm    = task->mm;
@@ -107,7 +119,7 @@ void allocate_stack(task_struct_t *task)
 void print_elf_info(task_struct_t *task)
 {
     mm_struct_t *mm_temp = task->mm;
-    vm_area_struct_t *vma_temp = mm_temp->mmap;
+    vm_area_struct_t *vma_temp = task->mm->mmap;
 
     kprintf("MM Struct: \n");
     kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n", 
@@ -135,7 +147,8 @@ int load_elf(task_struct_t *task, const char *fname)
 
     task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
 
-    for(int i = 0; i < e_hdr->e_phnum; i++) {
+    for(int i = 0; i < e_hdr->e_phnum; i++) 
+    {
         if(p_hdr->p_type == 1) {
             vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
             memset(vma, 0, sizeof(vm_area_struct_t));
@@ -149,8 +162,14 @@ int load_elf(task_struct_t *task, const char *fname)
 
             if(task->mm->mmap == NULL)
                 task->mm->mmap = vma;
-            else
-                task->mm->mmap->vm_next = vma;
+            else {
+                vm_area_struct_t *vma_temp = task->mm->mmap;
+                while(vma_temp->vm_next != NULL)
+                    vma_temp = vma_temp->vm_next;
+                vma_temp->vm_next = vma;
+                //vma->vm_next = task->mm->mmap;
+                //task->mm->mmap = vma;
+            }
 
             //TODO: Map process to virtual address
 

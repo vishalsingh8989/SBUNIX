@@ -50,6 +50,14 @@ static inline void invlpg(void* m)
     __asm__ __volatile__( "invlpg (%0)" : : "b"(m) : "memory" );
 }
 
+static inline uint64_t read_cr2()
+{
+    uint64_t read_cr2;
+    __asm__ __volatile__("movq %%cr2, %0;" : "=r" (read_cr2));
+
+    return read_cr2;
+}
+
 static inline uint64_t read_cr3()
 {
     uint64_t read_cr3;

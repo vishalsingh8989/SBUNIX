@@ -3,6 +3,15 @@
 #include <sys/kprintf.h>
 #include <sys/vmm.h>
 
+void memcpy(void* dest, void* src, int count)
+{
+    uint8_t * dest_t = (uint8_t *) dest;
+    uint8_t * src_t = (uint8_t *) src;
+
+    for(int i = 0; i < count; i++)
+        *dest_t++ = *src_t++;
+}
+
 void memset(void* dest, int value, int count)
 {
     uint8_t *dest_t = (uint8_t *) dest;

@@ -3,6 +3,7 @@
 #include <sys/kprintf.h>
 #include <sys/utils.h>
 #include <sys/asm_utils.h>
+#include <sys/process.h>
 
 int num_pages;
 
@@ -119,6 +120,77 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         kprintf("Entry not mapped!!!\n");
         return -1;
     }
+}
+
+void * pa_to_va(void * addr) 
+{
+    return addr + KERNAL_BASE_ADDRESS;
+}
+
+void map_proc(uint64_t paddr, uint64_t vaddr) 
+{
+    struct page_table *ptable;
+    struct page_directory *pdir;
+    struct page_directory_pointer *pdir_p;
+    uint64_t entry;
+
+    struct page_map_level_4 * pmap_l4 = (struct page_map_level_4 *) read_cr3();
+    pmap_l4 = (struct page_map_level_4 *) (KERNAL_BASE_ADDRESS | (uint64_t) pmap_l4);
+
+    entry = pmap_l4->pml4e[PML4_IDX(vaddr)];
+    if(entry & _PAGE_PRESENT) {
+        pdir_p = (struct page_directory_pointer *) (entry & 0xfffffffffffff000);
+        pdir_p = (struct page_directory_pointer *) pa_to_va(pdir_p);
+    }
+    else {
+        pdir_p = (struct page_directory_pointer *) page_alloc();
+        entry = (uint64_t) pdir_p;
+        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        pmap_l4->pml4e[PML4_IDX(vaddr)] = entry;
+        pdir_p = (struct page_directory_pointer *) pa_to_va(pdir_p);
+    }
+
+    entry = pdir_p->pdpe[PDPT_IDX(vaddr)];
+    if(entry & _PAGE_PRESENT) {
+        pdir = (struct page_directory *) (entry & 0xfffffffffffff000);
+        pdir = (struct page_directory *) pa_to_va(pdir);
+    }
+    else {
+        pdir = (struct page_directory *) page_alloc();
+        entry = (uint64_t) pdir;
+        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        pdir_p->pdpe[PDPT_IDX(vaddr)] = entry;
+        pdir = (struct page_directory *) pa_to_va(pdir);
+    }
+
+    entry = pdir->pde[PDE_IDX(vaddr)];
+    if(entry & _PAGE_PRESENT) {
+        ptable = (struct page_table *) (entry & 0xfffffffffffff000);
+        ptable = (struct page_table *) pa_to_va(ptable);
+    }
+    else {
+        ptable = (struct page_table *) page_alloc();
+        entry = (uint64_t) ptable;
+        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        pdir->pde[PDE_IDX(vaddr)] = entry;
+        ptable = (struct page_table *) pa_to_va(ptable);
+    }
+
+    entry = ptable->pte[PT_IDX(vaddr)];
+    if(entry & _PAGE_PRESENT) {
+        kprintf("Page already Mapped!!!\n");
+        //TODO: Have to remote this.
+        //entry = paddr;
+        //entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        //ptable->pte[PT_IDX(vaddr)] = entry;
+    }
+    else {
+        entry = paddr;
+        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        ptable->pte[PT_IDX(vaddr)] = entry;
+    }
+
+    write_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
 }
 
 void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr) 
@@ -261,11 +333,19 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     }
 
     //TODO: are two pages really needed?
-    map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 2);
+    map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
     kprintf("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
     
     uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     kprintf("Temp: %p\n", temp);
+
+    //uint64_t pml4_addr = (uint64_t) pmap_l4;
+    //map_addr_range(pmap_l4, pml4_addr, pml4_addr, 1);
+    //pmap_l4->pml4e[PML4_IDX(pml4_addr)] = pml4_addr | (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+
+    //uint64_t self_idx = (PML4_IDX(KERNAL_BASE_ADDRESS) - 1) & 0x1ff;
+    //pmap_l4->pml4e[self_idx] = pml4_addr | (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+    //pmap_l4->pml4e[510] = pml4_addr | _PAGE_PRESENT | _PAGE_RW;
 
     /*for(uint64_t addr = (uint64_t) physbase + KERNAL_BASE_ADDRESS; addr <= (uint64_t) physfree + KERNAL_BASE_ADDRESS; addr += 0x1000) {
         uint64_t temp = get_mapping(pmap_l4, addr);
@@ -306,6 +386,7 @@ uint64_t * kmalloc(uint64_t size)
 
     uint64_t * addr = (uint64_t *) get_va(free_pages_list);
 
+    //TODO: can I do this ?
     for(int i = 0; i < num_pages; i++) {
         if(page_alloc() == -1) 
             return NULL;

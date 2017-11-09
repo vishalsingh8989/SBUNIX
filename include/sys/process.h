@@ -42,4 +42,8 @@ typedef struct task_struct {
 
 task_struct_t* init_proc(const char *name, int type);
 
+task_struct_t *curr_task;
+task_struct_t *init_task;
+task_struct_t *kern_task;
+
 #endif

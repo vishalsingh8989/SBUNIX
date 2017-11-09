@@ -3,6 +3,9 @@
 #include <sys/defs.h>
 #include <sys/pic.h>
 #include <sys/utils.h>
+#include <sys/idt.h>
+#include <sys/vmm.h>
+#include <sys/process.h>
 
 void timer_int_handler() {
    static int i = 0, s = 0, m = 0, h = 0;
@@ -43,7 +46,7 @@ void timer_int_handler() {
    pic_send_eoi(0);
 }
 
-void div0_int_handler() {
+void div0_int_handler(cpu_regs *regs) {
    kpanic("-- Div0 Interrupt Fired --\n");
 }
 
@@ -69,7 +72,7 @@ void keyboard_int_handler() {
     pic_send_eoi(1);
 }
 
-void debug_excep_handler() {
+void debug_excep_handler(cpu_regs *regs) {
     kpanic("-- Debug Exception Fired --");
 }
 
@@ -93,8 +96,82 @@ void alignment_check_handler() {
     kpanic("-- Alignment Check Exception Fired --");
 }
 
-void page_fault_handler() {
-    kpanic("-- Page Fault Execption Fired --");
+void page_fault_handler(cpu_regs *regs) {
+    kprintf("-- Page Fault Execption Fired --\n");
+
+    uint64_t error = regs->error & 0xf;
+    kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
+
+    uint64_t fault_addr = read_cr2();
+    kprintf("Faulting address: %p\n", fault_addr);
+
+    uint64_t p_write_err = error & PF_W;
+    uint64_t p_prot_err  = error & PF_P;
+    //uint64_t p_user_err  = error & PF_U;
+    //uint64_t p_rsvd_err  = error & PF_R;
+    //uint64_t p_insf_err  = error & PF_I;
+
+    /*
+    if(p_prot_err & !p_write_err) {
+        kprintf("Page Fault at addr: %p\n", fault_addr);
+        kpanic("Read permission error");
+    }
+
+    if(p_rsvd_err) {
+        kprintf("Page Fault at addr: %p\n", fault_addr);
+        kpanic("Reserved page error");
+    }
+    */
+
+    vm_area_struct_t *vma = curr_task->mm->mmap;
+
+    while(vma) {
+        if(fault_addr >= vma->vm_start && fault_addr <= vma->vm_end) break;
+        vma = vma->vm_next;
+    }
+
+    if(vma == NULL) {
+        //TODO: Grow stack
+        //TODO: Grow heap
+        //TODO: Stack Overflow!
+        //TODO: Segmention Fault!
+        kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+    }
+
+    if(p_prot_err && p_write_err) {
+        //TODO: Handle COW
+        kprintf("TODO: Handle COW\n");
+    }
+
+    uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+    page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+    uint64_t falign_addr = align_down(fault_addr);
+    map_proc(page_addr, falign_addr);
+
+    //Copy contents.
+    uint64_t src, dst;
+    int size;
+
+    if(falign_addr <= vma->vm_start){
+        src = vma->file->f_start + vma->file->f_pgoff;
+        dst = vma->vm_start;
+    }
+    else {
+        src = vma->file->f_start + vma->file->f_pgoff + (falign_addr - vma->vm_start);
+        dst = falign_addr;
+    }
+
+    if(vma->file->f_size <= PAGE_SIZE) {
+        size = vma->file->f_size;
+    }
+    else if((falign_addr+PAGE_SIZE) <= (vma->vm_end - vma->file->f_bss_size)) {
+        size = PAGE_SIZE;
+    }
+    else {
+        size = (falign_addr+PAGE_SIZE) - (vma->vm_end - vma->file->f_bss_size);
+    }
+
+    memcpy((void *) dst, (void*) src, size);
 }
 
 void default_int_handler() {
