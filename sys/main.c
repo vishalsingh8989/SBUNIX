@@ -35,6 +35,8 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   probe_port(abar_t);
 
   vmm_init(modulep, physbase, physfree);
+  init_tarfs();
+  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
   //__asm__("int $0");
 
@@ -86,6 +88,7 @@ void boot(void)
   init_idt();
   init_pic();
   init_pci();
+
 
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
