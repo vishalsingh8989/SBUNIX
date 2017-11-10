@@ -5,13 +5,20 @@
 
 
 struct tarfs_fd tarfs_fds[OPEN_FILE_LIMIT];
+
 void sleep(int s){
 	for(int i = 0 ;i< s*900; i ++){
 		for(int k = 0 ;  k <s*900;k++  );
 	}
 }
 
-
+void test_tarfs_init(int upper){
+	kprintf("Start tarfs test..\n");
+	for(int iterator = 0 ;iterator < upper ; iterator++ ){
+		kprintf("Name :  %s, size : %p ,  data  : %p\n" ,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
+	}
+	kprintf("End tarfs test..\n");
+}
 
 void *align_up(void *p_val, uint64_t size)
 {
@@ -35,13 +42,11 @@ void init_tarfs(){
 
 	uint64_t fd_index = 1;
 
-
-	//struct posix_header_ustar *iterator ;
 	for(iterator =(posix_header_ustar *) &_binary_tarfs_start; iterator < ( posix_header_ustar *)&_binary_tarfs_end ;)
 	{
 		uint64_t name_length = strlen(iterator->name);
 		if(name_length){
-			uint64_t size = otoi_kernel(atoi_kernel(iterator->size));
+			uint64_t size = otoi(atoi(iterator->size));
 			kprintf("name=%s size=%p\n", iterator->name, size);
 			strcopy(tarfs_fds[fd_index].name, iterator->name);
 			tarfs_fds[fd_index].size = size;
@@ -50,70 +55,37 @@ void init_tarfs(){
 			if (size) {
 				tarfs_fds[fd_index].type = REGTYPE;
 				tarfs_fds[fd_index].data =  (void *) ((uint64_t) iterator + sizeof(posix_header_ustar));
-				size  = (uint64_t) align_up((void *) size, sizeof(posix_header_ustar));
+				size  = (uint64_t) align_up((void *) size, sizeof(posix_header_ustar)); // store in 4k
 				iterator = (posix_header_ustar *) ((uint64_t) iterator + size);
 			}else{
 				tarfs_fds[fd_index].data = 0;
 				tarfs_fds[fd_index].type = DIRTYPE;
 			}
+			fd_index++;
 		}
 		iterator++;
-		fd_index++;
 
 	}
 
+	test_tarfs_init(fd_index);
+	get_bin_addr("bin/ls");
 
-
-
-//	struct posix_header_ustar *iteratorator = (struct posix_header_ustar *)&_binary_tarfs_start ;
-//
-//
-//	kprintf("Val end %p\n", (struct posix_header_ustar *)&_binary_tarfs_end);
-//	for(iteratorator =(struct posix_header_ustar *) &_binary_tarfs_start; iteratorator < (struct posix_header_ustar *)&_binary_tarfs_end ;){
-//		uint64_t name_length = strlen(iteratorator->name);
-//
-//
-//
-//		if(name_length){
-//			uint64_t fsize = otoi(atoi((char*)iteratorator->size));
-//			kprintf("Name : %s, size %d\n", iteratorator->name , fsize);
-//			sleep(20);
-//			*tarfs_fds[idx].name = '/';
-//
-//			tarfs_fds[idx].offset = 0;
-//			tarfs_fds[idx].data = 0;
-//
-//
-//			if (fsize){
-//
-//				//iteratorator = (struct posix_header_ustar *)(iteratorator  + fsize);
-//				tarfs_fds[idx].type = 0;
-//				tarfs_fds[idx].size = 0;//alignPage (uint64_t addr);
-//			}else{
-//				tarfs_fds[idx].type = 5;
-//				tarfs_fds[idx].size = 0;
-//			}
-//			idx++;
-//		}
-//		iteratorator++;
-//		//kprintf("iteratorator :  %p ,  %p\n",iteratorator, (struct posix_header_ustar *)&_binary_tarfs_end);
-//
-//	}
-
-//	while(strlen(iteratorator->name)){
-//		uint64_t fsize = otoi(atoi((char*)iteratorator->size));
-//		kprintf("%p , Name : %s, size %d\n", iteratorator,iteratorator->name , fsize);
-//
-//		strcopy(tarfs_fds[idx].name , iteratorator->name);
-//		tarfs_fds[idx].size = fsize;
-//		tarfs_fds[idx].offset = 0;
-//		tarfs_fds[idx].data = 0;
-//		tarfs_fds[idx].type = 5;
-//		if (fsize){
-//			iteratorator = (struct posix_header_ustar *)(iteratorator  + fsize);
-//		}
-//
-//		iteratorator++;
-//	}
 
 }
+
+void *get_bin_addr(const char *fname){
+	uint64_t idx = 0;
+	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
+		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
+			kprintf("Found : %s at idx %d\n",fname,  idx);
+		}
+	}
+	//TODO
+	return NULL;
+
+
+
+}
+
+
+

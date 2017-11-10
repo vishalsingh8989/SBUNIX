@@ -2,6 +2,7 @@
 #define _TARFS_H
 
 #include<sys/defs.h>
+#include<sys/utils.h>
 #define	 OPEN_FILE_LIMIT		512
 
 
@@ -79,4 +80,5 @@ struct posix_header
 typedef struct posix_header posix_header_ustar;
 
 void init_tarfs();
+void *get_bin_addr(const char *fname);
 #endif
