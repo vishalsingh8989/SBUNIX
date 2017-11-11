@@ -9,6 +9,7 @@
 #include <sys/ahci.h>
 #include <sys/utils.h>
 #include <sys/process.h>
+#include <sys/isr.h>
 
 extern uint64_t *abar;
 
@@ -56,9 +57,15 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   print_welcome();
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   __asm__ __volatile("sti;");
+
+  init_syscall();
   //__asm__("int $0");
   //while(1);
-  init_proc("init_process", 0);
+
+//  __asm__ __volatile__("syscall");
+
+  init_proc("bin/init", 0);
+  init_proc("bin/init", 1);
 
   __asm__ __volatile__("cli;");
 

@@ -105,14 +105,16 @@ void allocate_stack(task_struct_t *task)
     //vma->vm_next = task->mm->mmap;
     //task->mm->mmap = vma;
 
-    task->mm->brk  = STACK_TOP;
-
     vma->vm_mm    = task->mm;
-    vma->vm_start = STACK_TOP + PAGE_SIZE;
-    vma->vm_end   = STACK_TOP;
+    //vma->vm_start = STACK_TOP + PAGE_SIZE;
+    //vma->vm_end   = STACK_TOP;
+    vma->vm_start = STACK_TOP;
+    vma->vm_end   = STACK_TOP + PAGE_SIZE;
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;
+
+    task->mm->brk  = STACK_TOP;
     task->stack_p = (uint64_t) (STACK_TOP + PAGE_SIZE - 16);
 }
 
@@ -172,6 +174,16 @@ int load_elf(task_struct_t *task, const char *fname)
             }
 
             //TODO: Map process to virtual address
+            /*
+            uint64_t st = align_down(p_hdr->p_vaddr);
+            uint64_t sz = (align_down(vma->vm_end) - align_down(vma->vm_start))/PAGE_SIZE; 
+            if(sz == 0) sz = 1;
+            for(int i = 0; i < sz; i++) {
+                uint64_t temp = (uint64_t) kmalloc(PAGE_SIZE);
+                map_proc((temp - KERNAL_BASE_ADDRESS), st);
+                st += PAGE_SIZE;
+            }
+            */
 
             if(vma->vm_flags == (IS_RD + IS_XE))
             {
@@ -182,6 +194,7 @@ int load_elf(task_struct_t *task, const char *fname)
                 vma->file->f_start = (uint64_t) e_hdr;
                 vma->file->f_pgoff = p_hdr->p_offset;
                 vma->file->f_size  = p_hdr->p_filesz;
+                //memcpy((void*) vma->vm_start, (void*) ((uint64_t) e_hdr + p_hdr->p_offset), p_hdr->p_filesz);
             }
             else if(vma->vm_flags == (IS_RD + IS_WR)) { //TODO: check this condition.
                 task->mm->start_data = vma->vm_start;
@@ -191,6 +204,7 @@ int load_elf(task_struct_t *task, const char *fname)
                 vma->file->f_start = (uint64_t) e_hdr;
                 vma->file->f_pgoff = p_hdr->p_offset;
                 vma->file->f_size  = p_hdr->p_filesz;
+                //memcpy((void*) vma->vm_start, (void*) ((uint64_t) e_hdr + p_hdr->p_offset), p_hdr->p_filesz);
             }
         }
         p_hdr++;

@@ -6,6 +6,8 @@
 #include <sys/kprintf.h>
 #include <sys/elf64.h>
 #include <sys/string.h>
+#include <sys/gdt.h>
+#include <sys/asm_utils.h>
 
 uint64_t g_pid;
 
@@ -91,16 +93,10 @@ void schedule()
         context_switch(prev_task, curr_task);
 }
 
-//TODO: this should come from main.
-void test_entry() 
-{
-    kprintf("Inside test process with pid: %d!!\n", curr_task->pid);
-    schedule();
-}
-
 void init_entry() 
 {
     kprintf("Inside Init process!!\n");
+    //TODO: load init process.
     //task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
     //int ret = load_elf(temp_task, "bin/init");
 
@@ -112,6 +108,37 @@ void init_entry()
     while(1) {
         schedule();
     }
+}
+
+void switch_to_userspace(task_struct_t *task)
+{
+    set_tss_rsp((void *) task->kern_stack);
+
+    __asm__ __volatile__(
+            "sti;"
+            "movq %0, %%cr3;"
+            "movq $0x23, %%rax;"
+            "movq %%rax, %%ds;"
+            "movq %%rax, %%es;"
+            "movq %%rax, %%fs;"
+            "movq %%rax, %%gs;"
+
+            "pushq %%rax;"
+            "pushq %1;"
+            //"movq %1, %%rax;"
+            //"pushq $0x23;"
+            //"pushq %%rax;"
+            "pushfq;"
+            "popq %%rax;"
+            "orq $0x200, %%rax;"
+            "pushq %%rax;"
+            "pushq $0x1B;" //TODO: 1B or 2B
+            "pushq %2;"
+            "movq $0x0, %%rdi;"
+            "movq $0x0, %%rsi;"
+            "iretq;"
+            ::"r"(task->pml4), "r"(task->stack_p), "r"(task->rip) : "memory", "rax"
+    );
 }
 
 task_struct_t *init_proc(const char *name, int type)
@@ -133,7 +160,7 @@ task_struct_t *init_proc(const char *name, int type)
 
         kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE); 
         if(!kern_mm) {
-            kpanic("Not able to allocate stack for init\n");
+            kpanic("Not able to allocate mm struct for init\n");
             return NULL;
         }
     }
@@ -153,34 +180,64 @@ task_struct_t *init_proc(const char *name, int type)
     init_task->parent    = NULL;
     init_task->sibling   = NULL;
     init_task->child     = NULL;
-    strcpy(init_task->pcmd_name, "init");
     strcpy(init_task->cdir_name, "/bin");
 
-    if (type == 0) {
+    if (type == 0) { //create init process
+        strcpy(init_task->pcmd_name, "idle");
         *(stack + 510) = (uint64_t) &init_entry;
-        init_task->stack_p   = (uint64_t) &stack[510];
+        init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
         init_task->next_task = init_task;
-        curr_task = kern_task;
-        kern_task->next_task = init_task;
+        curr_task = init_task;;
+        //kern_task->next_task = init_task;
         //For testing.
-        init_proc("init_proc", 1);
+        //init_proc("init_proc", 1);
         //init_proc("test_proc_2", 1);
-        schedule(); //TODO: remove this by taking tasks from schedular only.
+        //schedule(); //TODO: remove this by taking tasks from schedular only.
     }
-    else {
-        int ret = load_elf(init_task, "bin/init");
+    else { //Load user process
+        strcpy(init_task->pcmd_name, "/bin/init");
+
+        //TODO: setup user address space.
+        struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
+        struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
+
+        old_pml4 = (struct page_map_level_4 *)((uint64_t) old_pml4 + KERNAL_BASE_ADDRESS); //TODO: use pa_to_va
+
+        new_pml4->pml4e[511] = old_pml4->pml4e[511];
+
+        init_task->pml4 = (uint64_t) new_pml4 - KERNAL_BASE_ADDRESS;
+
+        write_cr3(init_task->pml4);
+
+        init_task->kern_stack = (uint64_t) &stack[510];
+
+        //Load process.
+        int ret = load_elf(init_task, name);
         if(ret == 0) 
             kprintf("Loading Exe Sucessfull\n");
         else
             kprintf("Error Loading Exe\n");
-        *(stack + 510) = (uint64_t) init_task->rip;
-        init_task->stack_p   = (uint64_t) &stack[510];
-        add_to_queue(init_task);
-        //task_struct_t *temp;
-        //temp = curr_task->next_task;
+
+        //TODO:  kernal stack fix the code below:
+        //*(stack + 510) = (uint64_t) init_task->rip;
+        //init_task->stack_p = (uint64_t) &stack[510];
+        //init_task->stack_p[510] = init_task->rip;
+
+        //TODO: revert to old address space.
+        write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
+
+        //add_to_queue(init_task);
+
         //curr_task->next_task = init_task;
-        //init_task->next_task = temp;
+        //kprintf("Curr task: %s\n", curr_task->pcmd_name);
+        init_task->next_task = curr_task;
+        curr_task = init_task;
+        //kprintf("Curr task: %s\n", curr_task->pcmd_name);
+        //kprintf("Next task: %s\n", curr_task->next_task->pcmd_name);
+        
+        switch_to_userspace(init_task);
     }
 
     return init_task;
 }
+

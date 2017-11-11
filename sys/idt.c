@@ -31,6 +31,7 @@ extern void _isr14();
 extern void _isr17();
 extern void _isr32();
 extern void _isr33();
+extern void _isr128();
 extern void _isrxx();
 
 void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
@@ -49,16 +50,17 @@ void init_idt() {
        set_idt(i, (uint64_t) &_isrxx  , 0x8e); 
     }
 
-    set_idt(  0, (uint64_t) &_isr0  , 0x8e); 
-    set_idt( 32, (uint64_t) &_isr32 , 0x8e); 
-    set_idt( 33, (uint64_t) &_isr33 , 0x8e); 
-    set_idt(  1, (uint64_t) &_isr1  , 0x8e); 
-    set_idt(  4, (uint64_t) &_isr4  , 0x8e); 
-    set_idt(  6, (uint64_t) &_isr6  , 0x8e); 
-    set_idt(  8, (uint64_t) &_isr8  , 0x8e); 
-    set_idt( 12, (uint64_t) &_isr12 , 0x8e); 
-    set_idt( 14, (uint64_t) &_isr14 , 0x8e); 
-    set_idt( 17, (uint64_t) &_isr17 , 0x8e); 
+    set_idt(  0,  (uint64_t) &_isr0   , 0x8e); 
+    set_idt( 32,  (uint64_t) &_isr32  , 0x8e); 
+    set_idt( 33,  (uint64_t) &_isr33  , 0x8e); 
+    set_idt(  1,  (uint64_t) &_isr1   , 0x8e); 
+    set_idt(  4,  (uint64_t) &_isr4   , 0x8e); 
+    set_idt(  6,  (uint64_t) &_isr6   , 0x8e); 
+    set_idt(  8,  (uint64_t) &_isr8   , 0x8e); 
+    set_idt( 12,  (uint64_t) &_isr12  , 0x8e); 
+    set_idt( 14,  (uint64_t) &_isr14  , 0x8e); 
+    set_idt( 17,  (uint64_t) &_isr17  , 0x8e); 
+    set_idt( 128, (uint64_t) &_isr128 , 0xee); 
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
 }
 

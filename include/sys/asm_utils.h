@@ -3,6 +3,15 @@
 
 #include <sys/defs.h>
 
+//Note: From osdev
+#define EFER      0xC0000080
+#define STAR      0xC0000081
+#define LSTAR     0xC0000082
+#define CSTAR     0xC0000083
+#define SFMASK    0xC0000084
+
+#define EFER_SCE 0x1
+
 //Note: Useful utility functions from  osdev.org
 static inline void outb(uint16_t port, uint8_t val)
 {
@@ -33,10 +42,19 @@ static inline void io_wait(void)
     __asm__ __volatile__ ( "outb %%al, $0x80" : : "a"(0) );
 }
 
+static inline void wrmsr(uint32_t msr_id, uint64_t msr_value) {
+    uint32_t lo, hi;
+    lo = (uint32_t)(msr_value & 0xffffffff);
+    hi = (uint32_t)(msr_value >> 32);
+    __asm__ __volatile__ ("wrmsr" : : "a"(lo), "d"(hi), "c"(msr_id));
+}
+
+/*
 inline void wrmsr(uint32_t msr_id, uint64_t msr_value)
 {
     __asm__ __volatile__( "wrmsr" : : "c" (msr_id), "A" (msr_value) );
 }
+*/
 
 inline uint64_t rdmsr(uint32_t msr_id)
 {

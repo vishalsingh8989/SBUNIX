@@ -8,6 +8,7 @@
 .globl _isr17
 .globl _isr32
 .globl _isr33
+.globl _isr128
 .globl _isrxx
 .align 4
 
@@ -129,7 +130,16 @@ _isr14:
 	callq page_fault_handler 
 	popad
 	addq $16, %rsp
-	//sti
+	iretq
+
+_isr128:
+	cli
+	pushq $128
+	pushad
+	movq %rsp, %rdi
+	callq syscall_handler 
+	popad
+	addq $16, %rsp
 	iretq
 
 _isrxx:

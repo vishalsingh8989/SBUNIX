@@ -6,6 +6,45 @@
 #include <sys/idt.h>
 #include <sys/vmm.h>
 #include <sys/process.h>
+#include <sys/asm_utils.h>
+#include <sys/syscall.h>
+
+extern void _isr128(void);
+
+#define OFFS 0xffffffff00000000
+
+//void syscall_handler(uint64_t s_num, uint64_t arg1, uint64_t arg2, uint64_t arg3)
+uint64_t syscall_handler(cpu_regs* regs)
+{
+    uint64_t s_num = regs->rax;
+    uint64_t arg1  = regs->rdi;
+    uint64_t arg2  = regs->rsi;
+    uint64_t arg3  = regs->rdx;
+   
+    kprintf("In the syscall handler, syscall no: %d\n", s_num);
+    kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
+
+    switch(s_num) {
+
+        case __NR_exit:
+            kprintf("Executing exit syscall\n");
+            sys_exit();
+            return 0;
+
+        default:
+            return -1;
+    }
+}
+
+void init_syscall()
+{
+    uint64_t efer;
+
+    efer = rdmsr(EFER);
+    wrmsr(EFER, efer | EFER_SCE);
+
+    wrmsr(LSTAR, (uint64_t)_isr128);
+}
 
 void timer_int_handler() {
    static int i = 0, s = 0, m = 0, h = 0;
@@ -81,6 +120,7 @@ void overflow_handler() {
 }
 
 void invalid_opcode_handler() {
+    //while(1);
     kpanic("-- Invalid Opcode Exception Fired --");
 }
 
@@ -135,7 +175,9 @@ void page_fault_handler(cpu_regs *regs) {
         //TODO: Grow heap
         //TODO: Stack Overflow!
         //TODO: Segmention Fault!
-        kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+        //kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+        //TODO: this should be for seq fault only
+        kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {
@@ -147,6 +189,16 @@ void page_fault_handler(cpu_regs *regs) {
     page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
     uint64_t falign_addr = align_down(fault_addr);
     map_proc(page_addr, falign_addr);
+
+    /*
+    if(curr_task->stack_p >= vma->vm_start && curr_task->stack_p <= vma->vm_end) {
+        //TODO: this was stack allocation and mapping. Don't need to copy.
+        return;
+    }
+    */
+
+    if(vma->file == NULL)
+        return;
 
     //Copy contents.
     uint64_t src, dst;
@@ -174,6 +226,8 @@ void page_fault_handler(cpu_regs *regs) {
     memcpy((void *) dst, (void*) src, size);
 }
 
+
 void default_int_handler() {
+    //while(1);
     kpanic("-- Unknown Interrupt Fired --");
 }

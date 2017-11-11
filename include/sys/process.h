@@ -34,6 +34,7 @@ typedef struct task_struct {
     uint64_t pml4;
     uint64_t rip;
     uint64_t stack_p;
+    uint64_t kern_stack;
     uint64_t sleep_t;
 
     char pcmd_name[MAX_NAME];
@@ -41,6 +42,8 @@ typedef struct task_struct {
 } task_struct_t;
 
 task_struct_t* init_proc(const char *name, int type);
+void context_switch(task_struct_t *prev_task, task_struct_t *next_task);
+void schedule();
 
 task_struct_t *curr_task;
 task_struct_t *init_task;

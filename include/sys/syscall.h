@@ -103,4 +103,6 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
     return out;
 } 
 
+void sys_exit();
+
 #endif
