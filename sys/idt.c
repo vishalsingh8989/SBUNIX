@@ -1,5 +1,6 @@
 #include <sys/defs.h>
 #include <sys/idt.h>
+#include <sys/syscall.h>
 
 //Note: From OSdev.
 struct idte_t {
@@ -24,12 +25,13 @@ static struct idtr_t idtr = {sizeof(idt), (uint64_t)idt};
 extern void _isr0();
 extern void _isr32();
 extern void _isr33();
+extern void _isr79();
 extern void _isrxx();
 
-void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
+void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr, int pri) {
     idt[intr_no].offset_1  = (func >>  0) & 0x0000ffff;
     idt[intr_no].selector  = 0x8;
-    idt[intr_no].ist       = 0x0;
+    idt[intr_no].ist       = pri;
     idt[intr_no].type_attr = type_attr; 
     idt[intr_no].offset_2  = (func >> 16) & 0x0000ffff;
     idt[intr_no].offset_3  = (func >> 32) & 0xffffffff;
@@ -39,12 +41,16 @@ void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
 void init_idt() {
 
     for(int i = 0; i < 256; i++) {
-       set_idt(i, (uint64_t) &_isrxx  , 0x8e); 
+       set_idt(i, (uint64_t) &_isrxx  , 0x8e, 0);
     }
 
-    set_idt(  0, (uint64_t) &_isr0  , 0x8e); 
-    set_idt( 32, (uint64_t) &_isr32 , 0x8e); 
-    set_idt( 33, (uint64_t) &_isr33 , 0x8e); 
+    set_idt(  0, (uint64_t) &_isr0  , 0x8e, 0 );
+
+    set_idt( 32, (uint64_t) &_isr32 , 0x8e, 0 );
+    set_idt( 33, (uint64_t) &_isr33 , 0x8e, 0 );
+    set_idt( 48, (uint64_t) &_isr79 , 0x8e, 3 );
+    set_idt( 128, (uint64_t) &_isr79 , 0xee, 0 );
+
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
 }
 

@@ -76,5 +76,18 @@ void keyboard_int_handler() {
 }
 
 void default_int_handler() {
-    //kprintf("Unknown interrupt hapenned\n");
+//    kprintf("Unknown interrupt happened.\n");
+//    kprintf("Unknown interrupt happened.\n");
+//    kprintf("Unknown interrupt happened..\n");
+//    kprintf("Unknown interrupt happened..\n");
+//    kprintf("Unknown interrupt happened...\n");
+//    kprintf("Unknown interrupt happened...\n");
+//    kprintf("Unknown interrupt happened...\n");
+}
+
+void getcwd_int_handler(){
+    kprintf("getcwd_int_handler  happened.\n");
+    kprintf("getcwd_int_handler  happened......\n");
+
+
 }

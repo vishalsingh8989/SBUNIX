@@ -19,7 +19,7 @@ int waitpid(int pid, int *status);
 int dup2(int old_fd, int new_fd);
 int access(const char *pathname, int mode);
 
-unsigned int sleep(unsigned int seconds);
+//unsigned int sleep(unsigned int seconds);
 
 pid_t getpid(void);
 pid_t getppid(void);

@@ -1,6 +1,7 @@
 .globl _isr0
 .globl _isr32
 .globl _isr33
+.globl _isr79
 .globl _isrxx
 .align 4
 
@@ -64,6 +65,14 @@ _isr33:
 	sti
 	iretq
 
+_isr79:
+	cli
+	pushad
+	call getcwd_int_handler
+	popad
+	sti
+	iretq
+
 _isrxx:
 	cli
 	pushad
@@ -71,3 +80,5 @@ _isrxx:
 	popad
 	sti
 	iretq
+
+

@@ -46,8 +46,9 @@ extern char _binary_tarfs_end;
 //https://www.gnu.org/software/tar/manual/html_node/Standard.html
 struct tarfs_fd {
     char name[100];
-    char match_source[20];
+    //char match_source[20];
     int type;
+    int mode;
     uint64_t size;
     uint64_t fd_index;
     uint64_t offset;
@@ -80,5 +81,8 @@ struct posix_header
 typedef struct posix_header posix_header_ustar;
 
 void init_tarfs();
-void *get_bin_addr(const char *fname);
+void *get_bin_info(const char *fname);
+int syscall_open(const char *fname ,  int flag);
+int get_index(const char* fname);
+//void *get_bin_addr(const char *fname);
 #endif
