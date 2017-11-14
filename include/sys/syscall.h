@@ -2,11 +2,13 @@
 #define SYSCALL_H
 
 #include <sys/defs.h>
+#include<dirent.h>
 
 #define __NR_read        0
 #define __NR_write       1
 #define __NR_open        2
 #define __NR_close       3
+#define __NR_lseek		8
 #define __NR_access     21
 #define __NR_pipe       22
 #define __NR_dup2       33
@@ -103,4 +105,9 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
     return out;
 } 
 
+void sys_exit();
+uint64_t sys_open(const char *fname, uint32_t flags);
+uint64_t sys_getcwd(char *buf, uint64_t size);
+uint64_t sys_chdir(const char *dirname);
+uint64_t sys_getdents(uint32_t fd, struct dirent * dir, uint32_t count);
 #endif

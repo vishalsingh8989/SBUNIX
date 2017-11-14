@@ -6,7 +6,9 @@
 #include<sys/syscall.h>
 
 
-struct tarfs_fd tarfs_fds[OPEN_FILE_LIMIT];
+
+
+extern char cwd[500];
 
 void sleep(int s){
 	for(int i = 0 ;i< s*900; i ++){
@@ -17,12 +19,12 @@ void sleep(int s){
 void test_tarfs_init(int upper){
 
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
-		kprintf("Name :  %s, size : %p ,  data  : %p\n" ,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
+		kprintf("index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
 	}
 
 }
 
-void *align_up(void *p_val, uint64_t size)
+void *align_tarfs(void *p_val, uint64_t size)
 {
     char *p_char_val = (char *) p_val;
     p_char_val = p_char_val - 1 - (((uint64_t) p_char_val - 1) % size) + size;
@@ -31,7 +33,9 @@ void *align_up(void *p_val, uint64_t size)
 
 void init_tarfs(){
 	kprintf("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
-
+	kprintf("Set root  : / \n");
+	strcopy(cwd, "/");
+	//cwd = "/";
 
 	posix_header_ustar *iterator = (posix_header_ustar *) &_binary_tarfs_start;
 
@@ -44,13 +48,18 @@ void init_tarfs(){
 
 	uint64_t fd_index = 1;
 
+
+
 	for(iterator =(posix_header_ustar *) &_binary_tarfs_start; iterator < ( posix_header_ustar *)&_binary_tarfs_end ;)
 	{
 		uint64_t name_length = strlen(iterator->name);
 		if(name_length){
-			uint64_t size = otoi(atoi(iterator->size));
-			kprintf("name=%s size=%p\n", iterator->name, size);
-			strcopy(tarfs_fds[fd_index].name, iterator->name);
+			uint64_t size = otod(atoi(iterator->size));
+			char tempname[100];
+			strcopy(tempname,"/");
+			strconcat(tempname, iterator->name);
+			//kprintf("name=%s size=%p\n", iterator->name, size);
+			strcopy(tarfs_fds[fd_index].name, tempname);
 			tarfs_fds[fd_index].size = size;
 			tarfs_fds[fd_index].offset = 0;// read offset
 			tarfs_fds[fd_index].mode = 0; // for flags
@@ -58,32 +67,62 @@ void init_tarfs(){
 			if (size) {//file if size not 0
 				tarfs_fds[fd_index].type = REGTYPE;
 				tarfs_fds[fd_index].data =  (void *) ((uint64_t) iterator + sizeof(posix_header_ustar));
-				size  = (uint64_t) align_up((void *) size, sizeof(posix_header_ustar)); // store in 4k
+				size  = (uint64_t)align_tarfs((void*) size ,  sizeof(posix_header_ustar)); // store in 4k
 				iterator = (posix_header_ustar *) ((uint64_t) iterator + size);
 			}else{
 				tarfs_fds[fd_index].data = 0; // dir have 0 data.
 				tarfs_fds[fd_index].type = DIRTYPE;
 			}
 			fd_index++;
-		}
+	}
 		iterator++;
 
 	}
 
-	kprintf("tarfs test start..........");
-	test_tarfs_init(fd_index);
-	struct tarfs_fd *bin_tarfs = (struct tarfs_fd*) get_bin_info("bin/ls");
-	kprintf("Found ls: %s at idx %p\n",bin_tarfs->name,  bin_tarfs->data);
-	int idx = get_index("cat");
-	kprintf("Cat index  : %d\n", idx);
-	idx  = syscall_open("sbush", 0);
-	kprintf("Sbush index  : %d\n", idx);
+	//testing
 
-	Elf64_Ehdr *e_hdr = (Elf64_Ehdr *) (bin_tarfs->data);
-	kprintf("Elf64_Ehdr data  : %p\n", e_hdr);
-	Elf64_Phdr *p_hdr = (Elf64_Phdr *) ((uint64_t)e_hdr + e_hdr->e_phoff);
-	kprintf("Elf64_Phdr p_hdr  : %p\n", p_hdr);
-	kprintf("********************************\n");
+	strcopy(tarfs_fds[fd_index].name, "/bin/sbin");
+
+	tarfs_fds[fd_index].size = 0;
+	tarfs_fds[fd_index].offset = 0;
+	tarfs_fds[fd_index].data = 0;
+	tarfs_fds[fd_index].type = DIRTYPE;
+
+
+	strcopy(tarfs_fds[fd_index+1].name, "/bin/config");
+
+	tarfs_fds[fd_index+1].size = 0;
+	tarfs_fds[fd_index+1].offset = 0;
+	tarfs_fds[fd_index+1].data = 0;
+	tarfs_fds[fd_index+1].type = DIRTYPE;
+
+
+	strcopy(tarfs_fds[fd_index+2].name, "/bin/config/ifconfig");
+	tarfs_fds[fd_index+2].size = 0;
+	tarfs_fds[fd_index+2].offset = 0;
+	tarfs_fds[fd_index+2].data = 0;
+	tarfs_fds[fd_index+2].type = REGTYPE;
+
+	strcopy(tarfs_fds[fd_index+3].name, "/etc/sbin/config/ifconfig");
+	tarfs_fds[fd_index+3].size = 0;
+	tarfs_fds[fd_index+3].offset = 0;
+	tarfs_fds[fd_index+3].data = 0;
+	tarfs_fds[fd_index+3].type = REGTYPE;
+	fd_index = fd_index+4;
+	kprintf("tarfs test start..........\n");
+	test_tarfs_init(fd_index);
+//	struct tarfs_fd *bin_tarfs = (struct tarfs_fd*) get_bin_info("bin/ls");
+//	kprintf("Found ls: %s at idx %p\n",bin_tarfs->name,  bin_tarfs->data);
+//	int idx = get_index("cat");
+//	kprintf("Cat index  : %d\n", idx);
+//	idx  = syscall_open("sbush", 0);
+//	kprintf("Sbush index  : %d\n", idx);
+//
+//	Elf64_Ehdr *e_hdr = (Elf64_Ehdr *) (bin_tarfs->data);
+//	kprintf("Elf64_Ehdr data  : %p\n", e_hdr);
+//	Elf64_Phdr *p_hdr = (Elf64_Phdr *) ((uint64_t)e_hdr + e_hdr->e_phoff);
+//	kprintf("Elf64_Phdr p_hdr  : %p\n", p_hdr);
+//	kprintf("********************************\n");
 
 //	typedef struct {
 //	  Elf64_Word    p_type;
@@ -95,34 +134,66 @@ void init_tarfs(){
 //	  Elf64_Xword   p_memsz;
 //	  Elf64_Xword   p_align;
 //	} Elf64_Phdr
-	kprintf("Elf64_Phdr p_type :  %d\n",p_hdr->p_type);
-	kprintf("Elf64_Phdr p_flags :  %d\n",p_hdr->p_flags);
-	kprintf("Elf64_Phdr p_offset :  %d\n",p_hdr->p_offset);
-	kprintf("Elf64_Phdr p_vaddr :  %p\n",p_hdr->p_vaddr);
-	kprintf("Elf64_Phdr p_paddr :  %p\n",p_hdr->p_paddr);
-	kprintf("Elf64_Phdr p_filesz :  %p\n",p_hdr->p_filesz);
-	kprintf("Elf64_Phdr p_memsz :  %p\n",p_hdr->p_memsz);
-	kprintf("Elf64_Phdr p_align :  %p\n",p_hdr->p_align);
-
-
-	kprintf("********************************\n");
-	kprintf("tarfs test end ..........");
-	kprintf("Open call\n");
-	//sleep();
-
+//	kprintf("Elf64_Phdr p_type :  %d\n",p_hdr->p_type);
+//	kprintf("Elf64_Phdr p_flags :  %d\n",p_hdr->p_flags);
+//	kprintf("Elf64_Phdr p_offset :  %d\n",p_hdr->p_offset);
+//	kprintf("Elf64_Phdr p_vaddr :  %p\n",p_hdr->p_vaddr);
+//	kprintf("Elf64_Phdr p_paddr :  %p\n",p_hdr->p_paddr);
+//	kprintf("Elf64_Phdr p_filesz :  %p\n",p_hdr->p_filesz);
+//	kprintf("Elf64_Phdr p_memsz :  %p\n",p_hdr->p_memsz);
+//	kprintf("Elf64_Phdr p_align :  %p\n",p_hdr->p_align);
+//
+//
+//	kprintf("********************************\n");
+	kprintf("tarfs test end ..........\n");
 
 	//char   buf[2048+1];
 
 
 	//getcwd(buf, (size_t) 2048+1);
-	uint64_t out;
-	out = syscall_0(48);
-	kprintf("Open call res : %d \n", out);
+	uint64_t out = 10;
+//	char   dir_path[500];
+	char *dir = "/lib";
+//	uint32_t idx = get_index_by_name(dir);
+//	uint32_t child_fidx = idx;
+//
+//	while ((child_fidx = get_child(idx, &child_fidx) )!=-1){
+//		kprintf("name : %s\n",tarfs_fds[child_fidx].name , child_fidx);
+//
+//
+//	}
+
+//	char dst[100];
+//	char src[100];
+//	strcopy(dst, "/hello");
+//	strcopy(src, "bin/etc");
+//
+//	strconcat(dst, (const char *)src);
+//	kprintf("Concatenation :  %s\n", dst);
+
+
+
+//
+//
+//	//out = syscall_2(__NR_open, (uint64_t) dir, (uint64_t) 0);// open
+//
+//
+//	out = syscall_2(__NR_getcwd, (uint64_t) dir_path, (uint64_t) 500);
+//	//out = syscall_1(__NR_chdir, (uint64_t)dir);
+//	//out = syscall_2(__NR_getcwd, (uint64_t) dir_path, (uint64_t) 500);
+//	//out = syscall_0(__NR_open);
+	//struct dirent *dirp =NULL;
+	out = 1;
+	while(out != -1){
+
+		out = syscall_3(__NR_getdents, (uint64_t) 4,(uint64_t) dir, (uint64_t) out);
+		kprintf("Open call res :%s, %d\n", dir, out);
+	}
 
 
 }
 
-int get_index(const char* fname){
+uint32_t get_index_by_name(const char* fname){
 	uint64_t idx = 0;
 	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
@@ -137,7 +208,7 @@ int get_index(const char* fname){
 void* get_bin_info(const char *fname){
 
 
-	uint64_t idx =  get_index(fname);
+	uint64_t idx =  get_index_by_name(fname);
 
 	if(idx !=  -1){
 		return &tarfs_fds[idx];
@@ -165,7 +236,7 @@ void* get_bin_info(const char *fname){
 
 int syscall_open(const char *fname ,  int flag){
 	//TODO respect flags
-	uint64_t idx = get_index(fname);
+	uint64_t idx = get_index_by_name(fname);
 	if(idx != -1){
 		tarfs_fds[idx].offset = 0;
 		tarfs_fds[idx].mode = flag; // TODO
@@ -187,6 +258,35 @@ int syscall_close(uint64_t fd){
 	}
 	return 0;
 
+}
+
+uint32_t get_child(uint32_t fd_idx , uint32_t *child_fidx){
+	//static int count;
+	char name[100] ;
+	char tempname[100] ;
+	strcopy(name,tarfs_fds[fd_idx].name);
+	//sleep(10);
+	//kprintf("start idx %d\n", *child_fidx);
+
+
+	for (uint32_t idx = *child_fidx + 1; idx <  15 ;idx ++){
+
+		strcopy(tempname,tarfs_fds[idx].name);
+
+//		if(strlen(name) == 1 && name[0] == '/'){
+//			kprintf("root :");
+//			return idx;// retrun everything one by one for root.
+//		}else{
+			int position = strstr(tempname,name);
+			if(position ==0){
+				//kprintf("name : %s , position :%d\n",tempname, position );
+				return idx;
+			}
+		//}
+	}
+
+	kprintf("Name is : %s\n", name);
+	return -1;
 }
 
 

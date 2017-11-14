@@ -1,6 +1,12 @@
 #ifndef _ELF64_H
 #define _ELF64_H
 
+#include <sys/process.h>
+
+#define IS_XE  0x1
+#define IS_WR  0x2
+#define IS_RD  0x4
+
 #define EI_NIDENT 16
 
 typedef uint64_t Elf64_Addr;
@@ -39,5 +45,7 @@ typedef struct {
   Elf64_Xword   p_memsz;
   Elf64_Xword   p_align;
 } Elf64_Phdr;
+
+int load_elf(task_struct_t *task, const char *fname);
 
 #endif

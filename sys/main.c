@@ -7,7 +7,11 @@
 #include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
+#include <sys/utils.h>
+#include <sys/process.h>
+#include <sys/isr.h>
 
+#include <sys/tarfs.h>
 extern uint64_t *abar;
 
 #define INITIAL_STACK_SIZE 4096
@@ -17,26 +21,10 @@ extern char kernmem, physbase;
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
-  //struct smap_t {
-  //  uint64_t base, length;
-  //  uint32_t type;
-  //}__attribute__((packed)) *smap;
-  //while(modulep[0] != 0x9001) modulep += modulep[1]+2;
-  //for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
-  //  if (smap->type == 1 /* memory */ && smap->length != 0) {
-  //    kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
-  //  }
-  //}
-  //kprintf("physfree %p\n", (uint64_t)physfree);
 
-  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
 
-  hba_mem_t * abar_t = (hba_mem_t *) abar;
-  probe_port(abar_t);
-
-  vmm_init(modulep, physbase, physfree);
-  init_tarfs();
-  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+  //hba_mem_t * abar_t = (hba_mem_t *) abar;
+  //probe_port(abar_t);
 
   //__asm__("int $0");
 
@@ -65,8 +53,28 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
   */
 
-  __asm__("sti");
-  while(1);
+  clr_term();
+  vmm_init(modulep, physbase, physfree); //TODO: This has to be moved before clr_term
+  print_welcome();
+  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+  __asm__ __volatile("sti;");
+
+  init_syscall();
+  //__asm__("int $0");
+  //while(1);
+
+//  __asm__ __volatile__("syscall");
+
+  //init_proc("bin/init", 0);
+  //init_proc("bin/init", 1);
+  init_tarfs();
+
+  __asm__ __volatile__("cli;");
+
+  while(1) {
+     // __asm__ __volatile("sti;");
+     // __asm__ __volatile("hlt;");
+  }
 }
 
 void boot(void)

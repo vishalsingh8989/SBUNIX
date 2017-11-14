@@ -56,7 +56,7 @@ struct tarfs_fd {
 };
 
 
-struct posix_header
+struct posix_header_ustar
 {                              /* byte offset */
   char name[100];               /*   0 */
   char mode[8];                 /* 100 */
@@ -78,11 +78,14 @@ struct posix_header
 };
 
 
-typedef struct posix_header posix_header_ustar;
+typedef struct posix_header_ustar posix_header_ustar;
+
+struct tarfs_fd tarfs_fds[OPEN_FILE_LIMIT];
 
 void init_tarfs();
 void *get_bin_info(const char *fname);
 int syscall_open(const char *fname ,  int flag);
-int get_index(const char* fname);
-//void *get_bin_addr(const char *fname);
+uint32_t get_index_by_name(const char* fname);
+uint32_t get_child(uint32_t fd_idx,uint32_t *child_fidx);
+
 #endif
