@@ -10,8 +10,20 @@
 #include <sys/asm_utils.h>
 
 uint64_t g_pid;
-
 struct mm_struct *kern_mm;
+
+
+void print_task_list()
+{
+    task_struct_t *temp = curr_task->next_task;
+
+    int i = 0;
+    kprintf("Current tasks in queue are: \n");
+    while(temp != curr_task) {
+        kprintf("%d : %s\n", i++, temp->pcmd_name);
+        temp = temp->next_task;
+    }
+}
 
 pid_t get_pid() {
     if(g_pid == MAX_PID)
@@ -69,6 +81,7 @@ void add_to_queue(task_struct_t *task)
     task->next_task = temp;
 }
 
+//TODO: replace this with better schedular
 task_struct_t *get_next_task()
 {
     return curr_task->next_task;
@@ -79,7 +92,6 @@ void schedule()
 
     //TODO: shouldn't this be atomic? 
     task_struct_t *prev_task = curr_task;
-    //curr_task = curr_task->next_task;
     curr_task = get_next_task();
 
     //struct mm_struct *curr_mm, *prev_mm;
@@ -88,24 +100,21 @@ void schedule()
 
     //if(prev_mm != curr_mm) 
     //    write_cr3(curr_mm->pml4);
+
+    print_task_list();
    
     if(curr_task != prev_task)
         context_switch(prev_task, curr_task);
 }
 
-void init_entry() 
+//TODO: change the name to idle.
+void idle_proc() 
 {
-    kprintf("Inside Init process!!\n");
-    //TODO: load init process.
-    //task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
-    //int ret = load_elf(temp_task, "bin/init");
-
-    //if(ret == 0) 
-    //    kprintf("Loading Exe Sucessfull\n");
-    //else
-    //    kprintf("Error Loading Exe\n");
+    kprintf("--Inside IDLE Process--\n");
 
     while(1) {
+        //__asm__ __volatile("hlt;");
+        //__asm__ __volatile("sti;");
         schedule();
     }
 }
@@ -125,9 +134,6 @@ void switch_to_userspace(task_struct_t *task)
 
             "pushq %%rax;"
             "pushq %1;"
-            //"movq %1, %%rax;"
-            //"pushq $0x23;"
-            //"pushq %%rax;"
             "pushfq;"
             "popq %%rax;"
             "orq $0x200, %%rax;"
@@ -168,36 +174,29 @@ task_struct_t *init_proc(const char *name, int type)
     uint64_t * stack = (uint64_t *) kmalloc(PAGE_SIZE);
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
-        return NULL;
     }
 
     init_task->state     = TASK_RUNNABLE;
-    init_task->pid       = 0;
     init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;
     init_task->pid       = get_pid();
+    init_task->ppid      = -1;
     init_task->prev_task = NULL;
     init_task->parent    = NULL;
     init_task->sibling   = NULL;
     init_task->child     = NULL;
     strcpy(init_task->cdir_name, "/bin");
 
-    if (type == 0) { //create init process
+    if (type == 0) { //create idle process
         strcpy(init_task->pcmd_name, "idle");
-        *(stack + 510) = (uint64_t) &init_entry;
+        *(stack + 510) = (uint64_t) &idle_proc;;
         init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
         init_task->next_task = init_task;
         curr_task = init_task;;
-        //kern_task->next_task = init_task;
-        //For testing.
-        //init_proc("init_proc", 1);
-        //init_proc("test_proc_2", 1);
-        //schedule(); //TODO: remove this by taking tasks from schedular only.
     }
     else { //Load user process
         strcpy(init_task->pcmd_name, "/bin/init");
 
-        //TODO: setup user address space.
         struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
         struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
 
@@ -218,22 +217,11 @@ task_struct_t *init_proc(const char *name, int type)
         else
             kprintf("Error Loading Exe\n");
 
-        //TODO:  kernal stack fix the code below:
-        //*(stack + 510) = (uint64_t) init_task->rip;
-        //init_task->stack_p = (uint64_t) &stack[510];
-        //init_task->stack_p[510] = init_task->rip;
-
-        //TODO: revert to old address space.
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
         //add_to_queue(init_task);
-
-        //curr_task->next_task = init_task;
-        //kprintf("Curr task: %s\n", curr_task->pcmd_name);
         init_task->next_task = curr_task;
         curr_task = init_task;
-        //kprintf("Curr task: %s\n", curr_task->pcmd_name);
-        //kprintf("Next task: %s\n", curr_task->next_task->pcmd_name);
         
         switch_to_userspace(init_task);
     }

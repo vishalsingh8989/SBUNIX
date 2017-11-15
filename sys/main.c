@@ -56,18 +56,17 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   vmm_init(modulep, physbase, physfree); //TODO: This has to be moved before clr_term
   print_welcome();
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-  __asm__ __volatile("sti;");
+  __asm__ __volatile__("sti;");
 
   init_syscall();
   //__asm__("int $0");
   //while(1);
 
-//  __asm__ __volatile__("syscall");
-
   init_proc("bin/init", 0);
   init_proc("bin/init", 1);
-
   __asm__ __volatile__("cli;");
+
+  //TODO: I guess below statements will never get executed.
 
   while(1) {
       __asm__ __volatile("sti;");

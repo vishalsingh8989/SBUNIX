@@ -10,26 +10,48 @@
 #include <sys/syscall.h>
 
 extern void _isr128(void);
+uint64_t k_rsp;
+uint64_t u_rsp;
 
 #define OFFS 0xffffffff00000000
 
-//void syscall_handler(uint64_t s_num, uint64_t arg1, uint64_t arg2, uint64_t arg3)
 uint64_t syscall_handler(cpu_regs* regs)
 {
     uint64_t s_num = regs->rax;
     uint64_t arg1  = regs->rdi;
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
+    uint64_t ret;
    
-    kprintf("In the syscall handler, syscall no: %d\n", s_num);
-    kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
+    //kprintf("In the syscall handler, syscall no: %d\n", s_num);
+    //kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
 
     switch(s_num) {
 
         case __NR_exit:
-            kprintf("Executing exit syscall\n");
+            kprintf("Executing Exit Syscall\n");
             sys_exit();
             return 0;
+
+        case __NR_read:
+            kprintf("Executing Read Syscall\n");
+            ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
+            return ret;
+
+        case __NR_write:
+            //kprintf("Executing Write Syscall\n");
+            ret = sys_write((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
+            return ret;
+
+        case __NR_fork:
+            kprintf("Executing Fork Syscall\n");
+            ret = sys_fork();
+            return ret;
+
+        case __NR_execve:
+            kprintf("Executing Execve Syscall\n");
+            ret = sys_execve((char *) arg1, (char **) arg2, (char **) arg3);
+            return ret;
 
         default:
             return -1;
@@ -42,8 +64,21 @@ void init_syscall()
 
     efer = rdmsr(EFER);
     wrmsr(EFER, efer | EFER_SCE);
+    wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x1B << 48);
 
     wrmsr(LSTAR, (uint64_t)_isr128);
+    wrmsr(SFMASK, 0xC0000084);
+}
+
+void pnum_xy (uint64_t value, int base, int x) {
+    if (value <= (base-1)) {
+        if (value < 10) pchar_xy((char) (value+48), RED, x++, 24);
+        else pchar_xy((char) (value+87), RED, x++, 24);
+    }
+    else {
+        pnum_xy(value/base, base, x);
+        pnum_xy(value - (value/base)*base, base, x);
+    }
 }
 
 void timer_int_handler() {
@@ -81,6 +116,8 @@ void timer_int_handler() {
    pchar_xy(':', GREEN, 74, 24);
    pchar_xy(hl , GREEN, 73, 24);
    pchar_xy(hh , GREEN, 72, 24);
+
+   pnum_xy(pages_used, 10, 60);
 
    pic_send_eoi(0);
 }
@@ -137,13 +174,13 @@ void alignment_check_handler() {
 }
 
 void page_fault_handler(cpu_regs *regs) {
-    kprintf("-- Page Fault Execption Fired --\n");
+    //kprintf("-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
+    //kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
 
     uint64_t fault_addr = read_cr2();
-    kprintf("Faulting address: %p\n", fault_addr);
+    //kprintf("Faulting address: %p\n", fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
@@ -177,7 +214,7 @@ void page_fault_handler(cpu_regs *regs) {
         //TODO: Segmention Fault!
         //kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
         //TODO: this should be for seq fault only
-        kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
+        //kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {

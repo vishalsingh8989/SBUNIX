@@ -130,6 +130,7 @@ _isr14:
 	callq page_fault_handler 
 	popad
 	addq $16, %rsp
+	//sti
 	iretq
 
 _isr128:
@@ -139,8 +140,9 @@ _isr128:
 	movq %rsp, %rdi
 	callq syscall_handler 
 	popad
-	addq $16, %rsp
-	iretq
+	addq $0x8, %rsp
+    sti
+	sysretq
 
 _isrxx:
 	cli

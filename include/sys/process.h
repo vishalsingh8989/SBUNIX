@@ -21,11 +21,12 @@ enum state {
 
 typedef struct task_struct {
     int pid;
+    int ppid;
     int state;
     int exit_code;
     
     mm_struct_t *mm;
-    struct file_d *fd[MAX_FILES];
+    fd_t *fd[MAX_FILES];
 
     struct task_struct *next_task, *prev_task;
     struct task_struct *next_run, *prev_run;
@@ -43,10 +44,14 @@ typedef struct task_struct {
 
 task_struct_t* init_proc(const char *name, int type);
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task);
+pid_t get_pid();
 void schedule();
+void switch_to_userspace(task_struct_t *task);
 
 task_struct_t *curr_task;
 task_struct_t *init_task;
 task_struct_t *kern_task;
+
+uint64_t pages_used;
 
 #endif

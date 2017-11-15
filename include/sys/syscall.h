@@ -103,6 +103,11 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
     return out;
 } 
 
+//Kernal Syscall Handlers.
 void sys_exit();
+uint64_t sys_fork();
+uint64_t sys_execve(char *fname, char **argv, char **envp);
+uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size);
+uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size);
 
 #endif
