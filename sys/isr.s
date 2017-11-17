@@ -10,6 +10,8 @@
 .globl _isr33
 .globl _isr128
 .globl _isrxx
+.globl kern_stack
+.globl user_stack
 .align 4
 
 .macro pushad
@@ -136,6 +138,38 @@ _isr14:
 _isr128:
 	cli
 	pushq $128
+	movq %rsp, user_stack
+	movq (kern_stack), %rsp
+	pushq (user_stack)
+	pushq %rax
+	pushq %rbx
+	pushq %rcx
+	pushq %rdx
+	pushq %rbp
+	pushq %rsi
+	pushq %rdi
+	pushq %r8
+	pushq %r9
+	movq %rsp, %rdi
+	callq syscall_handler 
+	popq %r9
+	popq %r8
+	popq %rdi
+	popq %rsi
+	popq %rbp
+	popq %rdx
+	popq %rcx
+	popq %rbx
+	popq %rax
+	popq %rsp
+	addq $0x8, %rsp
+    sti
+	sysretq
+
+/*
+_isr128:
+	cli
+	pushq $128
 	pushad
 	movq %rsp, %rdi
 	callq syscall_handler 
@@ -143,6 +177,7 @@ _isr128:
 	addq $0x8, %rsp
     sti
 	sysretq
+*/
 
 _isrxx:
 	cli

@@ -51,6 +51,10 @@ void switch_to_userspace(task_struct_t *task);
 task_struct_t *curr_task;
 task_struct_t *init_task;
 task_struct_t *kern_task;
+task_struct_t *prev_task;
+
+extern uint64_t kern_stack; 
+extern uint64_t user_stack;
 
 uint64_t pages_used;
 

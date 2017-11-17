@@ -12,17 +12,15 @@
 uint64_t g_pid;
 struct mm_struct *kern_mm;
 
+uint64_t kern_stack; 
+uint64_t user_stack;
 
 void print_task_list()
 {
-    task_struct_t *temp = curr_task->next_task;
-
     int i = 0;
     kprintf("Current tasks in queue are: \n");
-    while(temp != curr_task) {
-        kprintf("%d : %s\n", i++, temp->pcmd_name);
-        temp = temp->next_task;
-    }
+    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
+    kprintf("%d : %s\n", i++, curr_task->next_task->pcmd_name);
 }
 
 pid_t get_pid() {
@@ -122,6 +120,7 @@ void idle_proc()
 void switch_to_userspace(task_struct_t *task)
 {
     set_tss_rsp((void *) task->kern_stack);
+    kern_stack = task->kern_stack;
 
     __asm__ __volatile__(
             "sti;"
@@ -138,7 +137,7 @@ void switch_to_userspace(task_struct_t *task)
             "popq %%rax;"
             "orq $0x200, %%rax;"
             "pushq %%rax;"
-            "pushq $0x1B;" //TODO: 1B or 2B
+            "pushq $0x2B;"
             "pushq %2;"
             "movq $0x0, %%rdi;"
             "movq $0x0, %%rsi;"

@@ -135,7 +135,7 @@ void setup_child_ptables(uint64_t cpml4)
     parent_pml4 = (struct page_map_level_4 *) pa_to_va(parent_pml4);
     child_pml4  = (struct page_map_level_4 *) pa_to_va(child_pml4);
 
-    for(int pml4_idx = 0;  pml4_idx < 510; pml4_idx++) {
+    for(int pml4_idx = 0;  pml4_idx < 511; pml4_idx++) {
         uint64_t p_pml4_entry = parent_pml4->pml4e[pml4_idx];
         uint64_t c_pml4_entry = 0;
         if(p_pml4_entry & _PAGE_PRESENT) {
@@ -204,7 +204,7 @@ void setup_child_ptables(uint64_t cpml4)
         }
     }
 
-    child_pml4->pml4e[510] = parent_pml4->pml4e[510];
+    //child_pml4->pml4e[510] = parent_pml4->pml4e[510];
     child_pml4->pml4e[511] = parent_pml4->pml4e[511];
 }
 

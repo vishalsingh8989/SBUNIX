@@ -38,6 +38,8 @@ uint64_t sys_fork()
     child_task->sibling   = NULL;
     strcpy(child_task->pcmd_name, curr_task->pcmd_name);
 
+    prev_task = curr_task;
+
     //Set up virtual memory.
     setup_child_ptables(child_task->pml4);
 
@@ -69,14 +71,26 @@ uint64_t sys_fork()
         chld_vma->vm_next = NULL;
     }
     else {
-       child_task->mm->mmap = NULL; 
+       child_task->mm->mmap = NULL;
     }
 
     write_cr3(curr_task->pml4);
 
-    //TODO: adjust the child stack pointer.
+    volatile uint64_t stack_loc;
+    volatile uint64_t rip_loc;
+    __asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
+    __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
 
-    schedule();
+    if(curr_task == prev_task) {
+        stack[510] = rip_loc;
+        child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
+        child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+        kprintf("In Parent\n");
+        schedule();
+    }
+    else {
+        kprintf("In Child\n");
+    }
 
     return child_task->pid;
 }
@@ -124,32 +138,32 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     new_task->child     = NULL;
     strcpy(new_task->cdir_name, "/bin");
     strcpy(new_task->pcmd_name, fname);
-    
+
     //TODO: setup user address space.
     struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
     struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
-    
+
     old_pml4 = (struct page_map_level_4 *)((uint64_t) old_pml4 + KERNAL_BASE_ADDRESS); //TODO: use pa_to_va
-    
+
     new_pml4->pml4e[511] = old_pml4->pml4e[511];
-    
+
     new_task->pml4 = (uint64_t) new_pml4 - KERNAL_BASE_ADDRESS;
-    
+
     write_cr3(new_task->pml4);
-    
+
     new_task->kern_stack = (uint64_t) &stack[510];
-    
+
     //Load process.
     int ret = load_elf(new_task, fname);
     //TODO: print the name of the exec
-    if(ret == 0) 
+    if(ret == 0)
         kprintf("Loading Exe Sucessfull\n");
     else
         kprintf("Error Loading Exe\n");
-    
+
     //TODO: revert to old address space.
     write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
-    
+
     new_task->next_task = curr_task;
     curr_task = new_task;
 
