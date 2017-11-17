@@ -13,31 +13,7 @@
 #define HEAP_START  0x03000000
 #define STACK_TOP   0x50000000
 
-uint64_t atoi(char *num)
-{
-    int i = 0;
-    uint64_t inum = 0;
 
-    while(num[i] >= '0' && num[i] <= '9') {
-        inum = inum*10 + (num[i] - '0');
-        i++;
-    }
-
-    return inum;
-}
-
-uint64_t otod(uint64_t onum)
-{
-    uint64_t dnum = 0;
-    int base = 1;
-
-    for(uint64_t otemp = onum; otemp != 0; otemp/=10) {
-        dnum += (otemp % 10) * base; 
-        base = base * 8;
-    }
-
-    return dnum;
-}
 
 //TODO: replace this with tarfs_open()
 void *get_bin_addr(const char *fname)
@@ -120,13 +96,13 @@ void allocate_stack(task_struct_t *task)
 
 void print_elf_info(task_struct_t *task)
 {
-    mm_struct_t *mm_temp = task->mm;
+   // mm_struct_t *mm_temp = task->mm;
     vm_area_struct_t *vma_temp = task->mm->mmap;
 
-    kprintf("MM Struct: \n");
-    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n", 
-             task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
-             mm_temp->start_data, mm_temp->end_data);
+    //kprintf("MM Struct: \n");
+//    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
+//             task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
+//             mm_temp->start_data, mm_temp->end_data);
 
     while(vma_temp != NULL) {
         kprintf("VM Area Struct: \n");

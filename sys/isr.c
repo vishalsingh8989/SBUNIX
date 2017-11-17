@@ -14,33 +14,55 @@ extern void _isr128(void);
 #define OFFS 0xffffffff00000000
 
 //void syscall_handler(uint64_t s_num, uint64_t arg1, uint64_t arg2, uint64_t arg3)
-uint64_t syscall_handler(cpu_regs* regs)
+uint64_t  syscall_handler(cpu_regs* regs)
 {
     uint64_t s_num = regs->rax;
     uint64_t arg1  = regs->rdi;
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
    
+
+    //https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf
+    //page  205  :(
+
+
+	 //__asm__ __volatile__("movq %0, %%rsp"::
+	  //          "r"(curr_task->rip):"memory");
+
     kprintf("In the syscall handler, syscall no: %d\n", s_num);
-    kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
+    kprintf("arg1: %p, arg2: %d, arg3: %d\n", arg1, arg2, arg3);
 
     switch(s_num) {
 
         case __NR_exit:
             kprintf("Executing exit syscall\n");
             sys_exit();
-            return 0;
-
-        default:
-            return -1;
+            break;
+        case __NR_getcwd:
+        		kprintf("Executing __NR_getcwd syscall\n");
+        		sys_getcwd((char*)arg1, (uint32_t)arg2);
+        		break;
+        case __NR_chdir:
+         	kprintf("Executing __NR_chdir syscall\n");
+         	sys_chdir((const char*)arg1);
+         	break;
+        case __NR_fork:
+        		kprintf("Executing __NR_fork syscall\n");
+        		sys_fork();
+        		break;
+       default:
+            break;
     }
+    return 0 ;
+   //__asm__ __volatile__("movq %%rsp,%0;":"=r"(curr_task->rip):);
+
 }
 
 void init_syscall()
 {
     uint64_t efer;
-
     efer = rdmsr(EFER);
+
     wrmsr(EFER, efer | EFER_SCE);
 
     wrmsr(LSTAR, (uint64_t)_isr128);
@@ -137,13 +159,13 @@ void alignment_check_handler() {
 }
 
 void page_fault_handler(cpu_regs *regs) {
-    kprintf("-- Page Fault Execption Fired --\n");
+    //kprintf("-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
+    //kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
 
     uint64_t fault_addr = read_cr2();
-    kprintf("Faulting address: %p\n", fault_addr);
+    //kprintf("Faulting address: %p\n", fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
@@ -177,7 +199,7 @@ void page_fault_handler(cpu_regs *regs) {
         //TODO: Segmention Fault!
         //kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
         //TODO: this should be for seq fault only
-        kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
+        //kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {

@@ -90,6 +90,7 @@ void schedule()
     //    write_cr3(curr_mm->pml4);
    
     if(curr_task != prev_task)
+    		kprintf("In schedule\n");
         context_switch(prev_task, curr_task);
 }
 
@@ -97,13 +98,13 @@ void init_entry()
 {
     kprintf("Inside Init process!!\n");
     //TODO: load init process.
-    //task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
-    //int ret = load_elf(temp_task, "bin/init");
+    task_struct_t *temp_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+    int ret = load_elf(temp_task, "bin/init");
 
-    //if(ret == 0) 
-    //    kprintf("Loading Exe Sucessfull\n");
-    //else
-    //    kprintf("Error Loading Exe\n");
+    if(ret == 0)
+        kprintf("Loading Exe Sucessfull\n");
+    else
+        kprintf("Error Loading Exe\n");
 
     while(1) {
         schedule();

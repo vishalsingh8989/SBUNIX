@@ -11,4 +11,10 @@ void kpanic(const char *fmt, ...);
 uint64_t align_up (uint64_t addr);
 uint64_t align_down (uint64_t addr);
 
+uint64_t strlen( const char *s);
+uint64_t atoi(char *s);
+uint64_t otod(uint64_t o);
+int strstr(char *a, char *b);
+char *strcopy(char *d, const char *s);
+char *strconcat(char *dst, const char *src);
 #endif

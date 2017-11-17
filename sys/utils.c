@@ -2,6 +2,7 @@
 #include <sys/utils.h>
 #include <sys/kprintf.h>
 #include <sys/vmm.h>
+#include <sys/utils.h>
 
 void memcpy(void* dest, void* src, int count)
 {
@@ -70,3 +71,108 @@ uint64_t align_down (uint64_t addr)
     return addr - offset;
 }
 
+uint64_t strlen( const char *s){
+    uint64_t len = 0;
+
+    while (*s  !=  '\0') {
+    		len++;
+        s++;
+    }
+    return len;
+}
+
+int strstr(char *a, char *b){
+
+		if(strlen(a) < strlen((const char*)b)) return -1;
+	   int position = 0;
+	   char *x, *y;
+	   x = (char*)a;
+	   y = b;
+	   while(*a){
+		  while(*x==*y){
+			 x++;
+			 y++;
+			 if(*x=='\0'||*y=='\0')
+				break;
+		  }
+		  if(*y=='\0')
+			 break;
+		  a++;
+		  position++;
+		  x = (char*)a;
+		  y = b;
+	   }
+	   if(*a)
+		  return position;
+	   else
+		  return -1;
+}
+
+
+char *strcopy(char *d, const char *s)
+{
+    char *dest_iter = d;
+    const char *src_iter = s;
+
+
+
+    while (dest_iter && src_iter && *src_iter != '\0') {
+        *dest_iter = *src_iter;
+        dest_iter++;
+        src_iter++;
+    }
+    *dest_iter = '\0';
+    return dest_iter;
+}
+
+char *strconcat(char *dst, const char *src)
+{
+
+    int dst_len = 0;
+    char *dest_iter = dst;
+    const char *src_iter = src;
+
+    dst_len = strlen(dst);
+    //src_len = strlen(src);
+    int idx = 0;
+    while(idx<dst_len){
+    		idx++;
+    		dest_iter++;
+    }
+
+    while (dest_iter && src_iter && *src_iter != '\0') {
+        *dest_iter = *src_iter;
+        dest_iter++;
+        src_iter++;
+    }
+    *dest_iter = '\0';
+    return dest_iter;
+    }
+
+
+
+uint64_t atoi(char *num)
+{
+    int i = 0;
+    uint64_t inum = 0;
+
+    while(num[i] >= '0' && num[i] <= '9') {
+        inum = inum*10 + (num[i] - '0');
+        i++;
+    }
+
+    return inum;
+}
+
+uint64_t otod(uint64_t onum)
+{
+    uint64_t dnum = 0;
+    int base = 1;
+
+    for(uint64_t otemp = onum; otemp != 0; otemp/=10) {
+        dnum += (otemp % 10) * base;
+        base = base * 8;
+    }
+
+    return dnum;
+}
