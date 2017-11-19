@@ -12,15 +12,19 @@
 uint64_t g_pid;
 struct mm_struct *kern_mm;
 
-uint64_t kern_stack; 
+uint64_t kern_stack;
 uint64_t user_stack;
 
 void print_task_list()
 {
     int i = 0;
     kprintf("Current tasks in queue are: \n");
-    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
-    kprintf("%d : %s\n", i++, curr_task->next_task->pcmd_name);
+    task_struct_t * temp =  curr_task;
+    while(strcmp(temp->pcmd_name, "idle")) {
+        kprintf("%d : %s\n", i++, temp->pcmd_name);
+        temp = temp->next_task;
+    }
+    kprintf("%d : %s\n", i++, temp->pcmd_name);
 }
 
 pid_t get_pid() {
@@ -32,7 +36,7 @@ pid_t get_pid() {
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
     //TODO: does this have to be atomic.
-    __asm__ __volatile__ ( 
+    __asm__ __volatile__ (
         //"pushq %%rax;"
         //"pushq %%rbx;"
 	    //"pushq %%rcx;"
@@ -88,25 +92,20 @@ task_struct_t *get_next_task()
 void schedule()
 {
 
-    //TODO: shouldn't this be atomic? 
+    //TODO: shouldn't this be atomic?
     task_struct_t *prev_task = curr_task;
     curr_task = get_next_task();
 
-    //struct mm_struct *curr_mm, *prev_mm;
-    //curr_mm = curr_task->mm;
-    //prev_mm = prev_task->mm;
-
-    //if(prev_mm != curr_mm) 
-    //    write_cr3(curr_mm->pml4);
-
     print_task_list();
-   
-    if(curr_task != prev_task)
+
+    if(curr_task != prev_task) {
+        write_cr3(curr_task->pml4);
         context_switch(prev_task, curr_task);
+    }
 }
 
 //TODO: change the name to idle.
-void idle_proc() 
+void idle_proc()
 {
     kprintf("--Inside IDLE Process--\n");
 
@@ -163,7 +162,7 @@ task_struct_t *init_proc(const char *name, int type)
         }
         memset(kern_task, 0, sizeof(task_struct_t *));
 
-        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE); 
+        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
         if(!kern_mm) {
             kpanic("Not able to allocate mm struct for init\n");
             return NULL;
@@ -179,11 +178,12 @@ task_struct_t *init_proc(const char *name, int type)
     init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;
     init_task->pid       = get_pid();
-    init_task->ppid      = -1;
+    init_task->ppid      = 0;
     init_task->prev_task = NULL;
     init_task->parent    = NULL;
     init_task->sibling   = NULL;
     init_task->child     = NULL;
+    init_task->pml4      = read_cr3();
     strcpy(init_task->cdir_name, "/bin");
 
     if (type == 0) { //create idle process
@@ -194,7 +194,7 @@ task_struct_t *init_proc(const char *name, int type)
         curr_task = init_task;;
     }
     else { //Load user process
-        strcpy(init_task->pcmd_name, "/bin/init");
+        strcpy(init_task->pcmd_name, "bin/init");
 
         struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
         struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
@@ -211,7 +211,7 @@ task_struct_t *init_proc(const char *name, int type)
 
         //Load process.
         int ret = load_elf(init_task, name);
-        if(ret == 0) 
+        if(ret == 0)
             kprintf("Loading Exe Sucessfull\n");
         else
             kprintf("Error Loading Exe\n");
@@ -221,10 +221,9 @@ task_struct_t *init_proc(const char *name, int type)
         //add_to_queue(init_task);
         init_task->next_task = curr_task;
         curr_task = init_task;
-        
+
         switch_to_userspace(init_task);
     }
 
     return init_task;
 }
-

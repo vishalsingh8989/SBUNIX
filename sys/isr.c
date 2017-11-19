@@ -22,7 +22,7 @@ uint64_t syscall_handler(cpu_regs* regs)
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
     uint64_t ret;
-   
+
     //kprintf("In the syscall handler, syscall no: %d\n", s_num);
     //kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
 
@@ -53,6 +53,11 @@ uint64_t syscall_handler(cpu_regs* regs)
             ret = sys_execve((char *) arg1, (char **) arg2, (char **) arg3);
             return ret;
 
+        case __NR_wait4:
+            kprintf("Executing Wait4 Syscall\n");
+            ret = sys_waitpid((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
+            return ret;
+
         default:
             return -1;
     }
@@ -65,6 +70,7 @@ void init_syscall()
     efer = rdmsr(EFER);
     wrmsr(EFER, efer | EFER_SCE);
     wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x1B << 48);
+    //wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x20 << 48);
 
     wrmsr(LSTAR, (uint64_t)_isr128);
     wrmsr(SFMASK, 0xC0000084);
@@ -76,8 +82,8 @@ void pnum_xy (uint64_t value, int base, int x) {
         else pchar_xy((char) (value+87), RED, x++, 24);
     }
     else {
-        pnum_xy(value/base, base, x);
-        pnum_xy(value - (value/base)*base, base, x);
+        pnum_xy(value/base, base, x++);
+        pnum_xy(value - (value/base)*base, base, x++);
     }
 }
 
@@ -219,7 +225,11 @@ void page_fault_handler(cpu_regs *regs) {
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
-        kprintf("TODO: Handle COW\n");
+        uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+        page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+        uint64_t falign_addr = align_down(fault_addr);
+        map_proc(page_addr, falign_addr);
+        memcpy((void *) page_addr, (void*) falign_addr, PAGE_SIZE);
     }
 
     uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);

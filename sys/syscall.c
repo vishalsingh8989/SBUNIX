@@ -8,6 +8,8 @@
 #include <sys/fs.h>
 #include <sys/elf64.h>
 
+extern void fork_return(void);
+
 void sys_exit()
 {
     //TODO: cleanup
@@ -37,7 +39,6 @@ uint64_t sys_fork()
     child_task->ppid      = curr_task->pid;
     child_task->sibling   = NULL;
     strcpy(child_task->pcmd_name, curr_task->pcmd_name);
-
     prev_task = curr_task;
 
     //Set up virtual memory.
@@ -55,6 +56,7 @@ uint64_t sys_fork()
     uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
     uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
     memcpy(chld_stack-510, curr_stack-510, 4080);
+    memcpy(chld_stack, curr_stack, 4080);
     memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
     memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
     if(curr_task->mm->mmap != NULL) {
@@ -81,16 +83,38 @@ uint64_t sys_fork()
     __asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
     __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
 
+
+    /*
     if(curr_task == prev_task) {
-        stack[510] = rip_loc;
-        child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
-        child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-        kprintf("In Parent\n");
-        schedule();
+      //stack[510] = rip_loc;
+      //child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
+      //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+      //child_task->stack_p = child_task->kern_stack;
+      //uint64_t * temp = (uint64_t *) child_task->kern_stack;
+      //temp[0] = rip_loc;
+      //kprintf("In Parent!\n");
+      //schedule();
+
+      kprintf("In Parent!\n");
+      child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8;
+      *(uint64_t *) child_task->kern_stack = rip_loc;
+      child_task->stack_p = child_task->kern_stack;
+      schedule();
     }
     else {
-        kprintf("In Child\n");
+      kprintf("In Child!\n");
+      outb(0x20, 0x20);
+      return 0;
     }
+    */
+
+    //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+    //child_task->kern_stack = child_task->kern_stack - 16 - 128 - 8;
+
+    child_task->kern_stack = child_task->kern_stack - 16 - 64 - 8;
+    *(uint64_t *) child_task->kern_stack = (uint64_t) fork_return;
+    child_task->stack_p = child_task->kern_stack;
+    schedule();
 
     return child_task->pid;
 }
@@ -161,7 +185,8 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     else
         kprintf("Error Loading Exe\n");
 
-    //TODO: revert to old address space.
+    //TODO: copy arguments.
+
     write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
     new_task->next_task = curr_task;
@@ -191,4 +216,11 @@ uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
         pchar(*sym);
     }
     return 1;
+}
+
+uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
+{
+    curr_task->state = TASK_WAITING;
+
+    return 0;
 }

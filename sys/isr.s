@@ -12,6 +12,7 @@
 .globl _isrxx
 .globl kern_stack
 .globl user_stack
+.globl fork_return
 .align 4
 
 .macro pushad
@@ -79,7 +80,7 @@ _isr33:
 _isr1:
 	cli
 	pushad
-	callq debug_excep_handler 
+	callq debug_excep_handler
 	popad
 	sti
 	iretq
@@ -87,7 +88,7 @@ _isr1:
 _isr4:
 	cli
 	pushad
-	callq overflow_handler 
+	callq overflow_handler
 	popad
 	sti
 	iretq
@@ -95,7 +96,7 @@ _isr4:
 _isr6:
 	cli
 	pushad
-	callq invalid_opcode_handler 
+	callq invalid_opcode_handler
 	popad
 	sti
 	iretq
@@ -103,7 +104,7 @@ _isr6:
 _isr8:
 	cli
 	pushad
-	callq double_fault_handler 
+	callq double_fault_handler
 	popad
 	sti
 	iretq
@@ -111,7 +112,7 @@ _isr8:
 _isr12:
 	cli
 	pushad
-	callq stack_fault_handler 
+	callq stack_fault_handler
 	popad
 	sti
 	iretq
@@ -119,7 +120,7 @@ _isr12:
 _isr17:
 	cli
 	pushad
-	callq alignment_check_handler 
+	callq alignment_check_handler
 	popad
 	sti
 	iretq
@@ -129,7 +130,7 @@ _isr14:
 	pushq $14
 	pushad
 	movq %rsp, %rdi
-	callq page_fault_handler 
+	callq page_fault_handler
 	popad
 	addq $16, %rsp
 	//sti
@@ -151,7 +152,24 @@ _isr128:
 	pushq %r8
 	pushq %r9
 	movq %rsp, %rdi
-	callq syscall_handler 
+	callq syscall_handler
+	jmp sysret
+fork_return:
+	popq %r9
+	popq %r8
+	popq %rdi
+	popq %rsi
+	popq %rbp
+	popq %rdx
+	popq %rcx
+	popq %rbx
+	popq %rax
+	xorq %rax, %rax
+	popq %rsp
+	addq $0x8, %rsp
+  sti
+	sysretq
+sysret:
 	popq %r9
 	popq %r8
 	popq %rdi
@@ -163,7 +181,7 @@ _isr128:
 	popq %rax
 	popq %rsp
 	addq $0x8, %rsp
-    sti
+  sti
 	sysretq
 
 /*
@@ -172,7 +190,7 @@ _isr128:
 	pushq $128
 	pushad
 	movq %rsp, %rdi
-	callq syscall_handler 
+	callq syscall_handler
 	popad
 	addq $0x8, %rsp
     sti

@@ -20,88 +20,88 @@
 
 static inline uint64_t syscall_0(uint64_t s_no) {
 
-    uint64_t out;   
+    uint64_t out;
 
     __asm__ __volatile__("movq %1, %%rax;"
                          "syscall;"
-                         
+
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no)
                          :"rax"
                          );
     return out;
-} 
+}
 
 static inline uint64_t syscall_1(uint64_t s_no, uint64_t aa) {
 
-    uint64_t out;   
+    uint64_t out;
 
     __asm__ __volatile__("movq %1, %%rax;"
-                         "movq %2, %%rdi;" 
+                         "movq %2, %%rdi;"
                          "syscall;"
-                         
+
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no), "r"(aa)
                          :"rax", "rdi"
                          );
     return out;
-} 
+}
 
 static inline uint64_t syscall_2(uint64_t s_no, uint64_t aa, uint64_t bb) {
 
-    uint64_t out;   
+    uint64_t out;
 
     __asm__ __volatile__("movq %1, %%rax;"
-                         "movq %2, %%rdi;" 
-                         "movq %3, %%rsi;" 
+                         "movq %2, %%rdi;"
+                         "movq %3, %%rsi;"
                          "syscall;"
-                         
+
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no), "r"(aa), "r"(bb)
                          :"rax", "rdi", "rsi"
                          );
     return out;
-} 
+}
 
 static inline uint64_t syscall_3(uint64_t s_no, uint64_t aa, uint64_t bb, uint64_t cc) {
 
-    uint64_t out;   
+    uint64_t out;
 
     __asm__ __volatile__("movq %1, %%rax;"
-                         "movq %2, %%rdi;" 
-                         "movq %3, %%rsi;" 
-                         "movq %4, %%rdx;" 
+                         "movq %2, %%rdi;"
+                         "movq %3, %%rsi;"
+                         "movq %4, %%rdx;"
                          "syscall;"
-                         
+
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no), "r"(aa), "r"(bb), "r"(cc)
                          :"rax", "rdi", "rsi", "rdx"
                          );
     return out;
-} 
+}
 
 static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64_t cc, uint64_t dd) {
 
-    uint64_t out;   
+    uint64_t out;
 
     __asm__ __volatile__("movq %1, %%rax;"
-                         "movq %2, %%rdi;" 
-                         "movq %3, %%rsi;" 
-                         "movq %4, %%rdx;" 
-                         "movq %4, %%r10;" 
+                         "movq %2, %%rdi;"
+                         "movq %3, %%rsi;"
+                         "movq %4, %%rdx;"
+                         "movq %4, %%r10;"
                          "syscall;"
-                         
+
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no), "r"(aa), "r"(bb), "r"(cc), "r"(dd)
                          :"rax", "rdi", "rsi", "rdx", "r10"
                          );
     return out;
-} 
+}
 
 //Kernal Syscall Handlers.
 void sys_exit();
@@ -109,5 +109,6 @@ uint64_t sys_fork();
 uint64_t sys_execve(char *fname, char **argv, char **envp);
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size);
 uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size);
+uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options);
 
 #endif

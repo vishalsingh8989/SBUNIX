@@ -10,7 +10,7 @@ int num_pages;
 page_stat_t* free_pages_list;
 page_stat_t* pages_list;
 
-static void * preinit_alloc (uint64_t physfree, int size) 
+static void * preinit_alloc (uint64_t physfree, int size)
 {
     static char *nextfree;
     char *result;
@@ -44,21 +44,21 @@ void pages_init (void* physbase, void* physfree)
     }
 }
 
-static uint64_t get_pa(page_stat_t* page) 
+static uint64_t get_pa(page_stat_t* page)
 {
     uint64_t diff = (page - pages_list);
     uint64_t addr = diff * PAGE_SIZE;
     return addr;
 }
 
-static uint64_t get_va(page_stat_t* page) 
+static uint64_t get_va(page_stat_t* page)
 {
     uint64_t diff = (page - pages_list);
     uint64_t addr = KERNAL_BASE_ADDRESS + (diff * PAGE_SIZE);
     return addr;
 }
 
-uint64_t page_alloc() 
+uint64_t page_alloc()
 {
     page_stat_t * page = NULL;
 
@@ -122,12 +122,12 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
     }
 }
 
-void * pa_to_va(void * addr) 
+void * pa_to_va(void * addr)
 {
     return addr + KERNAL_BASE_ADDRESS;
 }
 
-void setup_child_ptables(uint64_t cpml4) 
+void setup_child_ptables(uint64_t cpml4)
 {
     struct page_map_level_4 * parent_pml4 = (struct page_map_level_4 *) read_cr3();
     struct page_map_level_4 * child_pml4  = (struct page_map_level_4 *) cpml4;
@@ -135,7 +135,8 @@ void setup_child_ptables(uint64_t cpml4)
     parent_pml4 = (struct page_map_level_4 *) pa_to_va(parent_pml4);
     child_pml4  = (struct page_map_level_4 *) pa_to_va(child_pml4);
 
-    for(int pml4_idx = 0;  pml4_idx < 511; pml4_idx++) {
+    volatile int pml4_idx = 0;
+    for(;  pml4_idx < 511; pml4_idx++) {
         uint64_t p_pml4_entry = parent_pml4->pml4e[pml4_idx];
         uint64_t c_pml4_entry = 0;
         if(p_pml4_entry & _PAGE_PRESENT) {
@@ -148,11 +149,12 @@ void setup_child_ptables(uint64_t cpml4)
             child_pml4->pml4e[pml4_idx] = c_pml4_entry;
 
             p_pdir_p = (struct page_directory_pointer *) (p_pml4_entry & 0xfffffffffffff000);
-            p_pdir_p = (struct page_directory_pointer *) pa_to_va(c_pdir_p);
-            c_pdir_p = (struct page_directory_pointer *) (p_pml4_entry & 0xfffffffffffff000);
+            p_pdir_p = (struct page_directory_pointer *) pa_to_va(p_pdir_p);
+            c_pdir_p = (struct page_directory_pointer *) (c_pml4_entry & 0xfffffffffffff000);
             c_pdir_p = (struct page_directory_pointer *) pa_to_va(c_pdir_p);
 
-            for(int pdp_idx = 0; pdp_idx < 512; pdp_idx++) {
+            volatile int pdp_idx = 0;
+            for(; pdp_idx < 512; pdp_idx++) {
                 uint64_t p_pdp_entry = p_pdir_p->pdpe[pdp_idx];
                 uint64_t c_pdp_entry = 0;
                 if(p_pdp_entry & _PAGE_PRESENT) {
@@ -169,7 +171,8 @@ void setup_child_ptables(uint64_t cpml4)
                     c_pdir = (struct page_directory *) (c_pdp_entry & 0xfffffffffffff000);
                     c_pdir = (struct page_directory *) pa_to_va(c_pdir);
 
-                    for(int pd_idx = 0; pd_idx < 512; pd_idx++) {
+                    volatile int pd_idx = 0;
+                    for(; pd_idx < 512; pd_idx++) {
                         uint64_t p_pd_entry = p_pdir->pde[pd_idx];
                         uint64_t c_pd_entry = 0;
 
@@ -187,12 +190,14 @@ void setup_child_ptables(uint64_t cpml4)
                             c_pt = (struct page_table *) (c_pd_entry & 0xfffffffffffff000);
                             c_pt = (struct page_table *) pa_to_va(c_pt);
 
-                            for(int pt_idx = 0; pt_idx < 512; pt_idx++) {
-                                uint64_t p_pt_entry = p_pt->pte[pd_idx];
+                            volatile int pt_idx = 0;
+                            for(; pt_idx < 512; pt_idx++) {
+                                uint64_t p_pt_entry = p_pt->pte[pt_idx];
                                 if(p_pt_entry & _PAGE_PRESENT) {
-                                    uint64_t pte; 
-                                    pte  = p_pt_entry * 0xfffffffffffff000;
-                                    pte |= (_PAGE_PRESENT | _PAGE_USER);
+                                    uint64_t pte;
+                                    pte  = p_pt_entry & 0xfffffffffffff000;
+                                    //pte |= (_PAGE_PRESENT | _PAGE_USER | _PAGE_RW); //TODO: remove the write permission.
+                                    pte |= (_PAGE_PRESENT | _PAGE_USER); //TODO: remove the write permission.
                                     c_pt->pte[pt_idx] = pte;
                                     p_pt->pte[pt_idx] = pte;
                                 }
@@ -200,7 +205,7 @@ void setup_child_ptables(uint64_t cpml4)
                         }
                     }
                 }
-            } 
+            }
         }
     }
 
@@ -208,7 +213,7 @@ void setup_child_ptables(uint64_t cpml4)
     child_pml4->pml4e[511] = parent_pml4->pml4e[511];
 }
 
-void map_proc(uint64_t paddr, uint64_t vaddr) 
+void map_proc(uint64_t paddr, uint64_t vaddr)
 {
     struct page_table *ptable;
     struct page_directory *pdir;
@@ -259,11 +264,11 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        kprintf("Page already Mapped!!!\n");
-        //TODO: Have to remote this.
-        //entry = paddr;
-        //entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
-        //ptable->pte[PT_IDX(vaddr)] = entry;
+        //TODO: Have to remove this.
+        kprintf("Page %p already Mapped, chainging to %p\n", entry, paddr | 0x7);
+        entry = paddr;
+        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        ptable->pte[PT_IDX(vaddr)] = entry;
     }
     else {
         entry = paddr;
@@ -274,7 +279,7 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
     write_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
 }
 
-void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr) 
+void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
 {
     struct page_table *ptable;
     struct page_directory *pdir;
@@ -326,7 +331,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
 
 }
 
-void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size) 
+void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size)
 {
     uint64_t addrp, addrv;
     addrp = align_up(paddr);
@@ -338,7 +343,7 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
     }
 }
 
-void vmm_init(uint32_t* modulep, void* physbase, void* physfree) 
+void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 {
     kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
@@ -371,7 +376,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 
     struct page_map_level_4* pmap_l4;
     pmap_l4 = (struct page_map_level_4 *) page_alloc();
-    //pmap_l4 = (struct page_map_level_4 *) preinit_alloc((uint64_t) physfree, PAGE_SIZE); 
+    //pmap_l4 = (struct page_map_level_4 *) preinit_alloc((uint64_t) physfree, PAGE_SIZE);
     memset((void *) pmap_l4, 0, PAGE_SIZE);
 
     kprintf("Before mapping....\n");
@@ -416,7 +421,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //TODO: are two pages really needed?
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
     kprintf("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
-    
+
     uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     kprintf("Temp: %p\n", temp);
 
@@ -469,13 +474,14 @@ uint64_t * kmalloc(uint64_t size)
 
     //TODO: can I do this ?
     for(int i = 0; i < num_pages; i++) {
-        if(page_alloc() == -1) 
+        if(page_alloc() == -1)
             return NULL;
         else
             memset((void *) addr, 0, PAGE_SIZE);
     }
 
     pages_used += num_pages;
+    //kprintf("Pages Used: %d\n", pages_used);
 
     return addr;
 }
@@ -489,4 +495,3 @@ void kfree(uint64_t * vaddr)
 
     pages_used--;
 }
-

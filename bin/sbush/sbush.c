@@ -98,7 +98,7 @@ int execute(char* cmd, int pos, char * envp[]) {
         mod_tokens[i] = tokens[i];
     for(int i = idx; i < 64; i++)
         mod_tokens[i] = NULL;
-    
+
     int idx1 = 0;
     while(path_var[idx1] != '\0'){
         path_buf[idx1] = path_var[idx1];
@@ -125,7 +125,7 @@ int execute(char* cmd, int pos, char * envp[]) {
     //PATH code
 
     pid_t pid = fork();
-    
+
     if (pid == 0) {
 
         if (pos == 0) {
@@ -180,19 +180,19 @@ int execute_line(char* cmd, char* envp[]) {
    while (pipes[idx] != NULL) {
        pipes[++idx] = strtok(NULL, "|");
    }
-   
+
    if(!strcmp(pipes[0], "exit")) exit(0);
    else {
        for(int i = 0; i < idx; i++) {
            int pos;
-   
-           if (i == idx-1) 
+
+           if (i == idx-1)
                pos = 2;
            else if (i == 0)
                pos = 0;
-           else 
+           else
                pos = 1;
-   
+
            execute(pipes[i], pos, envp);
        }
    }
@@ -201,7 +201,8 @@ int execute_line(char* cmd, char* envp[]) {
 }
 
 int main(int argc, char* argv[], char* envp[]) {
-    
+
+    puts("---Welcome to SBUSH shell---");
     if(argc == 1) {
         while (TRUE) {
 
@@ -244,4 +245,3 @@ int main(int argc, char* argv[], char* envp[]) {
 
     return 0;
 }
-
