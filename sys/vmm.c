@@ -129,6 +129,7 @@ void * pa_to_va(void * addr)
 
 void setup_child_ptables(uint64_t cpml4)
 {
+
     struct page_map_level_4 * parent_pml4 = (struct page_map_level_4 *) read_cr3();
     struct page_map_level_4 * child_pml4  = (struct page_map_level_4 *) cpml4;
 
@@ -196,8 +197,7 @@ void setup_child_ptables(uint64_t cpml4)
                                 if(p_pt_entry & _PAGE_PRESENT) {
                                     uint64_t pte;
                                     pte  = p_pt_entry & 0xfffffffffffff000;
-                                    //pte |= (_PAGE_PRESENT | _PAGE_USER | _PAGE_RW); //TODO: remove the write permission.
-                                    pte |= (_PAGE_PRESENT | _PAGE_USER); //TODO: remove the write permission.
+                                    pte |= (_PAGE_PRESENT | _PAGE_USER);
                                     c_pt->pte[pt_idx] = pte;
                                     p_pt->pte[pt_idx] = pte;
                                 }
@@ -264,9 +264,9 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        //TODO: Have to remove this.
-        kprintf("Page %p already Mapped, chainging to %p\n", entry, paddr | 0x7);
-        entry = paddr;
+        //TODO: Have to remove this and create separate one for COW.
+        kprintf("Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
+        //entry = paddr;
         entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }

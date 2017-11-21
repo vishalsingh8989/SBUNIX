@@ -26,6 +26,7 @@ uint64_t syscall_handler(cpu_regs* regs)
     //kprintf("In the syscall handler, syscall no: %d\n", s_num);
     //kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
 
+    //TODO: change char* to const char * and cast to uint64_t is not needed.
     switch(s_num) {
 
         case __NR_exit:
@@ -58,6 +59,46 @@ uint64_t syscall_handler(cpu_regs* regs)
             ret = sys_waitpid((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
+        case __NR_open:
+            kprintf("Executing Open Syscall\n");
+            ret = sys_open((char *) arg1, (uint64_t) arg2);
+            return ret;
+
+        case __NR_close:
+            kprintf("Executing Close Syscall\n");
+            ret = sys_close((uint64_t) arg1);
+            return ret;
+
+        case __NR_access:
+            kprintf("Executing access Syscall\n");
+            ret = sys_access((char *) arg1, (uint64_t) arg2);
+            return ret;
+
+        case __NR_pipe:
+            kprintf("Executing pipe Syscall\n");
+            ret = sys_pipe((uint64_t*) arg1);
+            return ret;
+
+        case __NR_dup2:
+            kprintf("Executing dup2 Syscall\n");
+            ret = sys_dup2((uint64_t) arg1, (uint64_t) arg2);
+            return ret;
+
+        case __NR_getdents:
+            kprintf("Executing getdents Syscall\n");
+            ret = sys_getdents((uint64_t) arg1, (char *) arg2, (uint64_t) arg3);
+            return ret;
+
+        case __NR_getcwd:
+            kprintf("Executing getcwd Syscall\n");
+            ret = sys_getcwd((char *) arg1, (uint64_t) arg2);
+            return ret;
+
+        case __NR_chdir:
+            kprintf("Executing chdir Syscall\n");
+            ret = sys_chdir((char *) arg1);
+            return ret;
+
         default:
             return -1;
     }
@@ -70,7 +111,6 @@ void init_syscall()
     efer = rdmsr(EFER);
     wrmsr(EFER, efer | EFER_SCE);
     wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x1B << 48);
-    //wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x20 << 48);
 
     wrmsr(LSTAR, (uint64_t)_isr128);
     wrmsr(SFMASK, 0xC0000084);
@@ -180,21 +220,21 @@ void alignment_check_handler() {
 }
 
 void page_fault_handler(cpu_regs *regs) {
-    //kprintf("-- Page Fault Execption Fired --\n");
+    kprintf("-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    //kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
+    kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
 
     uint64_t fault_addr = read_cr2();
-    //kprintf("Faulting address: %p\n", fault_addr);
+    kprintf("Faulting address: %p\n", fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
     //uint64_t p_user_err  = error & PF_U;
-    //uint64_t p_rsvd_err  = error & PF_R;
+    uint64_t p_rsvd_err  = error & PF_R;
     //uint64_t p_insf_err  = error & PF_I;
 
-    /*
+
     if(p_prot_err & !p_write_err) {
         kprintf("Page Fault at addr: %p\n", fault_addr);
         kpanic("Read permission error");
@@ -204,7 +244,6 @@ void page_fault_handler(cpu_regs *regs) {
         kprintf("Page Fault at addr: %p\n", fault_addr);
         kpanic("Reserved page error");
     }
-    */
 
     vm_area_struct_t *vma = curr_task->mm->mmap;
 
@@ -214,6 +253,13 @@ void page_fault_handler(cpu_regs *regs) {
     }
 
     if(vma == NULL) {
+        kprintf("Growing Stack!\n");
+        uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+        page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+        uint64_t falign_addr = align_down(fault_addr);
+        map_proc(page_addr, falign_addr);
+        return;
+
         //TODO: Grow stack
         //TODO: Grow heap
         //TODO: Stack Overflow!
@@ -225,32 +271,30 @@ void page_fault_handler(cpu_regs *regs) {
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
-        uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
-        page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+        kprintf("Doing Copy On Write\n");
+        //uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+        //page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
-        map_proc(page_addr, falign_addr);
-        memcpy((void *) page_addr, (void*) falign_addr, PAGE_SIZE);
+        map_proc(falign_addr, falign_addr);
+        //memcpy((void *) page_addr, (void*) falign_addr, PAGE_SIZE);
+        tlb_flush(curr_task->pml4);
+        return;
     }
 
+    //TODO: return for stack and heap growing.
     uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
     page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
     uint64_t falign_addr = align_down(fault_addr);
     map_proc(page_addr, falign_addr);
 
-    /*
-    if(curr_task->stack_p >= vma->vm_start && curr_task->stack_p <= vma->vm_end) {
-        //TODO: this was stack allocation and mapping. Don't need to copy.
-        return;
-    }
-    */
-
     if(vma->file == NULL)
         return;
 
-    //Copy contents.
+    //Copy file contents.
     uint64_t src, dst;
     int size;
 
+    kprintf("Copying file contents to %p\n", vma->vm_start);
     if(falign_addr <= vma->vm_start){
         src = vma->file->f_start + vma->file->f_pgoff;
         dst = vma->vm_start;

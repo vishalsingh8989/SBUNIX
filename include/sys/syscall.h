@@ -106,9 +106,17 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
 //Kernal Syscall Handlers.
 void sys_exit();
 uint64_t sys_fork();
+uint64_t sys_pipe(uint64_t* fds);
 uint64_t sys_execve(char *fname, char **argv, char **envp);
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size);
 uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size);
 uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options);
+uint64_t sys_dup2(uint64_t old_fd, uint64_t new_fd);
+uint64_t sys_getdents(uint64_t fd, char *dir, uint64_t size);
+uint64_t sys_getcwd(char *buf, uint64_t size);
+uint64_t sys_access(char * pathname, uint64_t mode);
+uint64_t sys_chdir(char * pathname);
+uint64_t sys_open(char * pathname, uint64_t flags);
+uint64_t sys_close(uint64_t fd);
 
 #endif

@@ -9,10 +9,6 @@
 #include <sys/mm_types.h>
 #include <sys/fs.h>
 
-//TODO:
-#define HEAP_START  0x03000000
-#define STACK_TOP   0x50000000
-
 uint64_t atoi(char *num)
 {
     int i = 0;
@@ -32,7 +28,7 @@ uint64_t otod(uint64_t onum)
     int base = 1;
 
     for(uint64_t otemp = onum; otemp != 0; otemp/=10) {
-        dnum += (otemp % 10) * base; 
+        dnum += (otemp % 10) * base;
         base = base * 8;
     }
 
@@ -48,7 +44,7 @@ void *get_bin_addr(const char *fname)
         return NULL;
     }
 
-    uint64_t *rp = (uint64_t *) tstart; 
+    uint64_t *rp = (uint64_t *) tstart;
 
     while(rp[0] || rp[1] || rp[2]) {
         if(!strcmp(tstart->name, fname)) {
@@ -124,7 +120,7 @@ void print_elf_info(task_struct_t *task)
     vm_area_struct_t *vma_temp = task->mm->mmap;
 
     kprintf("MM Struct: \n");
-    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n", 
+    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
              task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
              mm_temp->start_data, mm_temp->end_data);
 
@@ -135,13 +131,13 @@ void print_elf_info(task_struct_t *task)
     }
 }
 
-int load_elf(task_struct_t *task, const char *fname) 
+int load_elf(task_struct_t *task, const char *fname)
 {
 
     struct posix_header_ustar * p_hdr_ustar = (struct posix_header_ustar *) get_bin_addr(fname);
     Elf64_Ehdr *e_hdr = (Elf64_Ehdr *) (p_hdr_ustar + 1);
 
-    if(e_hdr == NULL) 
+    if(e_hdr == NULL)
         return -1;
 
     Elf64_Phdr *p_hdr = (Elf64_Phdr *) ((uint64_t)e_hdr + e_hdr->e_phoff);
@@ -149,7 +145,7 @@ int load_elf(task_struct_t *task, const char *fname)
 
     task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
 
-    for(int i = 0; i < e_hdr->e_phnum; i++) 
+    for(int i = 0; i < e_hdr->e_phnum; i++)
     {
         if(p_hdr->p_type == 1) {
             vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
@@ -176,7 +172,7 @@ int load_elf(task_struct_t *task, const char *fname)
             //TODO: Map process to virtual address
             /*
             uint64_t st = align_down(p_hdr->p_vaddr);
-            uint64_t sz = (align_down(vma->vm_end) - align_down(vma->vm_start))/PAGE_SIZE; 
+            uint64_t sz = (align_down(vma->vm_end) - align_down(vma->vm_start))/PAGE_SIZE;
             if(sz == 0) sz = 1;
             for(int i = 0; i < sz; i++) {
                 uint64_t temp = (uint64_t) kmalloc(PAGE_SIZE);
@@ -189,7 +185,7 @@ int load_elf(task_struct_t *task, const char *fname)
             {
                 task->mm->start_code = vma->vm_start;
                 task->mm->end_code   = vma->vm_end;
-                
+
                 vma->file = (file_t *) kmalloc(PAGE_SIZE);
                 vma->file->f_start = (uint64_t) e_hdr;
                 vma->file->f_pgoff = p_hdr->p_offset;
@@ -212,7 +208,7 @@ int load_elf(task_struct_t *task, const char *fname)
 
     allocate_heap(task);
     allocate_stack(task);
-    print_elf_info(task);
+    //print_elf_info(task);
 
     return 0;
 }

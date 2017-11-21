@@ -77,12 +77,14 @@ uint64_t sys_fork()
     }
 
     write_cr3(curr_task->pml4);
+    tlb_flush(curr_task->pml4);
 
     volatile uint64_t stack_loc;
     volatile uint64_t rip_loc;
+
+    //TODO: make these are functions in asm utils.h
     __asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
     __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
-
 
     /*
     if(curr_task == prev_task) {
@@ -144,7 +146,7 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     strcpy(args[0], fname);
 
     for(int i = 0; i < 5; i++) {
-        args[i][0] = '\0';
+        //args[i][0] = '\0';
         if(argv[i+1] != NULL) {
             strcpy(args[i], argv[i+1]);
             arg_cnt++;
@@ -178,14 +180,27 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     new_task->kern_stack = (uint64_t) &stack[510];
 
     //Load process.
-    int ret = load_elf(new_task, fname);
+    int ret = load_elf(new_task, args[0]);
     //TODO: print the name of the exec
     if(ret == 0)
         kprintf("Loading Exe Sucessfull\n");
     else
         kprintf("Error Loading Exe\n");
 
-    //TODO: copy arguments.
+    //TODO: copy arguments.TODO: do for envp too.
+    uint64_t args_user = (uint64_t) kmalloc(PAGE_SIZE);
+    uint64_t falign_addr = align_down(STACK_TOP);
+    uint64_t page_addr = args_user - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+    map_proc(page_addr, falign_addr);
+
+    args_user = STACK_TOP + 0x1000 - 0x10 - sizeof(args);
+    memcpy((void *) args_user, (void *) args, sizeof(args));
+    for(int i = arg_cnt; i > 0; i--)
+       *(uint64_t *)(args_user - 8*i) = args_user + (arg_cnt-i)*64;
+    *(uint64_t *)(args_user - 8*(arg_cnt+1)) = arg_cnt-1;
+
+    args_user = args_user - 8*(arg_cnt+1);
+    new_task->stack_p = args_user;
 
     write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
@@ -222,5 +237,53 @@ uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 {
     curr_task->state = TASK_WAITING;
 
+    return 0;
+}
+
+uint64_t sys_getdents(uint64_t fd, char *dir, uint64_t size)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_dup2(uint64_t old_fd, uint64_t new_fd)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_pipe(uint64_t* fds)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_getcwd(char *buf, uint64_t size)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_access(char * pathname, uint64_t mode)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_chdir(char * pathname)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_open(char * pathname, uint64_t flags)
+{
+    //TODO:
+    return 0;
+}
+
+uint64_t sys_close(uint64_t fd)
+{
+    //TODO:
     return 0;
 }

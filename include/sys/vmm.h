@@ -5,6 +5,8 @@
 
 #define PAGE_SIZE 4096
 #define KERNAL_BASE_ADDRESS 0xffffffff80000000
+#define HEAP_START  0x03000000
+#define STACK_TOP   0x50000000
 
 //From 4.13.5 linux kernal source.
 #define _PAGE_BIT_PRESENT	  0	    /* is present */
@@ -75,4 +77,4 @@ void setup_child_ptables(uint64_t child_pml4);
 
 uint64_t * kmalloc(uint64_t size);
 
-#endif 
+#endif

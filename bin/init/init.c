@@ -17,7 +17,7 @@ int main(int argc, char **argv, char **envp)
     puts(">>Executing /etc/rc..(TODO: Not Implemented Yet)");
     puts(">>Executing Sbush..");
 
-    char* const sargv[] = {"/bin/sbush", NULL};
+    char* const sargv[] = {"bin/sbush", NULL};
     char* const senvp[] = {"PATH=/bin:", NULL};
 
     uint64_t pid;
@@ -29,7 +29,8 @@ int main(int argc, char **argv, char **envp)
     if(pid == 0) {
         //Include to environment facility or change to execve.
         puts("Executing execvpe()");
-        execvpe("bin/sbush", sargv, senvp);
+        //execvpe("bin/sbush", sargv, senvp);
+        execvpe(sargv[0], sargv, senvp);
     }
     else {
         puts("Executing waitpid()");
