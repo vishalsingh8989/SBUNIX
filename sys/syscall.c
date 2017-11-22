@@ -218,17 +218,30 @@ uint64_t sys_getcwd(char *buf, uint64_t size){
 	//kprintf("Inside sys_getcwd\n");
 	strcopy(buf ,cwd);
 	//kprintf("cwd: %s\n", cwd);
-	kprintf("buf from getcwd : %s ,  size : %d\n", buf, size);
+	kprintf("Buff from getcwd      : %s\n", buf);
 	return 0;
 }
 
 uint64_t sys_chdir(const char *dirname){
-	//int len = strlen(cwd);
-//	TODO . handle absolute and relative paths.
-	strcopy(cwd, dirname);
+	kprintf("Inside sys_chdir old  : %s \n", cwd);
+	kprintf("Inside sys_chdir new  : %s \n", dirname);
+	for(uint32_t idx = 0 ;idx< 500 ; idx++){
+		if(!strcmp((const char *)tarfs_fds[idx].name, dirname)){
+			if(tarfs_fds[idx].type == DIRTYPE){
+				strcopy(cwd, dirname);
+				kprintf("Change dir to         : %s\n",dirname);
+
+			}
+			else{
+				kprintf("cd: %s: No such file or directory\n",dirname);
+			}
+			return 0;
+		}
+	}
+
 
 	//cwd = (char *)dirname;
-	//kprintf("Change dir :  %s, len: %d \n",cwd,len );
+	kprintf("Not found Change dir :  %s\n",dirname);
 	return 0;
 }
 
@@ -236,46 +249,18 @@ uint64_t sys_chdir(const char *dirname){
 uint64_t sys_getdents(uint32_t fd_index, struct dirent* dir, uint32_t count){
 	//kprintf("Inside sys_getdents : %d \n", fd_index);
 
-
-
 	char buf[512] = {0};
 	strcopy(buf ,cwd);
-
-
-	ksleep(10);
 	uint32_t child_fidx ;
 	child_fidx = get_child(fd_index, dir->offset);
-
 	if(child_fidx == -1){
-
 		dir->offset = -1;
 		return -1;
 	}
 
-
 	strcopy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
 	dir->offset = child_fidx;
 	kprintf("%s\n", dir->d_name);
-	//kprintf("Data copied to dir struct :  %s\n", dir->d_name);
-
-//	ksleep(10000);
-//
-//	dir_match("/bin", "/bin/ls");
-//
-//	dir_match("/bin", "/bin/sbush");
-//	dir_match("/bin", "/bin/cat");
-//	dir_match("/bin", "/etc/");
-//	dir_match("/etc", "/etc/usr");
-//	dir_match("/bin", "/etc/usr");
-//	dir_match("/etc", "/bin/usr");
-//	dir_match("/etc/usr", "/etc/");
 	return child_fidx;
-
-//
-//	while ((child_fidx = get_child(idx, &child_fidx) )!=-1){
-//		kprintf("name : %s\n",tarfs_fds[child_fidx].name , child_fidx);
-//
-//
-//	}
 
 }

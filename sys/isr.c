@@ -45,7 +45,7 @@ uint64_t syscall_handler(cpu_regs* regs)
         		ret = sys_open((const char *)arg1, (uint32_t )arg2);
         		break;
         case __NR_getcwd:
-        		kprintf("Executing __NR_getcwd syscall\n");
+        		//kprintf("Executing __NR_getcwd syscall\n");
         		ret = sys_getcwd((char*)arg1, (uint32_t)arg2);
         		break;
         case __NR_chdir:

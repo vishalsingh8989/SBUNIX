@@ -103,14 +103,14 @@ void init_tarfs(){
 
 	//testing
 
-	strcopy(tarfs_fds[fd_index].name, "/bin/sbin");
+	strcopy(tarfs_fds[fd_index].name, "/bin/sbin/");
 	tarfs_fds[fd_index].size = 0;
 	tarfs_fds[fd_index].offset = 0;
 	tarfs_fds[fd_index].data = 0;
 	tarfs_fds[fd_index].type = DIRTYPE;
 
 
-	strcopy(tarfs_fds[fd_index+1].name, "/bin/config");
+	strcopy(tarfs_fds[fd_index+1].name, "/bin/config/");
 	tarfs_fds[fd_index+1].size = 0;
 	tarfs_fds[fd_index+1].offset = 0;
 	tarfs_fds[fd_index+1].data = 0;

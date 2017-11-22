@@ -65,8 +65,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
 
 //  __asm__ __volatile__("syscall");
   init_tarfs();
-  init_proc("bin/init", 0);
-  init_proc("bin/init", 1);
+  init_proc("bin/cd", 0);
+  init_proc("bin/cd", 1);
+  //init_proc("bin/init", 1);
 
 
   __asm__ __volatile__("cli;");
