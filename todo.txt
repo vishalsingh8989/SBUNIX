@@ -1,0 +1,9 @@
+1. Write fork and execve system calls.
+2. Write memory usage print near the lower right corner.
+3. Write helper function for listing the task list and write ps system call.
+4. Fix initial memory allocation.
+5. Finish exit system call, to free memory of a task.
+
+Extras:
+1. Write zone allocator.
+2. Write better schedular.

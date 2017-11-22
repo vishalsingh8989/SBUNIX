@@ -1,17 +1,16 @@
-#ifdef  _FS_H
+#ifndef _FS_H
 #define _FS_H
 
 #include <sys/defs.h>
 
+#define STDIN  0
+#define STDOUT 1
+#define STDERR 2
+
 //TODO: define appropriate types.
-struct file_operations {
-    uint64_t (*llseek) (struct file *, off_t, int);
-    ssize_t (*read) (struct file *, char *, size_t, off_t *);
-    ssize_t (*writed) (struct file *, const char *, size_t, off_t *);
-}
 
 typedef struct file_node {
-    struct file_operations *f_op;
+    //struct file_operations *f_op;
 
     uint64_t    f_count;
     uint64_t    f_flags;
@@ -24,5 +23,9 @@ typedef struct file_node {
 
     void *private_data;
 } file_node_t;
+
+typedef struct file_d {
+    file_node_t* fnode;
+} fd_t;
 
 #endif

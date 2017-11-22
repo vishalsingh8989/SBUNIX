@@ -3,8 +3,24 @@
 
 #include <sys/defs.h>
 
-void memset(void* dest, int value, int count); 
-void memcpy(void* dest, void* src, int count);
+//static inline void memset(void* dest, int value, int count); 
+//static inline void memcpy(void* dest, void* src, int count);
+static inline void memcpy(void* dest, void* src, int count)
+{
+    uint8_t * dest_t = (uint8_t *) dest;
+    uint8_t * src_t = (uint8_t *) src;
+
+    for(int i = 0; i < count; i++)
+        *dest_t++ = *src_t++;
+}
+
+static inline void memset(void* dest, int value, int count)
+{
+    uint8_t *dest_t = (uint8_t *) dest;
+    for(int i = 0; i < count; i++)
+        *dest_t++ = value;
+}
+
 void clr_term(); 
 void print_welcome();
 void kpanic(const char *fmt, ...);
@@ -14,7 +30,9 @@ uint64_t align_down (uint64_t addr);
 uint64_t strlen( const char *s);
 uint64_t atoi(char *s);
 uint64_t otod(uint64_t o);
+void itoa(int n, char s[]);
 int strstr(char *a, char *b);
 char *strcopy(char *d, const char *s);
 char *strconcat(char *dst, const char *src);
+int dir_match(char *dirname, char *patt);
 #endif

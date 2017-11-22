@@ -25,7 +25,7 @@ int main(int argc, char* argv[], char* envp[]) {
      return 1;
    }
 
-   num_dirs = getdents(fd, dir_struct, 1024);
+   num_dirs = getdents(fd, (struct dirent *) dir_struct, 1024);
 
    int pos = 0;
    while(pos < num_dirs) {

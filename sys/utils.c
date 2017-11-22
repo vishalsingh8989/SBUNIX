@@ -4,7 +4,8 @@
 #include <sys/vmm.h>
 #include <sys/utils.h>
 
-void memcpy(void* dest, void* src, int count)
+/*
+static void memcpy(void* dest, void* src, int count)
 {
     uint8_t * dest_t = (uint8_t *) dest;
     uint8_t * src_t = (uint8_t *) src;
@@ -13,12 +14,13 @@ void memcpy(void* dest, void* src, int count)
         *dest_t++ = *src_t++;
 }
 
-void memset(void* dest, int value, int count)
+static void memset(void* dest, int value, int count)
 {
     uint8_t *dest_t = (uint8_t *) dest;
     for(int i = 0; i < count; i++)
         *dest_t++ = value;
 }
+*/
 
 void clr_term()
 {
@@ -81,6 +83,31 @@ uint64_t strlen( const char *s){
     return len;
 }
 
+int dir_match(char *dirname, char *patt){
+	if (strlen(dirname) > strlen(patt)){
+		//kprintf("");
+		return -1;
+	}
+
+	char *dir_ptr = dirname;
+	char *patt_ptr = patt;
+	int pos = 0;
+	while(*dir_ptr == *patt_ptr && *patt_ptr != '\0'){
+		pos++;
+		dir_ptr++;
+		patt_ptr++;
+
+	}
+	if(pos  == strlen(dirname)){
+		//kprintf("match :  %s, %s\n", dirname, patt);
+		return 1;
+	}else{
+		//kprintf("Not match :  %s, %s\n", dirname, patt);
+		return -1;
+	}
+
+
+}
 int strstr(char *a, char *b){
 
 		if(strlen(a) < strlen((const char*)b)) return -1;
@@ -175,4 +202,35 @@ uint64_t otod(uint64_t onum)
     }
 
     return dnum;
+}
+
+/* from KR book*/
+void reverse(char s[])
+ {
+     int i, j;
+     char c;
+
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+ }
+
+/* itoa:  convert n to characters in s  from KR book*/
+void itoa(int n, char s[]){
+
+	int i, sign;
+
+
+    if ((sign = n) < 0)  /* record sign */
+        n = -n;          /* make n positive */
+    i = 0;
+    do {       /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';   /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
+    if (sign < 0)
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
 }

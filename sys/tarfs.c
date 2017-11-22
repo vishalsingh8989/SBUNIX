@@ -11,8 +11,8 @@
 extern char cwd[500];
 
 void sleep(int s){
-	for(int i = 0 ;i< s*900; i ++){
-		for(int k = 0 ;  k <s*900;k++  );
+	for(int i = 0 ;i< s*99999; i ++){
+
 	}
 }
 
@@ -250,34 +250,22 @@ int syscall_close(uint64_t fd){
 
 	}
 	return 0;
-
 }
 
-uint32_t get_child(uint32_t fd_idx , uint32_t *child_fidx){
-	//static int count;
+uint32_t get_child(uint32_t fd_idx , uint32_t child_fidx){
+
 	char name[100] ;
 	char tempname[100] ;
 	strcopy(name,tarfs_fds[fd_idx].name);
-	//sleep(10);
-	//kprintf("start idx %d\n", *child_fidx);
 
-
-	for (uint32_t idx = *child_fidx + 1; idx <  15 ;idx ++){
-
+	for (uint32_t idx = child_fidx + 1; idx <  15 ;idx ++){
 		strcopy(tempname,tarfs_fds[idx].name);
-
-//		if(strlen(name) == 1 && name[0] == '/'){
-//			kprintf("root :");
-//			return idx;// retrun everything one by one for root.
-//		}else{
-			int position = strstr(tempname,name);
-			if(position ==0){
-				//kprintf("name : %s , position :%d\n",tempname, position );
-				return idx;
-			}
-		//}
+		int position = dir_match(name, tempname);
+		if(position ==1){
+			//kprintf("name : %s , position :%d\n",tempname, position );
+			return idx;
+		}
 	}
-
-	kprintf("Name is : %s\n", name);
+	//kprintf("Name is : %s\n", name);
 	return -1;
 }

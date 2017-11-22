@@ -105,8 +105,8 @@ void print_elf_info(task_struct_t *task)
 //             mm_temp->start_data, mm_temp->end_data);
 
     while(vma_temp != NULL) {
-        kprintf("VM Area Struct: \n");
-        kprintf("VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
+        //kprintf("VM Area Struct: \n");
+        //kprintf("VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
         vma_temp = vma_temp->vm_next;
     }
 }

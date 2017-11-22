@@ -3,6 +3,8 @@
 
 #include <sys/process.h>
 
+int load_elf(task_struct_t *task, const char *fname);
+
 #define IS_XE  0x1
 #define IS_WR  0x2
 #define IS_RD  0x4

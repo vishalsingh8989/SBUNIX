@@ -127,6 +127,87 @@ void * pa_to_va(void * addr)
     return addr + KERNAL_BASE_ADDRESS;
 }
 
+void setup_child_ptables(uint64_t cpml4) 
+{
+    struct page_map_level_4 * parent_pml4 = (struct page_map_level_4 *) read_cr3();
+    struct page_map_level_4 * child_pml4  = (struct page_map_level_4 *) cpml4;
+
+    parent_pml4 = (struct page_map_level_4 *) pa_to_va(parent_pml4);
+    child_pml4  = (struct page_map_level_4 *) pa_to_va(child_pml4);
+
+    for(int pml4_idx = 0;  pml4_idx < 511; pml4_idx++) {
+        uint64_t p_pml4_entry = parent_pml4->pml4e[pml4_idx];
+        uint64_t c_pml4_entry = 0;
+        if(p_pml4_entry & _PAGE_PRESENT) {
+            struct page_directory_pointer *c_pdir_p;
+            struct page_directory_pointer *p_pdir_p;
+
+            c_pdir_p      = (struct page_directory_pointer *) page_alloc();
+            c_pml4_entry  = (uint64_t) c_pdir_p;
+            c_pml4_entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+            child_pml4->pml4e[pml4_idx] = c_pml4_entry;
+
+            p_pdir_p = (struct page_directory_pointer *) (p_pml4_entry & 0xfffffffffffff000);
+            p_pdir_p = (struct page_directory_pointer *) pa_to_va(c_pdir_p);
+            c_pdir_p = (struct page_directory_pointer *) (p_pml4_entry & 0xfffffffffffff000);
+            c_pdir_p = (struct page_directory_pointer *) pa_to_va(c_pdir_p);
+
+            for(int pdp_idx = 0; pdp_idx < 512; pdp_idx++) {
+                uint64_t p_pdp_entry = p_pdir_p->pdpe[pdp_idx];
+                uint64_t c_pdp_entry = 0;
+                if(p_pdp_entry & _PAGE_PRESENT) {
+                    struct page_directory *c_pdir;
+                    struct page_directory *p_pdir;
+
+                    c_pdir       = (struct page_directory *) page_alloc();
+                    c_pdp_entry  = (uint64_t) c_pdir;
+                    c_pdp_entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+                    c_pdir_p->pdpe[pdp_idx] = c_pdp_entry;
+
+                    p_pdir = (struct page_directory *) (p_pdp_entry & 0xfffffffffffff000);
+                    p_pdir = (struct page_directory *) pa_to_va(p_pdir);
+                    c_pdir = (struct page_directory *) (c_pdp_entry & 0xfffffffffffff000);
+                    c_pdir = (struct page_directory *) pa_to_va(c_pdir);
+
+                    for(int pd_idx = 0; pd_idx < 512; pd_idx++) {
+                        uint64_t p_pd_entry = p_pdir->pde[pd_idx];
+                        uint64_t c_pd_entry = 0;
+
+                        if(p_pd_entry & _PAGE_PRESENT) {
+                            struct page_table *p_pt;
+                            struct page_table *c_pt;
+
+                            c_pt        = (struct page_table  *) page_alloc();
+                            c_pd_entry  = (uint64_t) c_pt;
+                            c_pd_entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+                            c_pdir->pde[pd_idx] = c_pd_entry;
+
+                            p_pt = (struct page_table *) (p_pd_entry & 0xfffffffffffff000);
+                            p_pt = (struct page_table *) pa_to_va(p_pt);
+                            c_pt = (struct page_table *) (c_pd_entry & 0xfffffffffffff000);
+                            c_pt = (struct page_table *) pa_to_va(c_pt);
+
+                            for(int pt_idx = 0; pt_idx < 512; pt_idx++) {
+                                uint64_t p_pt_entry = p_pt->pte[pd_idx];
+                                if(p_pt_entry & _PAGE_PRESENT) {
+                                    uint64_t pte; 
+                                    pte  = p_pt_entry * 0xfffffffffffff000;
+                                    pte |= (_PAGE_PRESENT | _PAGE_USER);
+                                    c_pt->pte[pt_idx] = pte;
+                                    p_pt->pte[pt_idx] = pte;
+                                }
+                            }
+                        }
+                    }
+                }
+            } 
+        }
+    }
+
+    //child_pml4->pml4e[510] = parent_pml4->pml4e[510];
+    child_pml4->pml4e[511] = parent_pml4->pml4e[511];
+}
+
 void map_proc(uint64_t paddr, uint64_t vaddr) 
 {
     struct page_table *ptable;
@@ -394,6 +475,8 @@ uint64_t * kmalloc(uint64_t size)
             memset((void *) addr, 0, PAGE_SIZE);
     }
 
+    pages_used += num_pages;
+
     return addr;
 }
 
@@ -403,5 +486,7 @@ void kfree(uint64_t * vaddr)
     page->ref = 0;
     page->next = free_pages_list;
     free_pages_list = page;
+
+    pages_used--;
 }
 

@@ -1,0 +1,181 @@
+
+rootfs/bin/init:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000004000b0 <_start>:
+  4000b0:	41 54                	push   %r12
+  4000b2:	55                   	push   %rbp
+  4000b3:	53                   	push   %rbx
+  4000b4:	48 81 ec 00 03 00 00 	sub    $0x300,%rsp
+  4000bb:	49 89 e4             	mov    %rsp,%r12
+  4000be:	4c 89 e5             	mov    %r12,%rbp
+  4000c1:	49 8b 9c 24 28 03 00 	mov    0x328(%r12),%rbx
+  4000c8:	00 
+  4000c9:	48 8d bc 24 00 02 00 	lea    0x200(%rsp),%rdi
+  4000d0:	00 
+  4000d1:	b8 00 00 00 00       	mov    $0x0,%eax
+  4000d6:	b9 20 00 00 00       	mov    $0x20,%ecx
+  4000db:	f3 48 ab             	rep stos %rax,%es:(%rdi)
+  4000de:	48 89 e7             	mov    %rsp,%rdi
+  4000e1:	b9 40 00 00 00       	mov    $0x40,%ecx
+  4000e6:	f3 48 ab             	rep stos %rax,%es:(%rdi)
+  4000e9:	83 fb 20             	cmp    $0x20,%ebx
+  4000ec:	7e 16                	jle    400104 <_start+0x54>
+  4000ee:	48 8d 3d 03 02 00 00 	lea    0x203(%rip),%rdi        # 4002f8 <write+0x28>
+  4000f5:	e8 6c 01 00 00       	callq  400266 <puts>
+  4000fa:	bf 01 00 00 00       	mov    $0x1,%edi
+  4000ff:	e8 4e 01 00 00       	callq  400252 <exit>
+  400104:	85 db                	test   %ebx,%ebx
+  400106:	7e 29                	jle    400131 <_start+0x81>
+  400108:	8d 43 ff             	lea    -0x1(%rbx),%eax
+  40010b:	48 8d 0c c5 08 00 00 	lea    0x8(,%rax,8),%rcx
+  400112:	00 
+  400113:	b8 00 00 00 00       	mov    $0x0,%eax
+  400118:	48 8b 94 05 30 03 00 	mov    0x330(%rbp,%rax,1),%rdx
+  40011f:	00 
+  400120:	48 89 94 04 00 02 00 	mov    %rdx,0x200(%rsp,%rax,1)
+  400127:	00 
+  400128:	48 83 c0 08          	add    $0x8,%rax
+  40012c:	48 39 c8             	cmp    %rcx,%rax
+  40012f:	75 e7                	jne    400118 <_start+0x68>
+  400131:	48 63 c3             	movslq %ebx,%rax
+  400134:	49 8b 94 c4 38 03 00 	mov    0x338(%r12,%rax,8),%rdx
+  40013b:	00 
+  40013c:	48 85 d2             	test   %rdx,%rdx
+  40013f:	74 2a                	je     40016b <_start+0xbb>
+  400141:	49 8d 34 c4          	lea    (%r12,%rax,8),%rsi
+  400145:	b8 00 00 00 00       	mov    $0x0,%eax
+  40014a:	b9 01 00 00 00       	mov    $0x1,%ecx
+  40014f:	48 89 14 04          	mov    %rdx,(%rsp,%rax,1)
+  400153:	ff c1                	inc    %ecx
+  400155:	48 8b 94 06 48 03 00 	mov    0x348(%rsi,%rax,1),%rdx
+  40015c:	00 
+  40015d:	48 83 c0 08          	add    $0x8,%rax
+  400161:	48 85 d2             	test   %rdx,%rdx
+  400164:	74 05                	je     40016b <_start+0xbb>
+  400166:	83 f9 3f             	cmp    $0x3f,%ecx
+  400169:	7e e4                	jle    40014f <_start+0x9f>
+  40016b:	48 89 e2             	mov    %rsp,%rdx
+  40016e:	48 8d b4 24 00 02 00 	lea    0x200(%rsp),%rsi
+  400175:	00 
+  400176:	89 df                	mov    %ebx,%edi
+  400178:	e8 13 00 00 00       	callq  400190 <main>
+  40017d:	89 c7                	mov    %eax,%edi
+  40017f:	e8 ce 00 00 00       	callq  400252 <exit>
+  400184:	48 81 c4 00 03 00 00 	add    $0x300,%rsp
+  40018b:	5b                   	pop    %rbx
+  40018c:	5d                   	pop    %rbp
+  40018d:	41 5c                	pop    %r12
+  40018f:	c3                   	retq   
+
+0000000000400190 <main>:
+  400190:	48 83 ec 28          	sub    $0x28,%rsp
+  400194:	48 c7 44 24 16 00 00 	movq   $0x0,0x16(%rsp)
+  40019b:	00 00 
+  40019d:	66 c7 44 24 1e 00 00 	movw   $0x0,0x1e(%rsp)
+  4001a4:	c6 44 24 16 49       	movb   $0x49,0x16(%rsp)
+  4001a9:	c6 44 24 17 6e       	movb   $0x6e,0x17(%rsp)
+  4001ae:	c6 44 24 18 20       	movb   $0x20,0x18(%rsp)
+  4001b3:	c6 44 24 19 49       	movb   $0x49,0x19(%rsp)
+  4001b8:	c6 44 24 1a 6e       	movb   $0x6e,0x1a(%rsp)
+  4001bd:	c6 44 24 1b 69       	movb   $0x69,0x1b(%rsp)
+  4001c2:	c6 44 24 1c 74       	movb   $0x74,0x1c(%rsp)
+  4001c7:	ba 00 00 00 00       	mov    $0x0,%edx
+  4001cc:	89 d0                	mov    %edx,%eax
+  4001ce:	c1 e8 1f             	shr    $0x1f,%eax
+  4001d1:	01 d0                	add    %edx,%eax
+  4001d3:	d1 f8                	sar    %eax
+  4001d5:	48 98                	cltq   
+  4001d7:	0f b6 44 04 16       	movzbl 0x16(%rsp,%rax,1),%eax
+  4001dc:	88 82 00 80 0b 80    	mov    %al,-0x7ff48000(%rdx)
+  4001e2:	48 83 c2 02          	add    $0x2,%rdx
+  4001e6:	48 83 fa 0e          	cmp    $0xe,%rdx
+  4001ea:	75 e0                	jne    4001cc <main+0x3c>
+  4001ec:	48 8d 3d 35 01 00 00 	lea    0x135(%rip),%rdi        # 400328 <write+0x58>
+  4001f3:	e8 6e 00 00 00       	callq  400266 <puts>
+  4001f8:	48 c7 44 24 0c 00 00 	movq   $0x0,0xc(%rsp)
+  4001ff:	00 00 
+  400201:	66 c7 44 24 14 00 00 	movw   $0x0,0x14(%rsp)
+  400208:	c6 44 24 0c 49       	movb   $0x49,0xc(%rsp)
+  40020d:	c6 44 24 0d 6e       	movb   $0x6e,0xd(%rsp)
+  400212:	c6 44 24 0e 20       	movb   $0x20,0xe(%rsp)
+  400217:	c6 44 24 0f 49       	movb   $0x49,0xf(%rsp)
+  40021c:	c6 44 24 10 6e       	movb   $0x6e,0x10(%rsp)
+  400221:	c6 44 24 11 69       	movb   $0x69,0x11(%rsp)
+  400226:	c6 44 24 12 74       	movb   $0x74,0x12(%rsp)
+  40022b:	ba 00 00 00 00       	mov    $0x0,%edx
+  400230:	89 d0                	mov    %edx,%eax
+  400232:	c1 e8 1f             	shr    $0x1f,%eax
+  400235:	01 d0                	add    %edx,%eax
+  400237:	d1 f8                	sar    %eax
+  400239:	48 98                	cltq   
+  40023b:	0f b6 44 04 0c       	movzbl 0xc(%rsp,%rax,1),%eax
+  400240:	88 82 00 80 0b 80    	mov    %al,-0x7ff48000(%rdx)
+  400246:	48 83 c2 02          	add    $0x2,%rdx
+  40024a:	48 83 fa 0e          	cmp    $0xe,%rdx
+  40024e:	75 e0                	jne    400230 <main+0xa0>
+
+0000000000400250 <hlt>:
+  400250:	eb a6                	jmp    4001f8 <main+0x68>
+
+0000000000400252 <exit>:
+  400252:	48 63 d7             	movslq %edi,%rdx
+  400255:	b9 3c 00 00 00       	mov    $0x3c,%ecx
+  40025a:	48 89 c8             	mov    %rcx,%rax
+  40025d:	48 89 d7             	mov    %rdx,%rdi
+  400260:	0f 05                	syscall 
+  400262:	48 89 c2             	mov    %rax,%rdx
+  400265:	c3                   	retq   
+
+0000000000400266 <puts>:
+  400266:	53                   	push   %rbx
+  400267:	48 89 fb             	mov    %rdi,%rbx
+  40026a:	0f b6 3f             	movzbl (%rdi),%edi
+  40026d:	40 84 ff             	test   %dil,%dil
+  400270:	74 1b                	je     40028d <puts+0x27>
+  400272:	40 0f be ff          	movsbl %dil,%edi
+  400276:	e8 30 00 00 00       	callq  4002ab <putchar>
+  40027b:	0f be 13             	movsbl (%rbx),%edx
+  40027e:	39 d0                	cmp    %edx,%eax
+  400280:	75 22                	jne    4002a4 <puts+0x3e>
+  400282:	48 ff c3             	inc    %rbx
+  400285:	0f b6 3b             	movzbl (%rbx),%edi
+  400288:	40 84 ff             	test   %dil,%dil
+  40028b:	75 e5                	jne    400272 <puts+0xc>
+  40028d:	bf 0a 00 00 00       	mov    $0xa,%edi
+  400292:	e8 14 00 00 00       	callq  4002ab <putchar>
+  400297:	83 f8 0a             	cmp    $0xa,%eax
+  40029a:	0f 95 c0             	setne  %al
+  40029d:	0f b6 c0             	movzbl %al,%eax
+  4002a0:	f7 d8                	neg    %eax
+  4002a2:	eb 05                	jmp    4002a9 <puts+0x43>
+  4002a4:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+  4002a9:	5b                   	pop    %rbx
+  4002aa:	c3                   	retq   
+
+00000000004002ab <putchar>:
+  4002ab:	48 83 ec 18          	sub    $0x18,%rsp
+  4002af:	89 7c 24 0c          	mov    %edi,0xc(%rsp)
+  4002b3:	48 8d 74 24 0c       	lea    0xc(%rsp),%rsi
+  4002b8:	ba 01 00 00 00       	mov    $0x1,%edx
+  4002bd:	bf 01 00 00 00       	mov    $0x1,%edi
+  4002c2:	e8 09 00 00 00       	callq  4002d0 <write>
+  4002c7:	8b 44 24 0c          	mov    0xc(%rsp),%eax
+  4002cb:	48 83 c4 18          	add    $0x18,%rsp
+  4002cf:	c3                   	retq   
+
+00000000004002d0 <write>:
+  4002d0:	48 89 f1             	mov    %rsi,%rcx
+  4002d3:	49 89 d2             	mov    %rdx,%r10
+  4002d6:	4c 63 cf             	movslq %edi,%r9
+  4002d9:	41 b8 01 00 00 00    	mov    $0x1,%r8d
+  4002df:	4c 89 c0             	mov    %r8,%rax
+  4002e2:	4c 89 cf             	mov    %r9,%rdi
+  4002e5:	48 89 ce             	mov    %rcx,%rsi
+  4002e8:	4c 89 d2             	mov    %r10,%rdx
+  4002eb:	0f 05                	syscall 
+  4002ed:	48 89 c1             	mov    %rax,%rcx
+  4002f0:	48 89 c8             	mov    %rcx,%rax
+  4002f3:	c3                   	retq   

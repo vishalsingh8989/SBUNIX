@@ -10,16 +10,18 @@
 #include <sys/syscall.h>
 
 extern void _isr128(void);
+uint64_t k_rsp;
+uint64_t u_rsp;
 
 #define OFFS 0xffffffff00000000
 
-//void syscall_handler(uint64_t s_num, uint64_t arg1, uint64_t arg2, uint64_t arg3)
-uint64_t  syscall_handler(cpu_regs* regs)
+uint64_t syscall_handler(cpu_regs* regs)
 {
     uint64_t s_num = regs->rax;
     uint64_t arg1  = regs->rdi;
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
+    uint64_t ret = -1;
    
 
     //https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf
@@ -29,23 +31,31 @@ uint64_t  syscall_handler(cpu_regs* regs)
 	 //__asm__ __volatile__("movq %0, %%rsp"::
 	  //          "r"(curr_task->rip):"memory");
 
-    kprintf("In the syscall handler, syscall no: %d\n", s_num);
-    kprintf("arg1: %p, arg2: %d, arg3: %d\n", arg1, arg2, arg3);
+    //kprintf("In the syscall handler, syscall no: %d\n", s_num);
+    //kprintf("arg1: %p, arg2: %d, arg3: %d\n", arg1, arg2, arg3);
 
     switch(s_num) {
 
         case __NR_exit:
-            kprintf("Executing exit syscall\n");
+            kprintf("Executing __NR_exit syscall\n");
             sys_exit();
             break;
+        case __NR_open:
+        		kprintf("Executing __NR_open syscall\n");
+        		ret = sys_open((const char *)arg1, (uint32_t )arg2);
+        		break;
         case __NR_getcwd:
         		kprintf("Executing __NR_getcwd syscall\n");
-        		sys_getcwd((char*)arg1, (uint32_t)arg2);
+        		ret = sys_getcwd((char*)arg1, (uint32_t)arg2);
         		break;
         case __NR_chdir:
-         	kprintf("Executing __NR_chdir syscall\n");
+         	//kprintf("Executing __NR_chdir syscall\n");
          	sys_chdir((const char*)arg1);
          	break;
+        case __NR_getdents:
+        		//kprintf("Executing __NR_getdents syscall\n");
+        		ret = sys_getdents((uint32_t )arg1, (struct dirent*)arg2, (uint32_t )arg3);
+        		break;
         case __NR_fork:
         		kprintf("Executing __NR_fork syscall\n");
         		sys_fork();
@@ -53,7 +63,7 @@ uint64_t  syscall_handler(cpu_regs* regs)
        default:
             break;
     }
-    return 0 ;
+    return ret ;
    //__asm__ __volatile__("movq %%rsp,%0;":"=r"(curr_task->rip):);
 
 }
@@ -61,11 +71,24 @@ uint64_t  syscall_handler(cpu_regs* regs)
 void init_syscall()
 {
     uint64_t efer;
-    efer = rdmsr(EFER);
 
+    efer = rdmsr(EFER);
     wrmsr(EFER, efer | EFER_SCE);
+    wrmsr(STAR, (uint64_t) 0x8 << 32 | (uint64_t) 0x1B << 48);
 
     wrmsr(LSTAR, (uint64_t)_isr128);
+    wrmsr(SFMASK, 0xC0000084);
+}
+
+void pnum_xy (uint64_t value, int base, int x) {
+    if (value <= (base-1)) {
+        if (value < 10) pchar_xy((char) (value+48), RED, x++, 24);
+        else pchar_xy((char) (value+87), RED, x++, 24);
+    }
+    else {
+        pnum_xy(value/base, base, x);
+        pnum_xy(value - (value/base)*base, base, x);
+    }
 }
 
 void timer_int_handler() {
@@ -103,6 +126,8 @@ void timer_int_handler() {
    pchar_xy(':', GREEN, 74, 24);
    pchar_xy(hl , GREEN, 73, 24);
    pchar_xy(hh , GREEN, 72, 24);
+
+   pnum_xy(pages_used, 10, 60);
 
    pic_send_eoi(0);
 }

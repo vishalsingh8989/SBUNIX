@@ -71,6 +71,8 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr);
 
 void map_proc(uint64_t paddr, uint64_t vaddr);
 
+void setup_child_ptables(uint64_t child_pml4);
+
 uint64_t * kmalloc(uint64_t size);
 
 #endif 
