@@ -209,6 +209,10 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
             perr = gets(str_buf);
 
+            puts("Input received from user:");
+            puts(str_buf);
+            while(1); //Put execve here for now, until pipe is implemented.
+
             execute_line(str_buf, envp);
         }
     }

@@ -17,14 +17,20 @@ uint64_t user_stack;
 
 void print_task_list()
 {
+
+    if(curr_task == NULL) {
+        kprintf("No tasks in the queue currently");
+        return;
+    }
+
     int i = 0;
-    kprintf("Current tasks in queue are: \n");
+    kprintf("Tasks in queue are: \n");
+    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
     task_struct_t * temp =  curr_task;
-    while(strcmp(temp->pcmd_name, "idle")) {
+    while(temp->next_task != curr_task) {
         kprintf("%d : %s\n", i++, temp->pcmd_name);
         temp = temp->next_task;
     }
-    kprintf("%d : %s\n", i++, temp->pcmd_name);
 }
 
 pid_t get_pid() {
@@ -75,12 +81,26 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
     );
 }
 
-void add_to_queue(task_struct_t *task)
+void add_to_queue(task_struct_t *new_task)
 {
-    task_struct_t *temp;
-    temp = curr_task->next_task;
-    curr_task->next_task = task;
-    task->next_task = temp;
+    print_task_list();
+
+    if(curr_task == NULL) {
+        curr_task = new_task;
+        curr_task->next_task = curr_task;
+        return;
+    }
+
+    task_struct_t *temp = curr_task->next_task;
+    while(temp->next_task != curr_task) {
+        temp = temp->next_task;
+        kprintf("temp: %s\n", temp->pcmd_name);
+    }
+    temp->next_task = new_task;
+
+    new_task->next_task = curr_task;
+    curr_task = new_task;
+
 }
 
 //TODO: replace this with better schedular
@@ -190,8 +210,7 @@ task_struct_t *init_proc(const char *name, int type)
         strcpy(init_task->pcmd_name, "idle");
         *(stack + 510) = (uint64_t) &idle_proc;;
         init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
-        init_task->next_task = init_task;
-        curr_task = init_task;;
+        add_to_queue(init_task);
     }
     else { //Load user process
         strcpy(init_task->pcmd_name, "bin/init");
@@ -218,9 +237,7 @@ task_struct_t *init_proc(const char *name, int type)
 
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
-        //add_to_queue(init_task);
-        init_task->next_task = curr_task;
-        curr_task = init_task;
+        add_to_queue(init_task);
 
         switch_to_userspace(init_task);
     }

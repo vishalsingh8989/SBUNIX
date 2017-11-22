@@ -24,7 +24,7 @@ typedef struct task_struct {
     int ppid;
     int state;
     int exit_code;
-    
+
     mm_struct_t *mm;
     fd_t *fd[MAX_FILES];
 
@@ -47,13 +47,14 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task);
 pid_t get_pid();
 void schedule();
 void switch_to_userspace(task_struct_t *task);
+void add_to_queue(task_struct_t *task);
 
 task_struct_t *curr_task;
 task_struct_t *init_task;
 task_struct_t *kern_task;
 task_struct_t *prev_task;
 
-extern uint64_t kern_stack; 
+extern uint64_t kern_stack;
 extern uint64_t user_stack;
 
 uint64_t pages_used;

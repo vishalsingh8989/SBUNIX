@@ -3,20 +3,22 @@
 
 #include <sys/defs.h>
 
-#define __NR_read        0
-#define __NR_write       1
-#define __NR_open        2
-#define __NR_close       3
-#define __NR_access     21
-#define __NR_pipe       22
-#define __NR_dup2       33
-#define __NR_fork       57
-#define __NR_execve     59
-#define __NR_exit       60
-#define __NR_wait4      61
-#define __NR_getdents   78
-#define __NR_getcwd     79
-#define __NR_chdir      80
+#define __NR_read         0
+#define __NR_write        1
+#define __NR_open         2
+#define __NR_close        3
+#define __NR_access      21
+#define __NR_pipe        22
+#define __NR_dup2        33
+#define __NR_fork        57
+#define __NR_execve      59
+#define __NR_exit        60
+#define __NR_wait4       61
+#define __NR_getdents    78
+#define __NR_getcwd      79
+#define __NR_chdir       80
+#define __NR_sched_yield 24
+#define __NR_shutdown    48
 
 static inline uint64_t syscall_0(uint64_t s_no) {
 
@@ -105,6 +107,8 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
 
 //Kernal Syscall Handlers.
 void sys_exit();
+void sys_sched_yield();
+void sys_shutdown(uint64_t code);
 uint64_t sys_fork();
 uint64_t sys_pipe(uint64_t* fds);
 uint64_t sys_execve(char *fname, char **argv, char **envp);

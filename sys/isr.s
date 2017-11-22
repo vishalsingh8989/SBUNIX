@@ -123,7 +123,7 @@ _isr14:
 	iretq
 
 _isr128:
-	cli
+	//cli
 	pushq $128
 	movq %rsp, user_stack
 	movq (kern_stack), %rsp

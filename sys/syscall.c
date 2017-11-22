@@ -7,6 +7,7 @@
 #include <sys/asm_utils.h>
 #include <sys/fs.h>
 #include <sys/elf64.h>
+#include <sys/terminal.h>
 
 extern void fork_return(void);
 
@@ -204,21 +205,18 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
 
     write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
-    new_task->next_task = curr_task;
-    curr_task = new_task;
+    add_to_queue(new_task);
 
     switch_to_userspace(new_task);
 
     return -1;
 }
+
 uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
 {
     if(fd == STDIN) {
-        char *buf = (char *) addr;
-        buf = "Hello";
-        kprintf(buf);
+        term_read(addr, size);
     }
-    while(1);
 
     return 1;
 }
@@ -226,10 +224,9 @@ uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
 {
     if(fd == STDOUT || fd == STDERR) {
-        //kprintf((char *) addr);
-        char *sym = (char *) addr;
-        pchar(*sym);
+        term_write(addr, size);
     }
+
     return 1;
 }
 
@@ -286,4 +283,15 @@ uint64_t sys_close(uint64_t fd)
 {
     //TODO:
     return 0;
+}
+
+void sys_sched_yield()
+{
+    schedule();
+}
+
+void sys_shutdown(uint64_t code)
+{
+    //TODO: clearn all tasks.
+    sys_exit();
 }

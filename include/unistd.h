@@ -19,6 +19,9 @@ int waitpid(int pid, int *status);
 int dup2(int old_fd, int new_fd);
 int access(const char *pathname, int mode);
 
+void yeild();
+void shutdown(int code);
+
 unsigned int sleep(unsigned int seconds);
 
 pid_t getpid(void);

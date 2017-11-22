@@ -8,6 +8,7 @@
 #include <sys/process.h>
 #include <sys/asm_utils.h>
 #include <sys/syscall.h>
+#include <sys/terminal.h>
 
 extern void _isr128(void);
 uint64_t k_rsp;
@@ -35,7 +36,7 @@ uint64_t syscall_handler(cpu_regs* regs)
             return 0;
 
         case __NR_read:
-            kprintf("Executing Read Syscall\n");
+            //kprintf("Executing Read Syscall\n");
             ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
@@ -98,6 +99,16 @@ uint64_t syscall_handler(cpu_regs* regs)
             kprintf("Executing chdir Syscall\n");
             ret = sys_chdir((char *) arg1);
             return ret;
+
+        case __NR_sched_yield:
+            kprintf("Executing yield Syscall\n");
+            sys_sched_yield();
+            return 0;
+
+        case __NR_shutdown:
+            kprintf("Executing shutdown Syscall\n");
+            sys_shutdown((uint64_t) arg1);
+            return 0;
 
         default:
             return -1;
@@ -189,6 +200,7 @@ void keyboard_int_handler() {
           pchar_xy(c  , RED, 70, 24);
           pchar_xy(']', RED, 71, 24);
         }
+        upd_term_buf(c);
     }
 
     pic_send_eoi(1);
