@@ -8,8 +8,11 @@
 #include <sys/fs.h>
 #include <sys/elf64.h>
 #include <sys/terminal.h>
+#include <sys/tarfs.h>
+#include <dirent.h>
 
 extern void fork_return(void);
+extern char cwd[500];
 
 void sys_exit()
 {
@@ -237,10 +240,22 @@ uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
     return 0;
 }
 
-uint64_t sys_getdents(uint64_t fd, char *dir, uint64_t size)
+uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 {
-    //TODO:
-    return 0;
+
+    char buf[512] = {0};
+    strcpy(buf ,cwd);
+    uint32_t child_fidx ;
+    child_fidx = get_child(fd, dir->offset);
+    if(child_fidx == -1){
+      dir->offset = -1;
+      return -1;
+    }
+
+    strcpy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
+    dir->offset = child_fidx;
+    kprintf("%s\n", dir->d_name);
+    return child_fidx;
 }
 
 uint64_t sys_dup2(uint64_t old_fd, uint64_t new_fd)
@@ -257,26 +272,73 @@ uint64_t sys_pipe(uint64_t* fds)
 
 uint64_t sys_getcwd(char *buf, uint64_t size)
 {
-    //TODO:
-    return 0;
+  //kprintf("Inside sys_getcwd\n");
+	strcpy(buf ,cwd);
+	//kprintf("cwd: %s\n", cwd);
+	kprintf("Buff from getcwd      : %s\n", buf);
+	return 0;
 }
 
 uint64_t sys_access(char * pathname, uint64_t mode)
 {
-    //TODO:
+  kprintf("Inside sys_chdir old  : %s \n", cwd);
+	kprintf("Inside sys_chdir new  : %s \n", pathname);
+	for(uint32_t idx = 0 ;idx< 500 ; idx++){
+		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
+			if(tarfs_fds[idx].type == DIRTYPE){
+				strcpy(cwd, pathname);
+				kprintf("Change dir to         : %s\n",pathname);
+
+			}
+			else{
+				kprintf("cd: %s: No such file or directory\n",pathname);
+			}
+			return 0;
+		}
+	}
+
+
+	//cwd = (char *)pathname;
+	kprintf("Not found Change dir :  %s\n",pathname);
+	return 0;
+
     return 0;
 }
 
 uint64_t sys_chdir(char * pathname)
 {
-    //TODO:
+    kprintf("Inside sys_chdir old  : %s \n", cwd);
+kprintf("Inside sys_chdir new  : %s \n", pathname);
+for(uint32_t idx = 0 ;idx< 500 ; idx++){
+  if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
+    if(tarfs_fds[idx].type == DIRTYPE){
+      strcpy(cwd, pathname);
+      kprintf("Change dir to         : %s\n",pathname);
+
+    }
+    else{
+      kprintf("cd: %s: No such file or directory\n",pathname);
+    }
     return 0;
+  }
+}
+
+
+//cwd = (char *)pathname;
+kprintf("Not found Change dir :  %s\n",pathname);
+return 0;
 }
 
 uint64_t sys_open(char * pathname, uint64_t flags)
 {
-    //TODO:
-    return 0;
+  kprintf("syscall : sys_open()\n");
+	int fidx = get_index_by_name(pathname);
+	if(fidx == -1){
+
+	}else{
+		kprintf("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
+	}
+	return fidx;
 }
 
 uint64_t sys_close(uint64_t fd)

@@ -9,32 +9,6 @@
 #include <sys/mm_types.h>
 #include <sys/fs.h>
 
-uint64_t atoi(char *num)
-{
-    int i = 0;
-    uint64_t inum = 0;
-
-    while(num[i] >= '0' && num[i] <= '9') {
-        inum = inum*10 + (num[i] - '0');
-        i++;
-    }
-
-    return inum;
-}
-
-uint64_t otod(uint64_t onum)
-{
-    uint64_t dnum = 0;
-    int base = 1;
-
-    for(uint64_t otemp = onum; otemp != 0; otemp/=10) {
-        dnum += (otemp % 10) * base;
-        base = base * 8;
-    }
-
-    return dnum;
-}
-
 //TODO: replace this with tarfs_open()
 void *get_bin_addr(const char *fname)
 {

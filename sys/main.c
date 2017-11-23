@@ -59,6 +59,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   __asm__ __volatile__("sti;");
 
   init_syscall();
+  init_tarfs();
   //__asm__("int $0");
   //while(1);
 

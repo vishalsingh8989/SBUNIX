@@ -9,6 +9,7 @@
 #include <sys/asm_utils.h>
 #include <sys/syscall.h>
 #include <sys/terminal.h>
+#include <dirent.h>
 
 extern void _isr128(void);
 uint64_t k_rsp;
@@ -87,7 +88,7 @@ uint64_t syscall_handler(cpu_regs* regs)
 
         case __NR_getdents:
             kprintf("Executing getdents Syscall\n");
-            ret = sys_getdents((uint64_t) arg1, (char *) arg2, (uint64_t) arg3);
+            ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_getcwd:

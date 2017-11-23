@@ -164,7 +164,8 @@ sysret:
 	popq %rdx
 	popq %rcx
 	popq %rbx
-	popq %rax
+	//popq %rax
+	popq %r11
 	popq %rsp
 	addq $0x8, %rsp
   sti

@@ -2,6 +2,7 @@
 #define SYSCALL_H
 
 #include <sys/defs.h>
+#include <dirent.h>
 
 #define __NR_read         0
 #define __NR_write        1
@@ -116,7 +117,7 @@ uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size);
 uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size);
 uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options);
 uint64_t sys_dup2(uint64_t old_fd, uint64_t new_fd);
-uint64_t sys_getdents(uint64_t fd, char *dir, uint64_t size);
+uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size);
 uint64_t sys_getcwd(char *buf, uint64_t size);
 uint64_t sys_access(char * pathname, uint64_t mode);
 uint64_t sys_chdir(char * pathname);
