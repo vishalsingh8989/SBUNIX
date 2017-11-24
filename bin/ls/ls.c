@@ -9,7 +9,7 @@ int main(int argc, char* argv[], char* envp[]) {
   /*
    int    num_dirs;
    int    fd;
-   char   dir_struct[2048];
+   struct dirent  dir_struct[2048];
    struct dirent* p;
    char   dir_path[NAME_MAX+1];
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
    int pos = 0;
    while(pos < num_dirs) {
-     p = (struct dirent *) (dir_struct + pos);
+     p = dir_struct + pos;
      puts(p->d_name);
      pos += p->reclen;
    }
@@ -59,4 +59,5 @@ int main(int argc, char* argv[], char* envp[]) {
 
  }
  puts("*********");
+ 
 }

@@ -48,6 +48,8 @@ pid_t get_pid();
 void schedule();
 void switch_to_userspace(task_struct_t *task);
 void add_to_queue(task_struct_t *task);
+void delete_task(task_struct_t *task);
+void print_task_list();
 
 task_struct_t *curr_task;
 task_struct_t *init_task;

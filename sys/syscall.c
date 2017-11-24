@@ -16,11 +16,22 @@ extern char cwd[500];
 
 void sys_exit()
 {
-    //TODO: cleanup
+    print_task_list();
 
-    task_struct_t* next_task = curr_task->next_task;
+    /*
+    task_struct_t *temp = curr_task;
+    if(curr_task->parent != NULL) {
+        delete_task(curr_task);
+        temp->next_task = temp->parent;
+        curr_task = temp;
+    }
+    else {
+        delete_task(curr_task);
+        curr_task = temp->next_task;
+    }
+    */
 
-    kprintf("Context switch from %s to %s\n", curr_task->pcmd_name, next_task->pcmd_name);
+    curr_task = curr_task->prev_task->prev_task;
     schedule();
 }
 
@@ -38,10 +49,10 @@ uint64_t sys_fork()
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
-    child_task->state     = TASK_RUNNABLE;
-    child_task->pid       = get_pid();
-    child_task->ppid      = curr_task->pid;
-    child_task->sibling   = NULL;
+    child_task->state   = TASK_RUNNABLE;
+    child_task->pid     = get_pid();
+    child_task->ppid    = curr_task->pid;
+    child_task->sibling = NULL;
     strcpy(child_task->pcmd_name, curr_task->pcmd_name);
     prev_task = curr_task;
 
@@ -49,10 +60,13 @@ uint64_t sys_fork()
     setup_child_ptables(child_task->pml4);
 
     //queue the child after parent task. TODO: add function "add_child_to_queue"
-    child_task->prev_task = curr_task;
-    child_task->next_task = curr_task->next_task;
     curr_task->child      = child_task;
-    curr_task->next_task  = child_task;
+    child_task->parent    = curr_task;
+    add_to_queue(child_task);
+
+    //child_task->prev_task = curr_task;
+    //child_task->next_task = curr_task->next_task;
+    //curr_task->next_task  = child_task;
 
     write_cr3(child_task->pml4);
 
@@ -128,6 +142,7 @@ uint64_t sys_fork()
 uint64_t sys_execve(char *fname, char **argv, char **envp)
 {
     //TODO: change the prints to include process name.
+
     task_struct_t *new_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
     if(!new_task) {
         kpanic("Not able to allocate task struct for new task\n");
@@ -135,15 +150,19 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     }
     memset(new_task, 0, sizeof(task_struct_t *));
 
+//    task_struct_t *new_task = curr_task;
+
     uint64_t * stack = (uint64_t *) kmalloc(PAGE_SIZE);
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
     }
 
+
     mm_struct_t *mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     if(!mm) {
         kpanic("Not able to allocate mm_struct for init\n");
     }
+
 
     char args[5][50]; //TODO: can this be less restrictive. Can use better version of kmalloc()
     int arg_cnt = 1;
@@ -187,9 +206,9 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     int ret = load_elf(new_task, args[0]);
     //TODO: print the name of the exec
     if(ret == 0)
-        kprintf("Loading Exe Sucessfull\n");
+        kprintf("Loading %s was sucessfull\n", new_task->pcmd_name);
     else
-        kprintf("Error Loading Exe\n");
+        kprintf("Error loading %s\n", new_task->pcmd_name);
 
     //TODO: copy arguments.TODO: do for envp too.
     uint64_t args_user = (uint64_t) kmalloc(PAGE_SIZE);
@@ -354,6 +373,6 @@ void sys_sched_yield()
 
 void sys_shutdown(uint64_t code)
 {
-    //TODO: clearn all tasks.
+    //TODO: clean all tasks.
     sys_exit();
 }

@@ -95,7 +95,7 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
                          "movq %2, %%rdi;"
                          "movq %3, %%rsi;"
                          "movq %4, %%rdx;"
-                         "movq %4, %%r10;"
+                         "movq %5, %%r10;"
                          "syscall;"
 
                          "movq %%rax, %0;"

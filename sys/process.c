@@ -19,15 +19,16 @@ void print_task_list()
 {
 
     if(curr_task == NULL) {
-        kprintf("No tasks in the queue currently");
+        kprintf("Tasks in queue are: \n");
+        kprintf("No tasks in the queue!\n");
         return;
     }
 
     int i = 0;
     kprintf("Tasks in queue are: \n");
     kprintf("%d : %s\n", i++, curr_task->pcmd_name);
-    task_struct_t * temp =  curr_task;
-    while(temp->next_task != curr_task) {
+    task_struct_t * temp =  curr_task->next_task;
+    while(temp != curr_task) {
         kprintf("%d : %s\n", i++, temp->pcmd_name);
         temp = temp->next_task;
     }
@@ -41,40 +42,9 @@ pid_t get_pid() {
 
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
-    //TODO: does this have to be atomic.
     __asm__ __volatile__ (
-        //"pushq %%rax;"
-        //"pushq %%rbx;"
-	    //"pushq %%rcx;"
-	    //"pushq %%rdx;"
-	    //"pushq %%rbp;"
-	    //"pushq %%rsi;"
-	    //"pushq %%rdi;"
-	    //"pushq %%r8;"
-	    //"pushq %%r9;"
-	    //"pushq %%r10;"
-	    //"pushq %%r11;"
-	    //"pushq %%r12;"
-	    //"pushq %%r13;"
-	    //"pushq %%r14;"
-	    //"pushq %%r15;"
         "movq %%rsp, %0;"
         "movq %1, %%rsp;"
-	    //"popq %%r15;"
-	    //"popq %%r14;"
-	    //"popq %%r13;"
-	    //"popq %%r12;"
-	    //"popq %%r11;"
-	    //"popq %%r10;"
-	    //"popq %%r9;"
-	    //"popq %%r8;"
-	    //"popq %%rdi;"
-	    //"popq %%rsi;"
-	    //"popq %%rbp;"
-	    //"popq %%rdx;"
-	    //"popq %%rcx;"
-	    //"popq %%rbx;"
-	    //"popq %%rax;"
         "retq;"
         ::"r"(&(prev_task->stack_p)),
           "r"(next_task->stack_p)
@@ -83,24 +53,36 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 
 void add_to_queue(task_struct_t *new_task)
 {
-    print_task_list();
-
     if(curr_task == NULL) {
         curr_task = new_task;
-        curr_task->next_task = curr_task;
+        curr_task->next_task = curr_task->prev_task = new_task;
+        print_task_list();
         return;
     }
 
-    task_struct_t *temp = curr_task->next_task;
-    while(temp->next_task != curr_task) {
-        temp = temp->next_task;
-        kprintf("temp: %s\n", temp->pcmd_name);
-    }
-    temp->next_task = new_task;
+    task_struct_t *curr_next = curr_task->next_task;
 
-    new_task->next_task = curr_task;
-    curr_task = new_task;
+    curr_task->next_task = new_task;
+    new_task->prev_task  = curr_task;
+    new_task->next_task  = curr_next;
+    curr_next->prev_task = new_task;
 
+    print_task_list();
+}
+
+void remove_from_queue(task_struct_t *task)
+{
+     task_struct_t *temp = task;
+
+     while(temp != task) {
+       temp = temp->next_task;
+     }
+
+     task_struct_t *prev_task = temp->prev_task;
+     task_struct_t *next_task = temp->next_task;
+
+     prev_task->next_task = next_task;
+     next_task->prev_task = prev_task;
 }
 
 //TODO: replace this with better schedular
@@ -124,20 +106,20 @@ void schedule()
     }
 }
 
-//TODO: change the name to idle.
 void idle_proc()
 {
     kprintf("--Inside IDLE Process--\n");
 
     while(1) {
-        //__asm__ __volatile("hlt;");
-        //__asm__ __volatile("sti;");
+        //__asm__ __volatile__("hlt;");
+        //__asm__ __volatile__("sti;");
         schedule();
     }
 }
 
 void switch_to_userspace(task_struct_t *task)
 {
+    curr_task = task;
     set_tss_rsp((void *) task->kern_stack);
     kern_stack = task->kern_stack;
 
@@ -207,7 +189,7 @@ task_struct_t *init_proc(const char *name, int type)
     strcpy(init_task->cdir_name, "/bin");
 
     if (type == 0) { //create idle process
-        strcpy(init_task->pcmd_name, "idle");
+        strcpy(init_task->pcmd_name, "idle_proc");
         *(stack + 510) = (uint64_t) &idle_proc;;
         init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
         add_to_queue(init_task);
@@ -231,9 +213,9 @@ task_struct_t *init_proc(const char *name, int type)
         //Load process.
         int ret = load_elf(init_task, name);
         if(ret == 0)
-            kprintf("Loading Exe Sucessfull\n");
+            kprintf("Loading %s was sucessfull\n", init_task->pcmd_name);
         else
-            kprintf("Error Loading Exe\n");
+            kprintf("Error loading %s\n", init_task->pcmd_name);
 
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
@@ -243,4 +225,9 @@ task_struct_t *init_proc(const char *name, int type)
     }
 
     return init_task;
+}
+
+void delete_task(task_struct_t *task)
+{
+    remove_from_queue(task);
 }

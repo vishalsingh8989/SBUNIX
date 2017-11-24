@@ -21,20 +21,21 @@ void term_read(uint64_t addr, uint64_t size)
     __asm__ __volatile__("sti;");
     while(term_idx < size); //TODO: change to enter pressed.
 
-    uint64_t addri = addr;
+    char * addri = (char *) addr;
 
     //kprintf("Returning char: %c at idx: %d to callee\n", term_buf[term_idx], term_idx-1);
 
     for(int i = 0; i < size; i++) {
-        *(uint64_t *) addri++ = term_buf[--term_idx];
+        *(addri+i) = term_buf[--term_idx];
     }
 }
 
 void term_write(uint64_t addr, uint64_t size)
 {
-    uint64_t addri = addr;
+    char * addri = (char *) addr;
 
     for(int i = 0; i < size; i++) {
-        pchar(*(char *) addri++);
+        pchar(*addri);
+        addri+=1;
     }
 }
