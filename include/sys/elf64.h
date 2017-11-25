@@ -47,5 +47,6 @@ typedef struct {
 } Elf64_Phdr;
 
 int load_elf(task_struct_t *task, const char *fname);
+void *get_bin_addr(const char *fname);
 
 #endif

@@ -14,6 +14,8 @@ char* tokens[64];
 char* mod_tokens[64];
 char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
+char* sargv[] = {"bin/ls", NULL};
+char* senvp[] = {"PATH=/bin:", NULL};
 
 int   err;
 char* perr;
@@ -209,29 +211,29 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
             perr = gets(str_buf);
 
+            tokens[0] = str_buf;
+            tokens[1] = NULL;
+
+            int status;
             puts("Input received from user:");
             puts(str_buf);
 
-            puts("Executing fork()");
             pid_t pid = fork();
-            int status;
-
-            //char* const sargv[] = {"bin/ls", NULL};
-            char* const sargv[] = {str_buf, NULL};
-            char* const senvp[] = {"PATH=/bin:", NULL};
 
             if(pid == 0) {
                 //Include the environment facility or change to execve.
-                puts("Executing execvpe()");
-                int ret = execvpe(sargv[0], sargv, senvp);
-                if(ret < 0) puts("Command not found!!");
+                //int ret = execvpe(sargv[0],  sargv, senvp);
+                int ret = execvpe(tokens[0], tokens, senvp);
+                if(ret < 0) {
+                  puts("Command not found!!");
+                  exit(1);
+                }
             }
             else {
                 puts("Executing waitpid()");
                 waitpid(pid, &status);
             }
 
-            //while(1); //Put execve here for now, until pipe is implemented.
             //execute_line(str_buf, envp);
         }
     }

@@ -199,7 +199,7 @@ void setup_child_ptables(uint64_t cpml4)
                                     pte  = p_pt_entry & 0xfffffffffffff000;
                                     pte |= (_PAGE_PRESENT | _PAGE_USER);
                                     c_pt->pte[pt_idx] = pte;
-                                    p_pt->pte[pt_idx] = pte;
+                                    //p_pt->pte[pt_idx] = pte;
                                 }
                             }
                         }

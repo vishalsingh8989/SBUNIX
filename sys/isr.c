@@ -87,7 +87,7 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_getdents:
-            kprintf("Executing getdents Syscall\n");
+            //kprintf("Executing getdents Syscall\n");
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
@@ -233,7 +233,7 @@ void alignment_check_handler() {
 }
 
 void page_fault_handler(cpu_regs *regs) {
-    kprintf("-- Page Fault Execption Fired --\n");
+    //kprintf("-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
     kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);

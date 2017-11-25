@@ -12,11 +12,10 @@ int main(int argc, char **argv, char **envp)
     char* const sargv[] = {"bin/sbush", NULL};
     char* const senvp[] = {"PATH=/bin:", NULL};
 
-    uint64_t pid;
     int status;
 
     puts("Executing fork()");
-    pid = fork();
+    pid_t pid = fork();
 
     if(pid == 0) {
         //Include the environment facility or change to execve.
