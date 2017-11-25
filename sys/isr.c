@@ -10,6 +10,7 @@
 #include <sys/syscall.h>
 #include <sys/terminal.h>
 #include <dirent.h>
+#include <debug.h>
 
 extern void _isr128(void);
 uint64_t k_rsp;
@@ -47,27 +48,27 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_fork:
-            kprintf("Executing Fork Syscall\n");
+        		debug("Executing Fork Syscall\n");
             ret = sys_fork();
             return ret;
 
         case __NR_execve:
-            kprintf("Executing Execve Syscall\n");
+            debug("Executing Execve Syscall\n");
             ret = sys_execve((char *) arg1, (char **) arg2, (char **) arg3);
             return ret;
 
         case __NR_wait4:
-            kprintf("Executing Wait4 Syscall\n");
+        		debug("Executing Wait4 Syscall\n");
             ret = sys_waitpid((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_open:
-            kprintf("Executing Open Syscall\n");
+        		debug("Executing Open Syscall\n");
             ret = sys_open((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_close:
-            kprintf("Executing Close Syscall\n");
+        		debug("Executing Close Syscall\n");
             ret = sys_close((uint64_t) arg1);
             return ret;
 
@@ -87,17 +88,17 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_getdents:
-            kprintf("Executing getdents Syscall\n");
+        		debug("Executing getdents Syscall\n");
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_getcwd:
-            kprintf("Executing getcwd Syscall\n");
+        		debug("Executing getcwd Syscall\n");
             ret = sys_getcwd((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_chdir:
-            kprintf("Executing chdir Syscall\n");
+            debug("Executing chdir Syscall\n");
             ret = sys_chdir((char *) arg1);
             return ret;
 

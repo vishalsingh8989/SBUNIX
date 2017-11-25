@@ -1,18 +1,19 @@
 #include <sys/defs.h>
 #include <sys/vmm.h>
 #include <sys/process.h>
-#include <sys/kprintf.h>
 #include <sys/string.h>
 #include <sys/utils.h>
 #include <sys/asm_utils.h>
 #include <sys/fs.h>
 #include <sys/elf64.h>
 #include <sys/terminal.h>
+#include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <dirent.h>
+#include <debug.h>
 
 extern void fork_return(void);
-extern char cwd[500];
+extern char cwd[MAX_NAME+1];
 
 void sys_exit()
 {
@@ -20,7 +21,7 @@ void sys_exit()
 
     task_struct_t* next_task = curr_task->next_task;
 
-    kprintf("Context switch from %s to %s\n", curr_task->pcmd_name, next_task->pcmd_name);
+    debug("Context switch from %s to %s\n", curr_task->pcmd_name, next_task->pcmd_name);
     schedule();
 }
 
@@ -98,17 +99,17 @@ uint64_t sys_fork()
       //child_task->stack_p = child_task->kern_stack;
       //uint64_t * temp = (uint64_t *) child_task->kern_stack;
       //temp[0] = rip_loc;
-      //kprintf("In Parent!\n");
+      //debug("In Parent!\n");
       //schedule();
 
-      kprintf("In Parent!\n");
+      debug("In Parent!\n");
       child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8;
       *(uint64_t *) child_task->kern_stack = rip_loc;
       child_task->stack_p = child_task->kern_stack;
       schedule();
     }
     else {
-      kprintf("In Child!\n");
+      debug("In Child!\n");
       outb(0x20, 0x20);
       return 0;
     }
@@ -149,13 +150,21 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     int arg_cnt = 1;
     strcpy(args[0], fname);
 
+
     for(int i = 0; i < 5; i++) {
         //args[i][0] = '\0';
         if(argv[i+1] != NULL) {
+        		kprintf("argv : %s\n", argv[i+1]);
+        		memset(args[i],  '\0', sizeof(args[i]));
             strcpy(args[i], argv[i+1]);
             arg_cnt++;
         }
     }
+
+    debug("**********in execvpe*************\n");
+    debug("args : %d\n", arg_cnt);
+    //sleep(99999);
+    //sleep(99999);
 
     new_task->state     = TASK_RUNNABLE;
     new_task->mm        = mm;
@@ -187,9 +196,9 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     int ret = load_elf(new_task, args[0]);
     //TODO: print the name of the exec
     if(ret == 0)
-        kprintf("Loading Exe Sucessfull\n");
+        debug("Loading Exe Sucessfull\n");
     else
-        kprintf("Error Loading Exe\n");
+        debug("Error Loading Exe\n");
 
     //TODO: copy arguments.TODO: do for envp too.
     uint64_t args_user = (uint64_t) kmalloc(PAGE_SIZE);
@@ -203,9 +212,13 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
        *(uint64_t *)(args_user - 8*i) = args_user + (arg_cnt-i)*64;
     *(uint64_t *)(args_user - 8*(arg_cnt+1)) = arg_cnt-1;
 
+
     args_user = args_user - 8*(arg_cnt+1);
     new_task->stack_p = args_user;
 
+    //if(strcmp(fname, "bin/ls")){
+    //		debug("In debug");
+    //}
     write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
     add_to_queue(new_task);
@@ -243,10 +256,13 @@ uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 {
 
-    char buf[512] = {0};
+    char buf[NAME_MAX+1] = {0};
+    memset(buf, '\0', sizeof(buf));
     strcpy(buf ,cwd);
     uint32_t child_fidx ;
+    debug("Get child of  fd : %d, prev child : %d\n",fd, dir->offset);
     child_fidx = get_child(fd, dir->offset);
+    debug("Child idx : %d\n", child_fidx);
     if(child_fidx == -1){
       dir->offset = -1;
       return -1;
@@ -254,7 +270,7 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 
     strcpy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
     dir->offset = child_fidx;
-    kprintf("%s\n", dir->d_name);
+    debug("%s\n", dir->d_name);
     return child_fidx;
 }
 
@@ -272,26 +288,26 @@ uint64_t sys_pipe(uint64_t* fds)
 
 uint64_t sys_getcwd(char *buf, uint64_t size)
 {
-  //kprintf("Inside sys_getcwd\n");
+  //debug("Inside sys_getcwd\n");
 	strcpy(buf ,cwd);
-	//kprintf("cwd: %s\n", cwd);
-	kprintf("Buff from getcwd      : %s\n", buf);
+	//debug("cwd: %s\n", cwd);
+	debug("Buff from getcwd      : %s\n", buf);
 	return 0;
 }
 
 uint64_t sys_access(char * pathname, uint64_t mode)
 {
-  kprintf("Inside sys_chdir old  : %s \n", cwd);
-	kprintf("Inside sys_chdir new  : %s \n", pathname);
+  debug("Inside sys_chdir old  : %s \n", cwd);
+	debug("Inside sys_chdir new  : %s \n", pathname);
 	for(uint32_t idx = 0 ;idx< 500 ; idx++){
 		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
 			if(tarfs_fds[idx].type == DIRTYPE){
 				strcpy(cwd, pathname);
-				kprintf("Change dir to         : %s\n",pathname);
+				debug("Change dir to         : %s\n",pathname);
 
 			}
 			else{
-				kprintf("cd: %s: No such file or directory\n",pathname);
+				debug("cd: %s: No such file or directory\n",pathname);
 			}
 			return 0;
 		}
@@ -299,7 +315,7 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 
 	//cwd = (char *)pathname;
-	kprintf("Not found Change dir :  %s\n",pathname);
+	debug("Not found Change dir :  %s\n",pathname);
 	return 0;
 
     return 0;
@@ -307,36 +323,34 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 uint64_t sys_chdir(char * pathname)
 {
-    kprintf("Inside sys_chdir old  : %s \n", cwd);
-kprintf("Inside sys_chdir new  : %s \n", pathname);
-for(uint32_t idx = 0 ;idx< 500 ; idx++){
-  if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
-    if(tarfs_fds[idx].type == DIRTYPE){
-      strcpy(cwd, pathname);
-      kprintf("Change dir to         : %s\n",pathname);
+	debug("Inside sys_chdir old  : %s \n", cwd);
+	debug("Inside sys_chdir new  : %s \n", pathname);
+	for(uint32_t idx = 0 ;idx< 500 ; idx++){
+		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
+			if(tarfs_fds[idx].type == DIRTYPE){
+				strcpy(cwd, pathname);
+				debug("Change dir to         : %s\n",pathname);
+			}
+			else{
+				debug("cd: %s: No such file or directory\n",pathname);
+			}
+			return 0;
+		}
+	}
 
-    }
-    else{
-      kprintf("cd: %s: No such file or directory\n",pathname);
-    }
-    return 0;
-  }
+
+	//cwd = (char *)pathname;
+	debug("Not found Change dir :  %s\n",pathname);
+	return 0;
 }
 
-
-//cwd = (char *)pathname;
-kprintf("Not found Change dir :  %s\n",pathname);
-return 0;
-}
-
-uint64_t sys_open(char * pathname, uint64_t flags)
-{
-  kprintf("syscall : sys_open()\n");
+uint64_t sys_open(char * pathname, uint64_t flags){
+	debug("syscall : sys_open()\n");
 	int fidx = get_index_by_name(pathname);
 	if(fidx == -1){
 
 	}else{
-		kprintf("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
+		debug("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
 	}
 	return fidx;
 }

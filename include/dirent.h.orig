@@ -1,0 +1,30 @@
+#ifndef _DIRENT_H
+#define _DIRENT_H
+
+#define NAME_MAX 255
+
+struct dirent {
+   long  inode;
+   long  offset;
+   unsigned short reclen;
+   char d_name[NAME_MAX+1];
+};
+
+//struct DIR {
+//   struct dirent ent;
+//};
+
+typedef struct DIR DIR;
+
+DIR *opendir(const char *name);
+struct dirent *readdir(DIR *dirp);
+int closedir(DIR *dirp);
+<<<<<<< HEAD
+int getdents(int fd,  struct dirent* dir, int size);
+||||||| merged common ancestors
+int getdents(int fd, char *dir, int size);
+=======
+int getdents(int fd, struct dirent *dir, int size);
+>>>>>>> 08b7266844cbb4be3516f08fe89cb34436759b2a
+
+#endif

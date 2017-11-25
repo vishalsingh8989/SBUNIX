@@ -4,6 +4,12 @@
 #include <sys/string.h>
 #include <sys/vmm.h>
 
+
+void sleep(int s){
+	for(int i = 0 ;i< s*99999; i ++){
+
+	}
+}
 /*
 static void memcpy(void* dest, void* src, int count)
 {
@@ -122,4 +128,35 @@ uint64_t align_down (uint64_t addr)
     uint64_t offset = ((uint64_t) addr % PAGE_SIZE);
 
     return addr - offset;
+}
+
+/* from KR book*/
+void reverse(char s[])
+ {
+     int i, j;
+     char c;
+
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+ }
+
+/* itoa:  convert n to characters in s  from KR book*/
+void itoa(int n, char s[]){
+
+	int i, sign;
+
+
+    if ((sign = n) < 0)  /* record sign */
+        n = -n;          /* make n positive */
+    i = 0;
+    do {       /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';   /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
+    if (sign < 0)
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
 }

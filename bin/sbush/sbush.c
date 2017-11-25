@@ -207,31 +207,41 @@ int main(int argc, char* argv[], char* envp[]) {
         while (TRUE) {
 
             setprompt();
+            memset(str_buf, '\0', sizeof(str_buf));
             perr = gets(str_buf);
 
             puts("Input received from user:");
             puts(str_buf);
 
+            int idx = 0;
+            memset(tokens[idx],  '\0', sizeof(tokens[idx]));
+			tokens[idx] = strtok(str_buf, " ");
+			while (tokens[idx] != NULL) {
+				++idx;
+				memset(tokens[idx],  '\0', sizeof(tokens[idx]));
+				tokens[idx] = strtok(NULL, " ");
+			}
+
             puts("Executing fork()");
             pid_t pid = fork();
             int status;
 
-            char* const sargv[] = {"bin/ls", NULL};
+            //char* const sargv[] = {"bin/ls", NULL};
             char* const senvp[] = {"PATH=/bin:", NULL};
 
             if(pid == 0) {
                 //Include the environment facility or change to execve.
                 puts("Executing execvpe()");
-                execvpe(sargv[0], sargv, senvp);
+                execvpe(tokens[0], tokens, senvp);
             }
             else {
                 puts("Executing waitpid()");
                 waitpid(pid, &status);
             }
 
-            while(1); //Put execve here for now, until pipe is implemented.
+            //while(1); //Put execve here for now, until pipe is implemented.
 
-            execute_line(str_buf, envp);
+            //execute_line(str_buf, envp);
         }
     }
     else {

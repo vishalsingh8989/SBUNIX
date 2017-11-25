@@ -1,19 +1,17 @@
 #include <sys/tarfs.h>
-#include <sys/kprintf.h>
 #include <sys/defs.h>
 #include <sys/utils.h>
 #include <sys/elf64.h>
 #include <sys/syscall.h>
 #include <sys/utils.h>
 #include <sys/string.h>
+#include <dirent.h>
+#include <debug.h>
 
-char cwd[500];
 
-void sleep(int s){
-	for(int i = 0 ;i< s*99999; i ++){
+char cwd[MAX_NAME+1];
 
-	}
-}
+
 
 
 //int open(const char* pathname, int flags) {
@@ -26,7 +24,7 @@ void sleep(int s){
 //{
 //    int dir_fd = -1;
 //    if (-1 == (dir_fd = open(name, O_DIRECTORY | O_RDONLY))) {
-//        kprintf("open fail\n");
+//        debug("open fail\n");
 //        return NULL;
 //    }
 //    DIR dir;//(DIR *) malloc(sizeof(DIR));
@@ -41,7 +39,7 @@ void test_tarfs_init(int upper){
 
 	sleep(0);
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
-		kprintf("index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
+		debug("index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
 	}
 
 }
@@ -54,8 +52,8 @@ void *align_tarfs(void *p_val, uint64_t size)
 }
 
 void init_tarfs(){
-	kprintf("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
-	kprintf("Set root  : / \n");
+	debug("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
+	debug("Set root  : / \n");
 	strcpy(cwd, "/");
 	//cwd = "/";
 
@@ -76,10 +74,12 @@ void init_tarfs(){
 		uint64_t name_length = strlen(iterator->name);
 		if(name_length){
 			uint64_t size = otod(atoi(iterator->size));
-			char tempname[100];
+			char tempname[NAME_MAX+1];
+			memset(tempname, '\0', sizeof(tempname));
 			strcpy(tempname,"/");
 			strconcat(tempname, iterator->name);
-			//kprintf("name=%s size=%p\n", iterator->name, size);
+			//debug("name=%s size=%p\n", iterator->name, size);
+			memset(tarfs_fds[fd_index].name, '\0', sizeof(tarfs_fds[fd_index].name));
 			strcpy(tarfs_fds[fd_index].name, tempname);
 			tarfs_fds[fd_index].size = size;
 			tarfs_fds[fd_index].offset = 0;// read offset
@@ -130,17 +130,19 @@ void init_tarfs(){
 	tarfs_fds[fd_index+3].type = REGTYPE;
 
 	fd_index = fd_index+4;
-	kprintf("tarfs test start..........\n");
-	test_tarfs_init(fd_index);
+	debug("tarfs test start..........\n");
 	*/
+	test_tarfs_init(fd_index);
 
-	kprintf("tarfs test end ..........\n");
+
+	debug("tarfs test end ..........\n");
+	sleep(9999);
 
 
 
 	//DIR* dir = opendir("/bin");
 
-	//kprintf("Dir :%d\n", dir->dfd);
+	//debug("Dir :%d\n", dir->dfd);
 	//char   buf[2048+1];
 
 
@@ -152,7 +154,7 @@ void init_tarfs(){
 //	uint32_t child_fidx = idx;
 //
 //	while ((child_fidx = get_child(idx, &child_fidx) )!=-1){
-//		kprintf("name : %s\n",tarfs_fds[child_fidx].name , child_fidx);
+//		debug("name : %s\n",tarfs_fds[child_fidx].name , child_fidx);
 //
 //
 //	}
@@ -163,7 +165,7 @@ void init_tarfs(){
 //	strcopy(src, "bin/etc");
 //
 //	strconcat(dst, (const char *)src);
-//	kprintf("Concatenation :  %s\n", dst);
+//	debug("Concatenation :  %s\n", dst);
 
 
 	//uint32_t out;
@@ -181,7 +183,7 @@ void init_tarfs(){
 ////	while(out != -1){
 ////
 ////		out = syscall_3(__NR_getdents, (uint64_t) 4,(uint64_t) dir, (uint64_t) out);
-//kprintf("Open call res , %d\n",out);
+//debug("Open call res , %d\n",out);
 //	}
 
 	//syscall_1(__NR_exit, (uint64_t) 0);
@@ -192,7 +194,7 @@ uint32_t get_index_by_name(const char* fname){
 	uint64_t idx = 0;
 	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-			kprintf("Found : %s at idx %d\n",fname,  idx);
+			debug("Found : %s at idx %d\n",fname,  idx);
 			return idx;
 		}
 	}
@@ -211,7 +213,7 @@ void* get_bin_info(const char *fname){
 	return NULL;
 //	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 //		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-//			kprintf("Found : %s at idx %d\n",fname,  idx);
+//			debug("Found : %s at idx %d\n",fname,  idx);
 //			return
 //		}
 //	}
@@ -239,7 +241,7 @@ int syscall_open(const char *fname ,  int flag){
 	return idx;
 //	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 //		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-//			kprintf("Found : %s at idx %d\n",fname,  idx);
+//			debug("Found : %s at idx %d\n",fname,  idx);
 //			return &tarfs_fds[idx];
 //		}
 //	}
@@ -256,18 +258,21 @@ int syscall_close(uint64_t fd){
 
 uint32_t get_child(uint32_t fd_idx , uint32_t child_fidx){
 
-	char name[100] ;
-	char tempname[100] ;
+	char name[MAX_NAME+1] ;
+	char tempname[MAX_NAME+1] ;
+	memset(name, '\0', sizeof(name));
+	memset(tempname, '\0', sizeof(tempname));
+
 	strcpy(name,tarfs_fds[fd_idx].name);
 
 	for (uint32_t idx = child_fidx + 1; idx <  15 ;idx ++){
 		strcpy(tempname,tarfs_fds[idx].name);
 		int position = dir_match(name, tempname);
 		if(position ==1){
-			//kprintf("name : %s , position :%d\n",tempname, position );
+			//debug("name : %s , position :%d\n",tempname, position );
 			return idx;
 		}
 	}
-	//kprintf("Name is : %s\n", name);
+	//debug("Name is : %s\n", name);
 	return -1;
 }

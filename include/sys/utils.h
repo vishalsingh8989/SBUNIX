@@ -29,5 +29,7 @@ uint64_t align_down (uint64_t addr);
 uint64_t atoi(char *num);
 uint64_t otod(uint64_t onum);
 int dir_match(char *dirname, char *patt);
+void sleep(int s);
+void itoa(int n, char s[]);
 
 #endif
