@@ -18,16 +18,13 @@ void sys_exit()
 {
     //print_task_list();
 
-    task_struct_t *temp = curr_task;
-    if(curr_task->parent != NULL) {
-        delete_task(curr_task);
-        temp->next_task = temp->parent;
-        //curr_task = temp;
-    }
-    else {
-        delete_task(curr_task);
-        //curr_task = temp->next_task;
-    }
+    //task_struct_t *temp = curr_task;
+    //add_to_zombie_queue(curr_task);
+    remove_from_queue(curr_task);
+
+    //if(curr_task->parent != NULL) {
+    //    temp->next_task = temp->parent;
+    //}
 
     schedule();
 }
@@ -71,7 +68,8 @@ uint64_t sys_fork()
     //Deep copy
     uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
     uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
-    memcpy(chld_stack-510, curr_stack-510, 4080);
+    memcpy(chld_stack-510, curr_stack-510, 4080); //TODO: debug this.
+    //memcpy(chld_stack-511, curr_stack-511, 4088); //TODO: debug this.
     //memcpy(chld_stack, curr_stack, 4080);
     memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
     memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
@@ -142,7 +140,7 @@ uint64_t sys_fork()
     return child_task->pid;
 }
 
-uint64_t sys_execve(char *fname, char **argv, char **envp)
+uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 {
     //TODO: change the prints to include process name.
     /*
@@ -190,7 +188,7 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     }
     */
 
-    char args[5][50]; //TODO: can this be less restrictive. Can use better version of kmalloc()
+    char args[5][64]; //TODO: can this be less restrictive. Can use better version of kmalloc()
     int arg_cnt = 0;
 
     while(argv[arg_cnt] != NULL && arg_cnt < 5) {

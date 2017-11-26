@@ -4,6 +4,10 @@
 #include <sys/defs.h>
 #include <sys/fs.h>
 
+#define VM_FILE  0
+#define VM_HEAP  1
+#define VM_STACK 2
+
 typedef struct file {
     uint64_t f_start;
     uint64_t f_size;
@@ -27,6 +31,7 @@ typedef struct vm_area_struct {
     struct mm_struct * vm_mm;
     struct vm_area_struct * vm_next;
     file_t * file;
+    uint64_t vm_type;
     uint64_t vm_start;
     uint64_t vm_end;
     uint64_t vm_page_prot;

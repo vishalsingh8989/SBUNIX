@@ -261,6 +261,9 @@ void page_fault_handler(cpu_regs *regs) {
     vm_area_struct_t *vma = curr_task->mm->mmap;
 
     while(vma) {
+        if(vma->vm_type == VM_STACK)
+          if(fault_addr <= vma->vm_start && fault_addr >= vma->vm_end) break;
+
         if(fault_addr >= vma->vm_start && fault_addr <= vma->vm_end) break;
         vma = vma->vm_next;
     }

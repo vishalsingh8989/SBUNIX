@@ -36,7 +36,7 @@ void print_task_list()
 
 pid_t get_pid() {
     if(g_pid == MAX_PID)
-        g_pid = 300;
+        g_pid = 1000;
     return g_pid++;
 }
 
@@ -123,19 +123,51 @@ void add_to_queue(task_struct_t *new_task)
     //print_task_list();
 }
 
+/*
+void add_to_zombie_queue(task_struct_t *task)
+{
+    if(zombie_task == NULL) {
+        task->next_task = NULL;
+        task->prev_task = NULL;
+        zombie_task = task;
+    }
+    else {
+        task->next_task = zombie_task;
+        task->prev_task = NULL;
+        zombie_task = task;
+    }
+}
+*/
+
 void remove_from_queue(task_struct_t *task)
 {
-     task_struct_t *temp = task;
+     task->state = TASK_ZOMBIE;
+     kprintf("Adding %s to zombie queue\n", curr_task->pcmd_name);
+     zombie_task = task; //TODO: used add_to_zombie_queue
+     //add_to_zombie_queue(curr_task);
 
-     while(temp != task) {
-       temp = temp->next_task;
-     }
-
-     task_struct_t *prev_task = temp->prev_task;
-     task_struct_t *next_task = temp->next_task;
+     task_struct_t *prev_task = task->prev_task;
+     task_struct_t *next_task = task->next_task;
 
      prev_task->next_task = next_task;
      next_task->prev_task = prev_task;
+}
+
+void reap_zombies()
+{
+    kprintf("Invoking Reaper!\n");
+
+    if(zombie_task == NULL) {
+      return;
+    }
+    else {
+      task_struct_t *temp = zombie_task;
+      zombie_task = zombie_task->next_task;
+      kprintf("Freeing memory of %s\n", temp->pcmd_name);
+      delete_task(temp);
+      //reap_zombies();
+    }
+
 }
 
 //TODO: replace this with better schedular
@@ -146,7 +178,6 @@ task_struct_t *get_next_task()
 
 void schedule()
 {
-
     //TODO: shouldn't this be atomic?
     task_struct_t *prev_task = curr_task;
     curr_task = get_next_task();
@@ -157,15 +188,28 @@ void schedule()
         write_cr3(curr_task->pml4);
         context_switch(prev_task, curr_task);
     }
+
+    //TODO: this is inefficient, in preemptive sched, put this in idle process.
+    //if(curr_task->state == TASK_ZOMBIE) {
+    //  kprintf("Adding %s to zombie queue\n", curr_task->pcmd_name);
+    //  add_to_zombie_queue(curr_task);
+    //}
+
+    //if (zombie_task != NULL) {
+    //  reap_zombies();
+    //}
 }
 
 void idle_proc()
 {
-    kprintf("--Inside IDLE Process--\n");
 
     while(1) {
         //__asm__ __volatile__("hlt;");
         //__asm__ __volatile__("sti;");
+        kprintf("--Inside IDLE Process--\n");
+        if (zombie_task != NULL) {
+           reap_zombies(); //Not safe.
+        }
         schedule();
     }
 }
@@ -300,7 +344,25 @@ task_struct_t *init_proc(const char *name, int type)
 
 void delete_task(task_struct_t *task)
 {
-    kprintf("Removing task: %s from task list\n", task->pcmd_name);
-    remove_from_queue(task);
     //print_task_list();
+
+    //Remove MM amd VMA recursively.
+    if(task->mm != NULL) {
+        vm_area_struct_t *vma = task->mm->mmap;
+        while(vma != NULL) {
+          vm_area_struct_t *temp = vma;
+          vma = vma->vm_next;
+          kfree((uint64_t*) temp);
+        }
+    }
+    kfree((uint64_t *) task->mm);
+
+    //Remove stack.
+    kfree((uint64_t *) align_down(task->kern_stack));
+
+    //Remove page tables.
+    //delete_ptables(task->pml4); //This throws error, Need to debug this.
+
+    //Remove task_struct.
+    kfree((uint64_t *) task);
 }

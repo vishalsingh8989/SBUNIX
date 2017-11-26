@@ -66,15 +66,13 @@ struct page_map_level_4 {
 }__attribute__((aligned(0x20)));
 
 void vmm_init(uint32_t *modulep, void *physbase, void *physfree);
-
 void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size);
-
 void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr);
-
 void map_proc(uint64_t paddr, uint64_t vaddr);
-
 void setup_child_ptables(uint64_t child_pml4);
+void delete_ptables(uint64_t pml4);
 
 uint64_t * kmalloc(uint64_t size);
+void kfree(uint64_t *addr);
 
 #endif
