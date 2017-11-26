@@ -8,6 +8,7 @@
 #define __NR_write        1
 #define __NR_open         2
 #define __NR_close        3
+#define __NR_mmap		 9
 #define __NR_access      21
 #define __NR_pipe        22
 #define __NR_dup2        33
@@ -95,13 +96,35 @@ static inline uint64_t syscall_4(uint64_t s_no, uint64_t aa, uint64_t bb, uint64
                          "movq %2, %%rdi;"
                          "movq %3, %%rsi;"
                          "movq %4, %%rdx;"
-                         "movq %4, %%r10;"
+                         "movq %5, %%r10;"
                          "syscall;"
 
                          "movq %%rax, %0;"
                          :"=r"(out)
                          :"r"(s_no), "r"(aa), "r"(bb), "r"(cc), "r"(dd)
                          :"rax", "rdi", "rsi", "rdx", "r10"
+                         );
+    return out;
+}
+
+
+static inline uint64_t syscall_6(uint64_t s_no, uint64_t aa, uint64_t bb, uint64_t cc, uint64_t dd, uint64_t ee, uint64_t ff) {
+
+    uint64_t out;
+
+    __asm__ __volatile__("movq %1, %%rax;"
+                         "movq %2, %%rdi;"
+                         "movq %3, %%rsi;"
+                         "movq %4, %%rdx;"
+                         "movq %5, %%r10;"
+    						"movq %6, %%r8;"
+    						"movq %7, %%r9;"
+                         "syscall;"
+
+                         "movq %%rax, %0;"
+                         :"=r"(out)
+                         :"r"(s_no), "r"(aa), "r"(bb), "r"(cc), "r"(dd), "r"(ee), "r"(ff)
+                         :"rax", "rdi", "rsi", "rdx", "r10", "r8", "r9"
                          );
     return out;
 }

@@ -10,8 +10,7 @@
 #include <sys/syscall.h>
 #include <sys/terminal.h>
 #include <dirent.h>
-#include <logger.h>
-
+#include <debug.h>
 
 extern void _isr128(void);
 uint64_t k_rsp;
@@ -25,29 +24,26 @@ uint64_t syscall_handler(cpu_regs* regs)
     uint64_t arg1  = regs->rdi;
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
-    //uint64_t arg4  = regs->r10;
-    //uint64_t arg5  = regs->r8;
-    //uint64_t arg6  = regs->r9;
     uint64_t ret;
 
-    //debug("In the syscall handler, syscall no: %d\n", s_num);
-    //debug("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
+    //kprintf("In the syscall handler, syscall no: %d\n", s_num);
+    //kprintf("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
 
     //TODO: change char* to const char * and cast to uint64_t is not needed.
     switch(s_num) {
 
         case __NR_exit:
-            debug("Executing Exit Syscall\n");
+            kprintf("Executing Exit Syscall\n");
             sys_exit();
             return 0;
 
         case __NR_read:
-            //debug("Executing Read Syscall\n");
+            //kprintf("Executing Read Syscall\n");
             ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_write:
-            //debug("Executing Write Syscall\n");
+            //kprintf("Executing Write Syscall\n");
             ret = sys_write((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
@@ -77,22 +73,28 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_access:
-            debug("Executing access Syscall\n");
+            kprintf("Executing access Syscall\n");
             ret = sys_access((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_pipe:
-            debug("Executing pipe Syscall\n");
+            kprintf("Executing pipe Syscall\n");
             ret = sys_pipe((uint64_t*) arg1);
             return ret;
 
         case __NR_dup2:
-            debug("Executing dup2 Syscall\n");
+            kprintf("Executing dup2 Syscall\n");
             ret = sys_dup2((uint64_t) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_getdents:
+<<<<<<< HEAD
         		debug("Executing getdents Syscall\n");
+||||||| merged common ancestors
+            kprintf("Executing getdents Syscall\n");
+=======
+            //kprintf("Executing getdents Syscall\n");
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
@@ -107,24 +109,14 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_sched_yield:
-            debug("Executing yield Syscall\n");
+            kprintf("Executing yield Syscall\n");
             sys_sched_yield();
             return 0;
 
         case __NR_shutdown:
-            debug("Executing shutdown Syscall\n");
+            kprintf("Executing shutdown Syscall\n");
             sys_shutdown((uint64_t) arg1);
             return 0;
-        case __NR_mmap:
-        		debug("Executing shutdown Syscall\n");
-//        		sys_mmap((void *) arg1,
-//        					(uint64_t) arg2,
-//        		        		(int32_t) arg3,
-//						(int32_t) arg4,
-//        		            (int32_t) arg5,
-//						(uint64_t) arg6);
-        		return 0;
-
 
         default:
             return -1;
@@ -248,13 +240,13 @@ void alignment_check_handler() {
 }
 
 void page_fault_handler(cpu_regs *regs) {
-    debug("-- Page Fault Execption Fired --\n");
+    //kprintf("-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    debug("Int Id: %d, Error: %d\n", regs->int_id, error);
+    kprintf("Int Id: %d, Error: %d\n", regs->int_id, error);
 
     uint64_t fault_addr = read_cr2();
-    debug("Faulting address: %p\n", fault_addr);
+    kprintf("Faulting address: %p\n", fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
@@ -264,12 +256,12 @@ void page_fault_handler(cpu_regs *regs) {
 
 
     if(p_prot_err & !p_write_err) {
-        debug("Page Fault at addr: %p\n", fault_addr);
+        kprintf("Page Fault at addr: %p\n", fault_addr);
         kpanic("Read permission error");
     }
 
     if(p_rsvd_err) {
-        debug("Page Fault at addr: %p\n", fault_addr);
+        kprintf("Page Fault at addr: %p\n", fault_addr);
         kpanic("Reserved page error");
     }
 
@@ -281,7 +273,7 @@ void page_fault_handler(cpu_regs *regs) {
     }
 
     if(vma == NULL) {
-        debug("Growing Stack!\n");
+        kprintf("Growing Stack!\n");
         uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
         page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
@@ -292,14 +284,14 @@ void page_fault_handler(cpu_regs *regs) {
         //TODO: Grow heap
         //TODO: Stack Overflow!
         //TODO: Segmention Fault!
-        //debug("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+        //kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
         //TODO: this should be for seq fault only
         //kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
-        debug("Doing Copy On Write\n");
+        kprintf("Doing Copy On Write\n");
         //uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
         //page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
@@ -322,7 +314,7 @@ void page_fault_handler(cpu_regs *regs) {
     uint64_t src, dst;
     int size;
 
-    debug("Copying file contents to %p\n", vma->vm_start);
+    kprintf("Copying file contents to %p\n", vma->vm_start);
     if(falign_addr <= vma->vm_start){
         src = vma->file->f_start + vma->file->f_pgoff;
         dst = vma->vm_start;

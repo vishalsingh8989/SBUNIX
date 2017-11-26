@@ -6,7 +6,7 @@
 #include <sys/utils.h>
 #include <sys/string.h>
 #include <dirent.h>
-#include <debug.h>
+#include<logger.h>
 
 
 char cwd[MAX_NAME+1];
@@ -37,10 +37,11 @@ char cwd[MAX_NAME+1];
 
 void test_tarfs_init(int upper){
 
-	sleep(0);
+
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
 		debug("index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
 	}
+	sleep(DEBUGWAIT);
 
 }
 
@@ -90,6 +91,7 @@ void init_tarfs(){
 				tarfs_fds[fd_index].data =  (void *) ((uint64_t) iterator + sizeof(posix_header_ustar));
 				size  = (uint64_t)align_tarfs((void*) size ,  sizeof(posix_header_ustar)); // store in 4k
 				iterator = (posix_header_ustar *) ((uint64_t) iterator + size);
+				tarfs_fds[fd_index].size = size;
 			}else{
 				tarfs_fds[fd_index].data = 0; // dir have 0 data.
 				tarfs_fds[fd_index].type = DIRTYPE;
@@ -136,7 +138,7 @@ void init_tarfs(){
 
 
 	debug("tarfs test end ..........\n");
-	sleep(9999);
+	sleep(99);
 
 
 

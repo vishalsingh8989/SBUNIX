@@ -1,11 +1,22 @@
 #include <sys/kprintf.h>
 #include <sys/defs.h>
+#include <sys/asm_utils.h>
 #include <stdarg.h>
 
 static int x_cord = 0;
 static int y_cord = 0;
 
 static uint64_t video_p = 0xffffffff800b8000;
+
+void update_cursor(int x, int y)
+{
+	uint16_t pos = y * MAX_X + x;
+
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
 
 void scroll() {
     char *disp;
@@ -79,6 +90,7 @@ void kprintf(const char *fmt, ...)
         idx++;
     }
 
+
     va_end(args);
 }
 
@@ -89,6 +101,8 @@ void pchar_xy (char value, char color, int x, int y)
 
     *disp     = value;
     *(disp+1) = color;
+
+
 }
 
 void pchar (char value) //TODO: support tab characters
@@ -125,6 +139,7 @@ void pchar (char value) //TODO: support tab characters
     else {
         x_cord++;
     }
+    update_cursor(x_cord ,y_cord);
 }
 
 void pstring (char * value) {

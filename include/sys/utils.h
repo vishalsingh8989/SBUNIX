@@ -30,6 +30,6 @@ uint64_t atoi(char *num);
 uint64_t otod(uint64_t onum);
 int dir_match(char *dirname, char *patt);
 void sleep(int s);
-void itoa(int n, char s[]);
+char *itoa(int value, char *str, int base);
 
 #endif

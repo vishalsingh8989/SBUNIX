@@ -34,15 +34,17 @@ struct posix_header_ustar {
 #define TVERSLEN 2
 
 /* Values used in typeflag field.  */
-#define REGTYPE  '0'            /* regular file */
-#define AREGTYPE '\0'           /* regular file */
-#define LNKTYPE  '1'            /* link */
-#define SYMTYPE  '2'            /* reserved */
-#define CHRTYPE  '3'            /* character special */
-#define BLKTYPE  '4'            /* block special */
-#define DIRTYPE  '5'            /* directory */
-#define FIFOTYPE '6'            /* FIFO special */
-#define CONTTYPE '7'            /* reserved */
+#define REGTYPE  0            /* regular file */
+//#define AREGTYPE '\0'           /* regular file */
+#define LNKTYPE  1            /* link */
+#define SYMTYPE  2            /* reserved */
+#define CHRTYPE  3            /* character special */
+#define BLKTYPE  4            /* block special */
+#define DIRTYPE  5            /* directory */
+#define FIFOTYPE 6            /* FIFO special */
+#define CONTTYPE 7            /* reserved */
+
+
 
 //https://www.gnu.org/software/tar/manual/html_node/Standard.html
 struct tarfs_fd {

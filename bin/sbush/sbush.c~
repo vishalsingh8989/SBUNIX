@@ -20,11 +20,6 @@ char* senvp[] = {"PATH=/bin:", NULL};
 int   err;
 char* perr;
 
-
-void memseti(void* dest, int value, int count){
-	//puts("memset called\n");
-	memset(dest, value, count);
-}
 char* getenv(const char * var_name) {
    if(!strcmp(var_name, "PATH"))
       return path_var;
@@ -209,59 +204,83 @@ int execute_line(char* cmd, char* envp[]) {
 
 int main(int argc, char* argv[], char* envp[]) {
 
-    puts("---Welcome to SBUSH shell---\n");
+    puts("---Welcome to SBUSH shell---");
     if(argc == 1) {
         while (TRUE) {
 
             setprompt();
-            memseti(str_buf, '\0', sizeof(str_buf));
+            memset(str_buf, '\0', sizeof(str_buf));
             perr = gets(str_buf);
+
+            tokens[0] = str_buf;
+            tokens[1] = NULL;
+
+            int status;
             puts("Input received from user:");
             puts(str_buf);
-            int idx = 0;
-            memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
-			tokens[idx] = strtok(str_buf, " ");
 
-			//puts(tokens[idx]);
-			//puts(" : ");
+<<<<<<< HEAD
+            int idx = 0;
+            memset(tokens[idx],  '\0', sizeof(tokens[idx]));
+			tokens[idx] = strtok(str_buf, " ");
 			while (tokens[idx] != NULL) {
 				++idx;
-				memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
+				memset(tokens[idx],  '\0', sizeof(tokens[idx]));
 				tokens[idx] = strtok(NULL, " ");
-				//puts(tokens[idx]);
-				//puts(" :");
 			}
 
-			//tokens[0] = str_buf;
-			//tokens[1] = "hello";
-            //puts("Executing fork()");
-            //puts("\n");
+            puts("Executing fork()");
+||||||| merged common ancestors
+            puts("Executing fork()");
+=======
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
             pid_t pid = fork();
+<<<<<<< HEAD
             int status;
 
             //char* const sargv[] = {"bin/ls", NULL};
-            char* senvp[] = {"PATH=/bin:", NULL};
+            char* const senvp[] = {"PATH=/bin:", NULL};
+||||||| merged common ancestors
+            int status;
+
+            char* const sargv[] = {"bin/ls", NULL};
+            char* const senvp[] = {"PATH=/bin:", NULL};
+=======
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
 
             if(pid == 0) {
                 //Include the environment facility or change to execve.
+<<<<<<< HEAD
                 puts("Executing execvpe()");
-                puts("\n");
                 execvpe(tokens[0], tokens, senvp);
-//                if(ret ==-1){
-//                		puts("ret is -1\n");
-//                }else{
-//                		puts("ret is not -1\n");
-//                }
-                //exit(0);
+||||||| merged common ancestors
+                puts("Executing execvpe()");
+                execvpe(sargv[0], sargv, senvp);
+=======
+                //int ret = execvpe(sargv[0],  sargv, senvp);
+                int ret = execvpe(tokens[0], tokens, senvp);
+                if(ret < 0) {
+                  puts("Command not found!!");
+                  exit(1);
+                }
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
             }
             else {
                 puts("Executing waitpid()");
                 waitpid(pid, &status);
             }
 
+<<<<<<< HEAD
             //while(1); //Put execve here for now, until pipe is implemented.
 
             //execute_line(str_buf, envp);
+||||||| merged common ancestors
+            while(1); //Put execve here for now, until pipe is implemented.
+
+            execute_line(str_buf, envp);
+=======
+            //execute_line(str_buf, envp);
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
         }
     }
     else {

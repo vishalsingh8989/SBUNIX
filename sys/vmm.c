@@ -1,9 +1,10 @@
 #include <sys/vmm.h>
 #include <sys/defs.h>
-#include <sys/kprintf.h>
+
 #include <sys/utils.h>
 #include <sys/asm_utils.h>
 #include <sys/process.h>
+#include <logger.h>
 
 int num_pages;
 
@@ -63,7 +64,7 @@ uint64_t page_alloc()
     page_stat_t * page = NULL;
 
     if (!free_pages_list) {
-        kprintf("Out of memory in page_alloc()\n");
+        debug("Out of memory in page_alloc()\n");
         return -1;
     }
     else {
@@ -90,7 +91,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir_p = (struct page_directory_pointer *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        debug("Entry not mapped!!!\n");
         return -1;
     }
 
@@ -99,7 +100,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir = (struct page_directory *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        debug("Entry not mapped!!!\n");
         return -1;
     }
 
@@ -108,7 +109,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         ptable = (struct page_table *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        debug("Entry not mapped!!!\n");
         return -1;
     }
 
@@ -117,7 +118,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         return (uint64_t) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        debug("Entry not mapped!!!\n");
         return -1;
     }
 }
@@ -199,7 +200,7 @@ void setup_child_ptables(uint64_t cpml4)
                                     pte  = p_pt_entry & 0xfffffffffffff000;
                                     pte |= (_PAGE_PRESENT | _PAGE_USER);
                                     c_pt->pte[pt_idx] = pte;
-                                    p_pt->pte[pt_idx] = pte;
+                                    //p_pt->pte[pt_idx] = pte;
                                 }
                             }
                         }
@@ -265,7 +266,7 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
         //TODO: Have to remove this and create separate one for COW.
-        kprintf("Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
+        debug("Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
         //entry = paddr;
         entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
         ptable->pte[PT_IDX(vaddr)] = entry;
@@ -321,7 +322,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        kprintf("Page already Mapped!!!\n");
+        debug("Page already Mapped!!!\n");
     }
     else {
         entry = paddr;
@@ -345,7 +346,7 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
 
 void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 {
-    kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
+    debug("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
     struct smap_t {
         uint64_t base, length;
@@ -357,7 +358,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     num_pages = 0;
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
         if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
-            kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            debug("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             if (smap->base > (uint64_t) physfree) {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
             }
@@ -379,7 +380,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //pmap_l4 = (struct page_map_level_4 *) preinit_alloc((uint64_t) physfree, PAGE_SIZE);
     memset((void *) pmap_l4, 0, PAGE_SIZE);
 
-    kprintf("Before mapping....\n");
+    debug("Before mapping....\n");
 
     uint64_t phy_addr;
     uint64_t vir_addr;
@@ -389,7 +390,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     phy_addr = (uint64_t) physbase;
     vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
     size = (physfree - physbase)/PAGE_SIZE;
-    kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+    debug("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
     map_addr_range(pmap_l4, phy_addr, vir_addr, size);
 
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
@@ -398,21 +399,21 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                debug("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
                 phy_addr = (uint64_t) physfree;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                debug("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else {
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                debug("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
         }
@@ -420,10 +421,10 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 
     //TODO: are two pages really needed?
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
-    kprintf("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
+    debug("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
 
     uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
-    kprintf("Temp: %p\n", temp);
+    debug("Temp: %p\n", temp);
 
     //uint64_t pml4_addr = (uint64_t) pmap_l4;
     //map_addr_range(pmap_l4, pml4_addr, pml4_addr, 1);
@@ -435,9 +436,9 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 
     /*for(uint64_t addr = (uint64_t) physbase + KERNAL_BASE_ADDRESS; addr <= (uint64_t) physfree + KERNAL_BASE_ADDRESS; addr += 0x1000) {
         uint64_t temp = get_mapping(pmap_l4, addr);
-        kprintf("V-ADDR: %p mapped to P-ADDR: %p\n", addr, temp);
+        debug("V-ADDR: %p mapped to P-ADDR: %p\n", addr, temp);
     }*/
-    //kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
+    //debug("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
     volatile uint64_t cr0;
     volatile uint64_t cr4;
@@ -451,15 +452,15 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     __asm__ __volatile__("movq %%cr4, %0;":"=r"(cr4));
     ia32_efer = rdmsr(MSR_EFER);
 
-    kprintf("CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
+    debug("CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
     //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
     write_cr3((uint64_t) pmap_l4);
 
     //temp = get_mapping(pmap_l4, 0xffffffff800b8000);
-    //kprintf("Temp: %p\n", temp);
+    //debug("Temp: %p\n", temp);
 
-    kprintf("Page Table Setup Sucessfull\n");
+    debug("Page Table Setup Sucessfull\n");
 }
 
 uint64_t * kmalloc(uint64_t size)
@@ -481,7 +482,7 @@ uint64_t * kmalloc(uint64_t size)
     }
 
     pages_used += num_pages;
-    //kprintf("Pages Used: %d\n", pages_used);
+    //debug("Pages Used: %d\n", pages_used);
 
     return addr;
 }

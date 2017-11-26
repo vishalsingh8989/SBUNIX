@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dirent.h>
 
 
 int main(int argc, char **argv, char **envp)
 {
 
-	char buff[500];
+	puts("*************In cd*********\n");
+	char buff[NAME_MAX+1];
+	memset(buff, '\0',  NAME_MAX+1);
 	char *dir = "/lib";// TODO replace dir with argv[1]
 
 	if(dir[0] == '/'){
-    		strcmp(buff, dir);
+    		strcpy(buff, dir);
     		//strconcat(buff, (const char *)dir);
 
     }else{
@@ -38,6 +41,9 @@ int main(int argc, char **argv, char **envp)
 
     strconcat(buff, "/");
 
+    puts("chdir to:");
+    puts(buff);
+    puts("\n");
     chdir(buff);
     	getcwd(buff, 500);
 

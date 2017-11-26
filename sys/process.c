@@ -3,11 +3,12 @@
 #include <sys/mm_types.h>
 #include <sys/utils.h>
 #include <sys/process.h>
-#include <sys/kprintf.h>
+
 #include <sys/elf64.h>
 #include <sys/string.h>
 #include <sys/gdt.h>
 #include <sys/asm_utils.h>
+#include<logger.h>
 
 uint64_t g_pid;
 struct mm_struct *kern_mm;
@@ -19,16 +20,17 @@ void print_task_list()
 {
 
     if(curr_task == NULL) {
-        kprintf("No tasks in the queue currently");
+        debug("Tasks in queue are: \n");
+        debug("No tasks in the queue!\n");
         return;
     }
 
     int i = 0;
-    kprintf("Tasks in queue are: \n");
-    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
-    task_struct_t * temp =  curr_task;
-    while(temp->next_task != curr_task) {
-        kprintf("%d : %s\n", i++, temp->pcmd_name);
+    debug("Tasks in queue are: \n");
+    debug("%d : %s\n", i++, curr_task->pcmd_name);
+    task_struct_t * temp =  curr_task->next_task;
+    while(temp != curr_task) {
+        debug("%d : %s\n", i++, temp->pcmd_name);
         temp = temp->next_task;
     }
 }
@@ -41,66 +43,100 @@ pid_t get_pid() {
 
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
-    //TODO: does this have to be atomic.
+    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
+    //kern_stack = align_up(curr_task->kern_stack) - 16;
+
+    set_tss_rsp((void *) next_task->kern_stack);
+    kern_stack = next_task->kern_stack;
+
+    debug("In task %s with rip: %p, pid: %d, pml4: %p, rsp; %p, Switching to %s with rip: %p, pid: %d, pml4: %p, rsp: %p\n",
+             prev_task->pcmd_name, prev_task->rip, prev_task->pid, prev_task->pml4, prev_task->stack_p,
+             next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
+
+    /*
     __asm__ __volatile__ (
-        //"pushq %%rax;"
-        //"pushq %%rbx;"
-	    //"pushq %%rcx;"
-	    //"pushq %%rdx;"
-	    //"pushq %%rbp;"
-	    //"pushq %%rsi;"
-	    //"pushq %%rdi;"
-	    //"pushq %%r8;"
-	    //"pushq %%r9;"
-	    //"pushq %%r10;"
-	    //"pushq %%r11;"
-	    //"pushq %%r12;"
-	    //"pushq %%r13;"
-	    //"pushq %%r14;"
-	    //"pushq %%r15;"
         "movq %%rsp, %0;"
         "movq %1, %%rsp;"
-	    //"popq %%r15;"
-	    //"popq %%r14;"
-	    //"popq %%r13;"
-	    //"popq %%r12;"
-	    //"popq %%r11;"
-	    //"popq %%r10;"
-	    //"popq %%r9;"
-	    //"popq %%r8;"
-	    //"popq %%rdi;"
-	    //"popq %%rsi;"
-	    //"popq %%rbp;"
-	    //"popq %%rdx;"
-	    //"popq %%rcx;"
-	    //"popq %%rbx;"
-	    //"popq %%rax;"
         "retq;"
         ::"r"(&(prev_task->stack_p)),
           "r"(next_task->stack_p)
     );
+    */
+
+    __asm__ __volatile__ (
+      "movq $1f, %0;"
+      :"=g"(prev_task->rip)
+    );
+
+    __asm__ __volatile__ (
+      "cli;"
+      "movq %%rsp, (%1);"
+      //"movq $1f, %0;"
+      "movq %2, %%rsp;"
+      //"movq %4, %%cr3;"
+      "pushq %3;"
+      "retq;"
+      "1:\t"
+      :"=g"(prev_task->rip)
+      :"r"(&(prev_task->kern_stack)), "r"(next_task->kern_stack), "r"(next_task->rip), "r"(next_task->pml4)
+    );
+
+
+    /*
+    __asm__ __volatile__ (
+        "sti;"
+        "movq %%rsp, %0;"
+        ::"r"(&(prev_task->stack_p))
+    );
+
+    __asm__ __volatile__ (
+        "movq %0, %%rsp;"
+        ::"r"(next_task->stack_p)
+    );
+
+    __asm__ __volatile__ (
+        "movq $1f, %0;"
+        "pushq %1;"
+        "retq;"
+        "1:\t"
+        :"=g"(prev_task->rip)
+        :"r"(next_task->rip)
+    );
+    */
 }
 
 void add_to_queue(task_struct_t *new_task)
 {
-    print_task_list();
-
     if(curr_task == NULL) {
         curr_task = new_task;
-        curr_task->next_task = curr_task;
+        curr_task->next_task = curr_task->prev_task = new_task;
+        //print_task_list();
         return;
     }
 
-    task_struct_t *temp = curr_task->next_task;
-    while(temp->next_task != curr_task) {
-        temp = temp->next_task;
-        kprintf("temp: %s\n", temp->pcmd_name);
-    }
-    temp->next_task = new_task;
+    task_struct_t *curr_next = curr_task->next_task;
 
-    new_task->next_task = curr_task;
-    curr_task = new_task;
+    curr_task->next_task = new_task;
+    new_task->prev_task  = curr_task;
+    new_task->next_task  = curr_next;
+    curr_next->prev_task = new_task;
 
+    //print_task_list();
+}
+
+void remove_from_queue(task_struct_t *task)
+{
+     task_struct_t *temp = task;
+
+     while(temp != task) {
+       temp = temp->next_task;
+     }
+
+     task_struct_t *prev_task = temp->prev_task;
+     task_struct_t *next_task = temp->next_task;
+
+     prev_task->next_task = next_task;
+     next_task->prev_task = prev_task;
 }
 
 //TODO: replace this with better schedular
@@ -116,7 +152,7 @@ void schedule()
     task_struct_t *prev_task = curr_task;
     curr_task = get_next_task();
 
-    print_task_list();
+    //print_task_list();
 
     if(curr_task != prev_task) {
         write_cr3(curr_task->pml4);
@@ -124,20 +160,32 @@ void schedule()
     }
 }
 
-//TODO: change the name to idle.
 void idle_proc()
 {
-    kprintf("--Inside IDLE Process--\n");
+    debug("--Inside IDLE Process--\n");
 
     while(1) {
-        //__asm__ __volatile("hlt;");
-        //__asm__ __volatile("sti;");
+        //__asm__ __volatile__("hlt;");
+        //__asm__ __volatile__("sti;");
         schedule();
     }
 }
 
 void switch_to_userspace(task_struct_t *task)
 {
+    debug("In task %s with rip: %p, pid: %d, pml4: %p, rsp: %p Switching to userspace!\n",
+             task->pcmd_name, task->rip, task->pid, task->pml4, task->stack_p);
+
+    curr_task = task;
+
+    //uint64_t rsp;
+    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(rsp));
+    //set_tss_rsp((void *) align_up(rsp) - 16);
+    //kern_stack = align_up(rsp) - 16;
+
+    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
+    //kern_stack = align_up(curr_task->kern_stack) - 16;
+
     set_tss_rsp((void *) task->kern_stack);
     kern_stack = task->kern_stack;
 
@@ -158,6 +206,11 @@ void switch_to_userspace(task_struct_t *task)
             "pushq %%rax;"
             "pushq $0x2B;"
             "pushq %2;"
+            "movq $0x0, %%rax;"
+            "movq $0x0, %%rbx;"
+            "movq $0x0, %%rcx;"
+            "movq $0x0, %%rdx;"
+            "movq $0x0, %%rbp;"
             "movq $0x0, %%rdi;"
             "movq $0x0, %%rsi;"
             "iretq;"
@@ -207,9 +260,10 @@ task_struct_t *init_proc(const char *name, int type)
     strcpy(init_task->cdir_name, "/bin");
 
     if (type == 0) { //create idle process
-        strcpy(init_task->pcmd_name, "idle");
-        *(stack + 510) = (uint64_t) &idle_proc;;
-        init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
+        strcpy(init_task->pcmd_name, "idle_proc");
+        *(stack + 510) = (uint64_t) &idle_proc;
+        init_task->stack_p = init_task->kern_stack = (uint64_t) &stack[510];
+        init_task->rip = (uint64_t) &idle_proc;
         add_to_queue(init_task);
     }
     else { //Load user process
@@ -231,9 +285,9 @@ task_struct_t *init_proc(const char *name, int type)
         //Load process.
         int ret = load_elf(init_task, name);
         if(ret == 0)
-            kprintf("Loading Exe Sucessfull\n");
+            debug("Loading %s was sucessfull\n", init_task->pcmd_name);
         else
-            kprintf("Error Loading Exe\n");
+            debug("Error loading %s\n", init_task->pcmd_name);
 
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
@@ -243,4 +297,11 @@ task_struct_t *init_proc(const char *name, int type)
     }
 
     return init_task;
+}
+
+void delete_task(task_struct_t *task)
+{
+    debug("Removing task: %s from task list\n", task->pcmd_name);
+    remove_from_queue(task);
+    //print_task_list();
 }

@@ -28,8 +28,9 @@ char *strcpy(char *dst, const char *src)
 {
     char *dst_t = dst;
 
-    while(*src != '\0')
+    while(*src)
         *dst++ = *src++;
+    *dst = '\0';
 
     return dst_t;
 }

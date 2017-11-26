@@ -1,13 +1,15 @@
 #ifndef _DIRENT_H
 #define _DIRENT_H
 
-#define NAME_MAX 255
+#define NAME_MAX 512
 
 struct dirent {
-   long  inode;
-   long  offset;
-   unsigned short reclen;
-   char d_name[NAME_MAX+1];
+	int type;
+	int size;
+	long  inode;
+	long  offset;
+	unsigned short len;
+	char d_name[NAME_MAX+1];
 };
 
 //struct DIR {

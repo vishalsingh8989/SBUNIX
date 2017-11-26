@@ -3,82 +3,26 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/defs.h>
+/* from KR book*/
 
-void lsleep(int s){
-	for(int i  = 0 ; i <s*999999;i ++){
+void reverse(char s[])
+ {
+     int i, j;
+     char c;
 
-	}
-}
-
-int main(int argc, char* argv[], char* envp[]) {
- /*
-	char* video_p = (char *) 0xffffffff800b8000;
-	char msg[10] = {'I', 'n', ' ', 'I', 'n', 'i', 't'};
-
-	for(int i = 0; i < 1000; i+=2)
-		video_p[i] = msg[(i/2) % 10];
-	*/
-
-
-	char buff[500];
-	getcwd(buff, 500);
-	puts("*************************");
-	puts("Executing ls for /bin");
-
-
-	int fidx = open("/bin", 0);
-
-
-	struct dirent dir_buff ;
-	struct dirent* ptr_dir = &dir_buff;
-	ptr_dir->offset=fidx;
-
-	while(getdents(fidx, ptr_dir, 100) !=-1){
-			puts(ptr_dir->d_name);
-
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+ }
 
 <<<<<<< HEAD
-	}
-	puts("*************************");
-	lsleep(9999);
-	lsleep(9999);
-	lsleep(9999);
-	lsleep(9999);
-	return 0;
-//TODO close(fidx); .
+/* itoa:  convert n to characters in s  from KR book*/
+void itoa(int n, char s[]){
 ||||||| merged common ancestors
-   int    num_dirs;
-   int    fd;
-   char   dir_struct[2048];
-   struct dirent* p;
-   char   dir_path[NAME_MAX+1];
+int main(int argc, char* argv[], char* envp[]) {
 
-   if(argc == 1) {
-     getcwd(dir_path, (size_t) NAME_MAX+1);
-     fd = open(dir_path, O_RDONLY | O_DIRECTORY); 
-   }
-   else {
-     fd = open(argv[1], O_RDONLY | O_DIRECTORY);
-   }
-
-   if(fd == -1) {
-     puts("Directory not found");
-     return 1;
-   }
-
-   num_dirs = getdents(fd, dir_struct, 1024);
-
-   int pos = 0;
-   while(pos < num_dirs) {
-     p = (struct dirent *) (dir_struct + pos);
-     puts(p->d_name);
-     pos += p->reclen;
-   }
-  
-   close(fd);
-
-   return 0;
-=======
   /*
    int    num_dirs;
    int    fd;
@@ -118,19 +62,114 @@ int main(int argc, char* argv[], char* envp[]) {
  puts("*********");
  puts("Executing ls for /");
 
+=======
+int main(int argc, char* argv[], char* envp[]) {
 
- int fidx = open("/bin", 0);
+  /*
+   int    num_dirs;
+   int    fd;
+   struct dirent  dir_struct[2048];
+   struct dirent* p;
+   char   dir_path[NAME_MAX+1];
+
+   if(argc == 1) {
+     getcwd(dir_path, (size_t) NAME_MAX+1);
+     fd = open(dir_path, O_RDONLY | O_DIRECTORY);
+   }
+   else {
+     fd = open(argv[1], O_RDONLY | O_DIRECTORY);
+   }
+
+   if(fd == -1) {
+     puts("Directory not found");
+     return 1;
+   }
+
+   num_dirs = getdents(fd, dir_struct, 1024);
+
+   int pos = 0;
+   while(pos < num_dirs) {
+     p = dir_struct + pos;
+     puts(p->d_name);
+     pos += p->reclen;
+   }
+
+   close(fd);
+
+   return 0;
+   */
+
+   char buff[500];
+ getcwd(buff, 500);
+ puts("*********");
+ puts("Executing ls for /");
+
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
+
+	int i, sign;
 
 
- struct dirent dir_buff ;
- struct dirent* ptr_dir = &dir_buff;
- ptr_dir->offset=fidx;
+    if ((sign = n) < 0)  /* record sign */
+        n = -n;          /* make n positive */
+    i = 0;
+    do {       /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';   /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
+    if (sign < 0)
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
+}
 
- while(getdents(fidx, ptr_dir, 100) !=-1){
-     puts(ptr_dir->d_name);
+
+int main(int argc, char* argv[], char* envp[]) {
+
+<<<<<<< HEAD
+	puts("************In ls*************\n");
+	for(int i=0 ;i < argc ; i++){
+		puts(argv[i]);
+	}
+
+	sleep(99999);
+	sleep(99999);
+	puts("************In ls*************\n");
+
+	char buff[NAME_MAX+1];
+	memset(buff, '\0', NAME_MAX+1);
+	if(argc == 1){
+		getcwd(buff, NAME_MAX+1);
+	}else if(argc == 2){
+		strcpy(buff, argv[1]);
+	}else{
+
+		puts("Multiple directories not supported\n");
+
+	}
+	puts("*********");
+	puts("Executing ls for ");
+	puts(buff);
+	int fidx = open(buff, 0);
+	struct dirent dir_buff ;
+	struct dirent* ptr_dir = &dir_buff;
+	ptr_dir->offset=fidx;
+
+	memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
+	while(getdents(fidx, ptr_dir, 100) !=-1){
+		puts(ptr_dir->d_name);
+		memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
 
 
+	}
+	puts("*********");
+||||||| merged common ancestors
  }
  puts("*********");
->>>>>>> 08b7266844cbb4be3516f08fe89cb34436759b2a
+=======
+ }
+ puts("*********");
+
+
+ //puts("*");
+
+>>>>>>> 87bb78c6943390479da8e85cba7999bcaa81d4b9
 }

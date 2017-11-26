@@ -109,10 +109,11 @@ int load_elf(task_struct_t *task, const char *fname)
 {
 
     struct posix_header_ustar * p_hdr_ustar = (struct posix_header_ustar *) get_bin_addr(fname);
+    if(p_hdr_ustar == NULL)
+        return -1;
+
     Elf64_Ehdr *e_hdr = (Elf64_Ehdr *) (p_hdr_ustar + 1);
 
-    if(e_hdr == NULL)
-        return -1;
 
     Elf64_Phdr *p_hdr = (Elf64_Phdr *) ((uint64_t)e_hdr + e_hdr->e_phoff);
     task->rip = e_hdr->e_entry; //TODO: should be assigned to stack[510], i dont' need rip then

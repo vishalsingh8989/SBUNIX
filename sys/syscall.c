@@ -7,175 +7,215 @@
 #include <sys/fs.h>
 #include <sys/elf64.h>
 #include <sys/terminal.h>
-#include <sys/kprintf.h>
 #include <sys/tarfs.h>
 #include <dirent.h>
-#include <debug.h>
+#include<logger.h>
 
 extern void fork_return(void);
 extern char cwd[MAX_NAME+1];
 
 void sys_exit()
 {
-    //TODO: cleanup
+	//print_task_list();
 
-    task_struct_t* next_task = curr_task->next_task;
+	    task_struct_t *temp = curr_task;
+	    if(curr_task->parent != NULL) {
+	        delete_task(curr_task);
+	        temp->next_task = temp->parent;
+	        //curr_task = temp;
+	    }
+	    else {
+	        delete_task(curr_task);
+	        //curr_task = temp->next_task;
+	    }
 
-    debug("Context switch from %s to %s\n", curr_task->pcmd_name, next_task->pcmd_name);
-    schedule();
+	    schedule();
 }
 
 uint64_t sys_fork()
 {
-    task_struct_t *child_task;
+	 task_struct_t *child_task;
 
-    uint64_t *stack = (uint64_t *) kmalloc(PAGE_SIZE);
-    if(!stack) {
-        kpanic("Not able to allocate stack!!");
-    }
+	    uint64_t *stack = (uint64_t *) kmalloc(PAGE_SIZE);
+	    if(!stack) {
+	        kpanic("Not able to allocate stack!!");
+	    }
 
-    child_task = (task_struct_t *) kmalloc(PAGE_SIZE);
-    child_task->pml4 = (uint64_t) kmalloc(PAGE_SIZE) - KERNAL_BASE_ADDRESS;
-    child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
-    child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
+	    child_task = (task_struct_t *) kmalloc(PAGE_SIZE);
+	    child_task->pml4 = (uint64_t) kmalloc(PAGE_SIZE) - KERNAL_BASE_ADDRESS;
+	    child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
+	    child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
-    child_task->state     = TASK_RUNNABLE;
-    child_task->pid       = get_pid();
-    child_task->ppid      = curr_task->pid;
-    child_task->sibling   = NULL;
-    strcpy(child_task->pcmd_name, curr_task->pcmd_name);
-    prev_task = curr_task;
+	    child_task->state   = TASK_RUNNABLE;
+	    child_task->pid     = get_pid();
+	    child_task->ppid    = curr_task->pid;
+	    child_task->sibling = NULL;
+	    strcpy(child_task->pcmd_name, curr_task->pcmd_name);
+	    strconcat(child_task->pcmd_name, "_child");
+	    prev_task = curr_task;
 
-    //Set up virtual memory.
-    setup_child_ptables(child_task->pml4);
+	    //Set up virtual memory.
+	    setup_child_ptables(child_task->pml4);
 
-    //queue the child after parent task. TODO: add function "add_child_to_queue"
-    child_task->prev_task = curr_task;
-    child_task->next_task = curr_task->next_task;
-    curr_task->child      = child_task;
-    curr_task->next_task  = child_task;
+	    //queue the child after parent task. TODO: add function "add_child_to_queue"
+	    curr_task->child      = child_task;
+	    child_task->parent    = curr_task;
+	    add_to_queue(child_task);
 
-    write_cr3(child_task->pml4);
+	    //child_task->prev_task = curr_task;
+	    //child_task->next_task = curr_task->next_task;
+	    //curr_task->next_task  = child_task;
 
-    //Deep copy
-    uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
-    uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
-    memcpy(chld_stack-510, curr_stack-510, 4080);
-    memcpy(chld_stack, curr_stack, 4080);
-    memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
-    memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
-    if(curr_task->mm->mmap != NULL) {
-        vm_area_struct_t *curr_vma = curr_task->mm->mmap;
-        vm_area_struct_t *chld_vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
-        memcpy(chld_vma, curr_vma, sizeof(vm_area_struct_t));
-        child_task->mm->mmap = chld_vma;
-        while(curr_vma->vm_next != NULL) {
-            curr_vma = curr_vma->vm_next;
-            chld_vma->vm_next = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
-            chld_vma = chld_vma->vm_next;
-            memcpy(chld_vma, curr_vma, sizeof(vm_area_struct_t));
-        }
-        chld_vma->vm_next = NULL;
-    }
-    else {
-       child_task->mm->mmap = NULL;
-    }
+	    //write_cr3(child_task->pml4);
 
-    write_cr3(curr_task->pml4);
-    tlb_flush(curr_task->pml4);
+	    //Deep copy
+	    uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
+	    uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
+	    memcpy(chld_stack-510, curr_stack-510, 4080);
+	    //memcpy(chld_stack, curr_stack, 4080);
+	    memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
+	    memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
+	    if(curr_task->mm->mmap != NULL) {
+	        vm_area_struct_t *curr_vma = curr_task->mm->mmap;
+	        vm_area_struct_t *chld_vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
+	        memcpy(chld_vma, curr_vma, sizeof(vm_area_struct_t));
+	        child_task->mm->mmap = chld_vma;
+	        while(curr_vma->vm_next != NULL) {
+	            curr_vma = curr_vma->vm_next;
+	            chld_vma->vm_next = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
+	            chld_vma = chld_vma->vm_next;
+	            memcpy(chld_vma, curr_vma, sizeof(vm_area_struct_t));
+	        }
+	        chld_vma->vm_next = NULL;
+	    }
+	    else {
+	       child_task->mm->mmap = NULL;
+	    }
 
-    volatile uint64_t stack_loc;
-    volatile uint64_t rip_loc;
+	    //write_cr3(curr_task->pml4);
+	    //tlb_flush(curr_task->pml4);
 
-    //TODO: make these are functions in asm utils.h
-    __asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
-    __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
+	    //volatile uint64_t stack_loc;
+	    //volatile uint64_t rip_loc;
+	    //curr_task = prev_task;
 
-    /*
-    if(curr_task == prev_task) {
-      //stack[510] = rip_loc;
-      //child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
-      //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-      //child_task->stack_p = child_task->kern_stack;
-      //uint64_t * temp = (uint64_t *) child_task->kern_stack;
-      //temp[0] = rip_loc;
-      //debug("In Parent!\n");
-      //schedule();
+	    //TODO: make these are functions in asm utils.h
+	    //__asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
+	    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
 
-      debug("In Parent!\n");
-      child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8;
-      *(uint64_t *) child_task->kern_stack = rip_loc;
-      child_task->stack_p = child_task->kern_stack;
-      schedule();
-    }
-    else {
-      debug("In Child!\n");
-      outb(0x20, 0x20);
-      return 0;
-    }
-    */
+	    /*
+	    if(curr_task == prev_task) {
+	      //stack[510] = rip_loc;
+	      //child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
+	      //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+	      //child_task->stack_p = child_task->kern_stack;
+	      //uint64_t * temp = (uint64_t *) child_task->kern_stack;
+	      //temp[0] = rip_loc;
+	      //debug("In Parent!\n");
+	      //schedule();
 
-    //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-    //child_task->kern_stack = child_task->kern_stack - 16 - 128 - 8;
+	      debug("In Parent!\n");
+	      *(uint64_t *) child_task->kern_stack = rip_loc;
+	      child_task->stack_p = child_task->kern_stack;
+	      child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
+	      child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+	      child_task->rip = rip_loc;
+	      return child_task->pid;
+	    }
+	    else {
+	      debug("In Child!\n");
+	      //outb(0x20, 0x20);
+	      return 0;
+	    }
+	    */
 
-    child_task->kern_stack = child_task->kern_stack - 16 - 64 - 8;
-    *(uint64_t *) child_task->kern_stack = (uint64_t) fork_return;
-    child_task->stack_p = child_task->kern_stack;
-    schedule();
+	    //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
+	    //child_task->kern_stack = child_task->kern_stack - 16 - 128 - 8;
 
-    return child_task->pid;
+	    //child_task->kern_stack = child_task->kern_stack - 16 - 64 - 8;
+	    child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
+	    //*(uint64_t *) child_task->kern_stack = (uint64_t) fork_return;
+	    //child_task->stack_p = child_task->kern_stack;
+	    child_task->rip = (uint64_t) fork_return;
+	    schedule();
+
+	    return child_task->pid;
 }
 
 uint64_t sys_execve(char *fname, char **argv, char **envp)
 {
-    //TODO: change the prints to include process name.
+
+
+	//TODO: change the prints to include process name.
+    /*
     task_struct_t *new_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
     if(!new_task) {
         kpanic("Not able to allocate task struct for new task\n");
         return -1;
     }
     memset(new_task, 0, sizeof(task_struct_t *));
+    */
+    task_struct_t *new_task = curr_task;
+    int * retp = (int *) get_bin_addr(fname);
+    if(retp != NULL)
+        debug("Loading %s was sucessfull\n", fname);
+    else {
+        debug("Error loading %s\n", fname);
+        return -1;
+    }
 
     uint64_t * stack = (uint64_t *) kmalloc(PAGE_SIZE);
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
     }
 
+    /*
     mm_struct_t *mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     if(!mm) {
         kpanic("Not able to allocate mm_struct for init\n");
     }
+    */
+
+    //char* args[] = {"bin/ls", NULL};
+    //int arg_cnt = 1;
+
+    /*
+    char args[5][50];
+    int arg_cnt = 1;
+    if(!strcmp(fname, "bin/sbush")) {
+        strcpy(args[0], "bin/sbush");
+        args[1][0] = '\0';
+    }
+    else {
+        strcpy(args[0], "bin/ls");
+        args[1][0] = '\0';
+    }
+    */
 
     char args[5][50]; //TODO: can this be less restrictive. Can use better version of kmalloc()
-    int arg_cnt = 1;
-    strcpy(args[0], fname);
+    int arg_cnt = 0;
 
 
-    for(int i = 0; i < 5; i++) {
-        //args[i][0] = '\0';
-        if(argv[i+1] != NULL) {
-        		kprintf("argv : %s\n", argv[i+1]);
-        		memset(args[i],  '\0', sizeof(args[i]));
-            strcpy(args[i], argv[i+1]);
-            arg_cnt++;
-        }
+
+
+
+    while(argv[arg_cnt] != NULL && arg_cnt < 5) {
+           args[arg_cnt][0] = '\0';
+           strcpy(args[arg_cnt], argv[arg_cnt]);
+           arg_cnt++;
     }
+    for(int i = arg_cnt; i < 5; i++) args[i][0] = '\0';
 
-    debug("**********in execvpe*************\n");
-    debug("args : %d\n", arg_cnt);
-    //sleep(99999);
-    //sleep(99999);
-
-    new_task->state     = TASK_RUNNABLE;
-    new_task->mm        = mm;
-    new_task->sleep_t   = 0;
-    new_task->pid       = get_pid();
-    new_task->ppid      = -1;
-    new_task->prev_task = NULL;
-    new_task->parent    = NULL;
-    new_task->sibling   = NULL;
+    //new_task->state     = TASK_RUNNABLE;
+    //new_task->mm        = mm;
+    //new_task->sleep_t   = 0;
+    //new_task->pid       = get_pid();
+    //new_task->ppid      = -1;
+    //new_task->prev_task = NULL;
+    //new_task->parent    = NULL;
+    //new_task->sibling   = NULL;
     new_task->child     = NULL;
-    strcpy(new_task->cdir_name, "/bin");
+    //strcpy(new_task->cdir_name, "/bin");
     strcpy(new_task->pcmd_name, fname);
 
     //TODO: setup user address space.
@@ -190,15 +230,10 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
 
     write_cr3(new_task->pml4);
 
-    new_task->kern_stack = (uint64_t) &stack[510];
+    //new_task->kern_stack = (uint64_t) &stack[510];
 
     //Load process.
-    int ret = load_elf(new_task, args[0]);
-    //TODO: print the name of the exec
-    if(ret == 0)
-        debug("Loading Exe Sucessfull\n");
-    else
-        debug("Error Loading Exe\n");
+    load_elf(new_task, args[0]);
 
     //TODO: copy arguments.TODO: do for envp too.
     uint64_t args_user = (uint64_t) kmalloc(PAGE_SIZE);
@@ -210,18 +245,14 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     memcpy((void *) args_user, (void *) args, sizeof(args));
     for(int i = arg_cnt; i > 0; i--)
        *(uint64_t *)(args_user - 8*i) = args_user + (arg_cnt-i)*64;
-    *(uint64_t *)(args_user - 8*(arg_cnt+1)) = arg_cnt-1;
-
+    *(uint64_t *)(args_user - 8*(arg_cnt+1)) = arg_cnt;
 
     args_user = args_user - 8*(arg_cnt+1);
     new_task->stack_p = args_user;
 
-    //if(strcmp(fname, "bin/ls")){
-    //		debug("In debug");
-    //}
-    write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
+    //write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
-    add_to_queue(new_task);
+    //add_to_queue(new_task);
 
     switch_to_userspace(new_task);
 
@@ -243,6 +274,7 @@ uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
         term_write(addr, size);
     }
 
+
     return 1;
 }
 
@@ -250,26 +282,29 @@ uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 {
     curr_task->state = TASK_WAITING;
 
+    schedule();
+
     return 0;
 }
 
 uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 {
 
-    char buf[NAME_MAX+1] = {0};
-    memset(buf, '\0', sizeof(buf));
+    char buf[512] = {0};
+
     strcpy(buf ,cwd);
     uint32_t child_fidx ;
-    debug("Get child of  fd : %d, prev child : %d\n",fd, dir->offset);
     child_fidx = get_child(fd, dir->offset);
-    debug("Child idx : %d\n", child_fidx);
     if(child_fidx == -1){
       dir->offset = -1;
       return -1;
     }
 
     strcpy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
+    dir->inode = child_fidx;
     dir->offset = child_fidx;
+    dir->type = tarfs_fds[child_fidx].type;
+    dir->size = tarfs_fds[child_fidx].size;
     debug("%s\n", dir->d_name);
     return child_fidx;
 }
@@ -297,7 +332,7 @@ uint64_t sys_getcwd(char *buf, uint64_t size)
 
 uint64_t sys_access(char * pathname, uint64_t mode)
 {
-  debug("Inside sys_chdir old  : %s \n", cwd);
+	debug("Inside sys_chdir old  : %s \n", cwd);
 	debug("Inside sys_chdir new  : %s \n", pathname);
 	for(uint32_t idx = 0 ;idx< 500 ; idx++){
 		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
@@ -370,4 +405,19 @@ void sys_shutdown(uint64_t code)
 {
     //TODO: clearn all tasks.
     sys_exit();
+}
+
+uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
+        int32_t flags, int32_t fd, uint64_t offset)
+{
+
+//	 task_struct_t *temp = curr_task;
+//    uint64_t anon_brk = curr_task->proc.mm->anon_mem_brk;
+//    if (!start && 0 == offset && MAP_ANONYMOUS | MAP_PRIVATE) {
+//        struct vm_area_struct *vma =
+//            add_vma(curr_task->proc.mm, anon_brk, length);
+//        curr_task->proc.mm->anon_mem_brk = vma->vm_end;
+//    }
+//    return anon_brk;
+	return 0;
 }

@@ -15,5 +15,6 @@ int strlen( const char *s);
 char *strconcat(char *dst, const char *src);
 char* gets(char *s);
 void memset(void* dest, int value, int count);
+char *itoa(int value, char *str, int base);
 
 #endif
