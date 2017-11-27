@@ -42,8 +42,8 @@ int main(int argc, char* argv[], char* envp[]) {
 
    char buff[500];
  getcwd(buff, 500);
- puts("*********");
- puts("Executing ls for /");
+ //puts("*********");
+ //puts("Executing ls for /");
 
 
  int fidx = open("/bin", 0);
@@ -58,9 +58,6 @@ int main(int argc, char* argv[], char* envp[]) {
 
 
  }
- puts("*********");
-
-
- //puts("*");
+ //puts("*********");
 
 }

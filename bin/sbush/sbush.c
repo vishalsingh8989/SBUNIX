@@ -215,8 +215,8 @@ int main(int argc, char* argv[], char* envp[]) {
             tokens[1] = NULL;
 
             int status;
-            puts("Input received from user:");
-            puts(str_buf);
+            //puts("Input received from user:");
+            //puts(str_buf);
 
             pid_t pid = fork();
 

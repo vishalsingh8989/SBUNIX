@@ -54,8 +54,8 @@ void *align_tarfs(void *p_val, uint64_t size)
 }
 
 void init_tarfs(){
-	kprintf("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
-	kprintf("Set root  : / \n");
+	klog(INFO, "Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
+	//kprintf("Set root  : / \n");
 	strcpy(cwd, "/");
 	//cwd = "/";
 
@@ -134,7 +134,7 @@ void init_tarfs(){
 	test_tarfs_init(fd_index);
 	*/
 
-	kprintf("tarfs test end ..........\n");
+	//kprintf("tarfs test end ..........\n");
 
 
 
@@ -192,7 +192,7 @@ uint32_t get_index_by_name(const char* fname){
 	uint64_t idx = 0;
 	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-			kprintf("Found : %s at idx %d\n",fname,  idx);
+			//kprintf("Found : %s at idx %d\n",fname,  idx);
 			return idx;
 		}
 	}

@@ -63,7 +63,7 @@ uint64_t page_alloc()
     page_stat_t * page = NULL;
 
     if (!free_pages_list) {
-        kprintf("Out of memory in page_alloc()\n");
+        klog(FATAL, "Out of memory in page_alloc()\n");
         return -1;
     }
     else {
@@ -90,7 +90,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir_p = (struct page_directory_pointer *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 
@@ -99,7 +99,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir = (struct page_directory *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 
@@ -108,7 +108,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         ptable = (struct page_table *) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 
@@ -117,7 +117,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         return (uint64_t) (entry & 0xfffffffffffff000);
     }
     else {
-        kprintf("Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 }
@@ -268,6 +268,7 @@ void delete_ptables(uint64_t addr)
             kfree((uint64_t *) pdir_p);
         }
     }
+    kfree((uint64_t *) addr);
 }
 
 void map_proc(uint64_t paddr, uint64_t vaddr)
@@ -321,9 +322,7 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        //TODO: Have to remove this and create separate one for COW.
-        kprintf("Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
-        //entry = paddr;
+        klog(INFO, "Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
         entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }
@@ -378,7 +377,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        kprintf("Page already Mapped!!!\n");
+        klog(ERR, "Page already Mapped!!!\n");
     }
     else {
         entry = paddr;
@@ -402,7 +401,7 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
 
 void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 {
-    kprintf("physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
+    klog(INFO, "physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
     struct smap_t {
         uint64_t base, length;
@@ -414,7 +413,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     num_pages = 0;
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
         if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
-            kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            klog(INFO, "Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             if (smap->base > (uint64_t) physfree) {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
             }
@@ -426,6 +425,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
             }
         }
     }
+    total_pages = num_pages;
 
     pages_list = preinit_alloc((uint64_t) physfree, num_pages * sizeof(page_stat_t));
 
@@ -436,8 +436,6 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //pmap_l4 = (struct page_map_level_4 *) preinit_alloc((uint64_t) physfree, PAGE_SIZE);
     memset((void *) pmap_l4, 0, PAGE_SIZE);
 
-    kprintf("Before mapping....\n");
-
     uint64_t phy_addr;
     uint64_t vir_addr;
     int size;
@@ -446,7 +444,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     phy_addr = (uint64_t) physbase;
     vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
     size = (physfree - physbase)/PAGE_SIZE;
-    kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+    klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
     map_addr_range(pmap_l4, phy_addr, vir_addr, size);
 
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
@@ -455,28 +453,28 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
                 phy_addr = (uint64_t) physfree;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else {
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
-                kprintf("phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
         }
     }
 
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
-    kprintf("PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
+    klog(IMP, "PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
 
     //uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
@@ -507,7 +505,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     __asm__ __volatile__("movq %%cr4, %0;":"=r"(cr4));
     ia32_efer = rdmsr(MSR_EFER);
 
-    kprintf("CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
+    klog(IMP, "CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
     //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
     write_cr3((uint64_t) pmap_l4);
@@ -515,7 +513,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
 
-    kprintf("Page Table Setup Sucessfull\n");
+    klog(INFO, "Page Table Setup Sucessfull\n");
 }
 
 uint64_t * kmalloc(uint64_t size)

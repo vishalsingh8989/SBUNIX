@@ -19,17 +19,17 @@ void print_task_list()
 {
 
     if(curr_task == NULL) {
-        kprintf("Tasks in queue are: \n");
-        kprintf("No tasks in the queue!\n");
+        klog(IMP, "Tasks in queue are: \n");
+        klog(IMP, "No tasks in the queue!\n");
         return;
     }
 
     int i = 0;
-    kprintf("Tasks in queue are: \n");
-    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
+    klog(INFO, "Tasks in queue are: \n");
+    klog(INFO, "%d : %s\n", i++, curr_task->pcmd_name);
     task_struct_t * temp =  curr_task->next_task;
     while(temp != curr_task) {
-        kprintf("%d : %s\n", i++, temp->pcmd_name);
+        klog(INFO, "%d : %s\n", i++, temp->pcmd_name);
         temp = temp->next_task;
     }
 }
@@ -42,25 +42,13 @@ pid_t get_pid() {
 
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
-    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
-    //kern_stack = align_up(curr_task->kern_stack) - 16;
 
     set_tss_rsp((void *) next_task->kern_stack);
     kern_stack = next_task->kern_stack;
 
-    kprintf("In task %s with rip: %p, pid: %d, pml4: %p, rsp; %p, Switching to %s with rip: %p, pid: %d, pml4: %p, rsp: %p\n",
-             prev_task->pcmd_name, prev_task->rip, prev_task->pid, prev_task->pml4, prev_task->stack_p,
-             next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
-
-    /*
-    __asm__ __volatile__ (
-        "movq %%rsp, %0;"
-        "movq %1, %%rsp;"
-        "retq;"
-        ::"r"(&(prev_task->stack_p)),
-          "r"(next_task->stack_p)
-    );
-    */
+    klog(IMP, "In task %s with rip: %p, pid: %d, pml4: %p, rsp; %p, Switching to %s with rip: %p, pid: %d, pml4: %p, rsp: %p\n",
+              prev_task->pcmd_name, prev_task->rip, prev_task->pid, prev_task->pml4, prev_task->stack_p,
+              next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
 
     __asm__ __volatile__ (
       "movq $1f, %0;"
@@ -79,29 +67,6 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
       :"=g"(prev_task->rip)
       :"r"(&(prev_task->kern_stack)), "r"(next_task->kern_stack), "r"(next_task->rip), "r"(next_task->pml4)
     );
-
-
-    /*
-    __asm__ __volatile__ (
-        "sti;"
-        "movq %%rsp, %0;"
-        ::"r"(&(prev_task->stack_p))
-    );
-
-    __asm__ __volatile__ (
-        "movq %0, %%rsp;"
-        ::"r"(next_task->stack_p)
-    );
-
-    __asm__ __volatile__ (
-        "movq $1f, %0;"
-        "pushq %1;"
-        "retq;"
-        "1:\t"
-        :"=g"(prev_task->rip)
-        :"r"(next_task->rip)
-    );
-    */
 }
 
 void add_to_queue(task_struct_t *new_task)
@@ -142,7 +107,7 @@ void add_to_zombie_queue(task_struct_t *task)
 void remove_from_queue(task_struct_t *task)
 {
      task->state = TASK_ZOMBIE;
-     kprintf("Adding %s to zombie queue\n", curr_task->pcmd_name);
+     klog(IMP, "Adding %s to zombie queue\n", curr_task->pcmd_name);
      zombie_task = task; //TODO: used add_to_zombie_queue
      //add_to_zombie_queue(curr_task);
 
@@ -155,15 +120,13 @@ void remove_from_queue(task_struct_t *task)
 
 void reap_zombies()
 {
-    kprintf("Invoking Reaper!\n");
-
     if(zombie_task == NULL) {
       return;
     }
     else {
       task_struct_t *temp = zombie_task;
       zombie_task = zombie_task->next_task;
-      kprintf("Freeing memory of %s\n", temp->pcmd_name);
+      klog(IMP, "Reaper is freeing memory of %s\n", temp->pcmd_name);
       delete_task(temp);
       //reap_zombies();
     }
@@ -188,25 +151,13 @@ void schedule()
         write_cr3(curr_task->pml4);
         context_switch(prev_task, curr_task);
     }
-
-    //TODO: this is inefficient, in preemptive sched, put this in idle process.
-    //if(curr_task->state == TASK_ZOMBIE) {
-    //  kprintf("Adding %s to zombie queue\n", curr_task->pcmd_name);
-    //  add_to_zombie_queue(curr_task);
-    //}
-
-    //if (zombie_task != NULL) {
-    //  reap_zombies();
-    //}
 }
 
 void idle_proc()
 {
 
     while(1) {
-        //__asm__ __volatile__("hlt;");
-        //__asm__ __volatile__("sti;");
-        kprintf("--Inside IDLE Process--\n");
+        klog(IMP, "--Inside IDLE Process--\n");
         if (zombie_task != NULL) {
            reap_zombies(); //Not safe.
         }
@@ -216,18 +167,10 @@ void idle_proc()
 
 void switch_to_userspace(task_struct_t *task)
 {
-    kprintf("In task %s with rip: %p, pid: %d, pml4: %p, rsp: %p Switching to userspace!\n",
-             task->pcmd_name, task->rip, task->pid, task->pml4, task->stack_p);
+    klog(IMP, "In task %s with rip: %p, pid: %d, pml4: %p, rsp: %p Switching to userspace!\n",
+              task->pcmd_name, task->rip, task->pid, task->pml4, task->stack_p);
 
     curr_task = task;
-
-    //uint64_t rsp;
-    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(rsp));
-    //set_tss_rsp((void *) align_up(rsp) - 16);
-    //kern_stack = align_up(rsp) - 16;
-
-    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
-    //kern_stack = align_up(curr_task->kern_stack) - 16;
 
     set_tss_rsp((void *) task->kern_stack);
     kern_stack = task->kern_stack;
@@ -328,9 +271,9 @@ task_struct_t *init_proc(const char *name, int type)
         //Load process.
         int ret = load_elf(init_task, name);
         if(ret == 0)
-            kprintf("Loading %s was sucessfull\n", init_task->pcmd_name);
+            klog(INFO, "Loading %s was sucessfull\n", init_task->pcmd_name);
         else
-            kprintf("Error loading %s\n", init_task->pcmd_name);
+            klog(ERR, "Error loading %s\n", init_task->pcmd_name);
 
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
@@ -347,6 +290,7 @@ void delete_task(task_struct_t *task)
     //print_task_list();
 
     //Remove MM amd VMA recursively.
+    klog(INFO, "Freeing MM and VMA's for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
     if(task->mm != NULL) {
         vm_area_struct_t *vma = task->mm->mmap;
         while(vma != NULL) {
@@ -358,11 +302,14 @@ void delete_task(task_struct_t *task)
     kfree((uint64_t *) task->mm);
 
     //Remove stack.
+    klog(INFO, "Freeing kernal STACK for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
     kfree((uint64_t *) align_down(task->kern_stack));
 
     //Remove page tables.
+    //klog(INFO, "Freeing page tables for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
     //delete_ptables(task->pml4); //This throws error, Need to debug this.
 
     //Remove task_struct.
+    klog(INFO, "Freeing task structure for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
     kfree((uint64_t *) task);
 }

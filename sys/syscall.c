@@ -16,16 +16,7 @@ extern char cwd[500];
 
 void sys_exit()
 {
-    //print_task_list();
-
-    //task_struct_t *temp = curr_task;
-    //add_to_zombie_queue(curr_task);
     remove_from_queue(curr_task);
-
-    //if(curr_task->parent != NULL) {
-    //    temp->next_task = temp->parent;
-    //}
-
     schedule();
 }
 
@@ -59,18 +50,12 @@ uint64_t sys_fork()
     child_task->parent    = curr_task;
     add_to_queue(child_task);
 
-    //child_task->prev_task = curr_task;
-    //child_task->next_task = curr_task->next_task;
-    //curr_task->next_task  = child_task;
-
     //write_cr3(child_task->pml4);
 
     //Deep copy
     uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
     uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
     memcpy(chld_stack-510, curr_stack-510, 4080); //TODO: debug this.
-    //memcpy(chld_stack-511, curr_stack-511, 4088); //TODO: debug this.
-    //memcpy(chld_stack, curr_stack, 4080);
     memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
     memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
     if(curr_task->mm->mmap != NULL) {
@@ -127,13 +112,7 @@ uint64_t sys_fork()
     }
     */
 
-    //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-    //child_task->kern_stack = child_task->kern_stack - 16 - 128 - 8;
-
-    //child_task->kern_stack = child_task->kern_stack - 16 - 64 - 8;
     child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
-    //*(uint64_t *) child_task->kern_stack = (uint64_t) fork_return;
-    //child_task->stack_p = child_task->kern_stack;
     child_task->rip = (uint64_t) fork_return;
     schedule();
 
@@ -142,21 +121,12 @@ uint64_t sys_fork()
 
 uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 {
-    //TODO: change the prints to include process name.
-    /*
-    task_struct_t *new_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
-    if(!new_task) {
-        kpanic("Not able to allocate task struct for new task\n");
-        return -1;
-    }
-    memset(new_task, 0, sizeof(task_struct_t *));
-    */
     task_struct_t *new_task = curr_task;
     int * retp = (int *) get_bin_addr(fname);
     if(retp != NULL)
-        kprintf("Loading %s was sucessfull\n", fname);
+        klog(INFO, "Loading %s was sucessfull\n", fname);
     else {
-        kprintf("Error loading %s\n", fname);
+        klog(ERR, "Error loading %s\n", fname);
         return -1;
     }
 
@@ -164,29 +134,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
     }
-
-    /*
-    mm_struct_t *mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
-    if(!mm) {
-        kpanic("Not able to allocate mm_struct for init\n");
-    }
-    */
-
-    //char* args[] = {"bin/ls", NULL};
-    //int arg_cnt = 1;
-
-    /*
-    char args[5][50];
-    int arg_cnt = 1;
-    if(!strcmp(fname, "bin/sbush")) {
-        strcpy(args[0], "bin/sbush");
-        args[1][0] = '\0';
-    }
-    else {
-        strcpy(args[0], "bin/ls");
-        args[1][0] = '\0';
-    }
-    */
 
     char args[5][64]; //TODO: can this be less restrictive. Can use better version of kmalloc()
     int arg_cnt = 0;
@@ -198,16 +145,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     }
     for(int i = arg_cnt; i < 5; i++) args[i][0] = '\0';
 
-    //new_task->state     = TASK_RUNNABLE;
-    //new_task->mm        = mm;
-    //new_task->sleep_t   = 0;
-    //new_task->pid       = get_pid();
-    //new_task->ppid      = -1;
-    //new_task->prev_task = NULL;
-    //new_task->parent    = NULL;
-    //new_task->sibling   = NULL;
-    new_task->child     = NULL;
-    //strcpy(new_task->cdir_name, "/bin");
     strcpy(new_task->pcmd_name, fname);
 
     //TODO: setup user address space.
@@ -221,8 +158,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     new_task->pml4 = (uint64_t) new_pml4 - KERNAL_BASE_ADDRESS;
 
     write_cr3(new_task->pml4);
-
-    //new_task->kern_stack = (uint64_t) &stack[510];
 
     //Load process.
     load_elf(new_task, args[0]);
@@ -241,10 +176,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 
     args_user = args_user - 8*(arg_cnt+1);
     new_task->stack_p = args_user;
-
-    //write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
-
-    //add_to_queue(new_task);
 
     switch_to_userspace(new_task);
 
@@ -292,7 +223,7 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 
     strcpy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
     dir->offset = child_fidx;
-    kprintf("%s\n", dir->d_name);
+    //kprintf("%s\n", dir->d_name);
     return child_fidx;
 }
 
@@ -313,23 +244,23 @@ uint64_t sys_getcwd(char *buf, uint64_t size)
   //kprintf("Inside sys_getcwd\n");
 	strcpy(buf ,cwd);
 	//kprintf("cwd: %s\n", cwd);
-	kprintf("Buff from getcwd      : %s\n", buf);
+	//kprintf("Buff from getcwd      : %s\n", buf);
 	return 0;
 }
 
 uint64_t sys_access(char * pathname, uint64_t mode)
 {
-  kprintf("Inside sys_chdir old  : %s \n", cwd);
-	kprintf("Inside sys_chdir new  : %s \n", pathname);
+  //kprintf("Inside sys_chdir old  : %s \n", cwd);
+	//kprintf("Inside sys_chdir new  : %s \n", pathname);
 	for(uint32_t idx = 0 ;idx< 500 ; idx++){
 		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
 			if(tarfs_fds[idx].type == DIRTYPE){
 				strcpy(cwd, pathname);
-				kprintf("Change dir to         : %s\n",pathname);
+				//kprintf("Change dir to         : %s\n",pathname);
 
 			}
 			else{
-				kprintf("cd: %s: No such file or directory\n",pathname);
+				klog(ERR, "cd: %s: No such file or directory\n",pathname);
 			}
 			return 0;
 		}
@@ -337,7 +268,7 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 
 	//cwd = (char *)pathname;
-	kprintf("Not found Change dir :  %s\n",pathname);
+	klog(ERR, "Not found Change dir :  %s\n",pathname);
 	return 0;
 
     return 0;
@@ -345,17 +276,17 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 uint64_t sys_chdir(char * pathname)
 {
-    kprintf("Inside sys_chdir old  : %s \n", cwd);
-kprintf("Inside sys_chdir new  : %s \n", pathname);
+ //kprintf("Inside sys_chdir old  : %s \n", cwd);
+ //kprintf("Inside sys_chdir new  : %s \n", pathname);
 for(uint32_t idx = 0 ;idx< 500 ; idx++){
   if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
     if(tarfs_fds[idx].type == DIRTYPE){
       strcpy(cwd, pathname);
-      kprintf("Change dir to         : %s\n",pathname);
+      //kprintf("Change dir to         : %s\n",pathname);
 
     }
     else{
-      kprintf("cd: %s: No such file or directory\n",pathname);
+      klog(IMP, "cd: %s: No such file or directory\n",pathname);
     }
     return 0;
   }
@@ -363,18 +294,18 @@ for(uint32_t idx = 0 ;idx< 500 ; idx++){
 
 
 //cwd = (char *)pathname;
-kprintf("Not found Change dir :  %s\n",pathname);
+klog(IMP, "Not found Change dir :  %s\n",pathname);
 return 0;
 }
 
 uint64_t sys_open(char * pathname, uint64_t flags)
 {
-  kprintf("syscall : sys_open()\n");
+  klog(INFO, "syscall : sys_open()\n");
 	int fidx = get_index_by_name(pathname);
 	if(fidx == -1){
 
 	}else{
-		kprintf("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
+		//kprintf("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
 	}
 	return fidx;
 }

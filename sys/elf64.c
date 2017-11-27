@@ -42,15 +42,12 @@ void *get_bin_addr(const char *fname)
 
 void allocate_heap(task_struct_t *task)
 {
-    vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
+    vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(sizeof(vm_area_struct_t));
 
     vm_area_struct_t *vma_temp = task->mm->mmap;
     while(vma_temp->vm_next != NULL)
         vma_temp = vma_temp->vm_next;
     vma_temp->vm_next = vma;
-
-    //vma->vm_next = task->mm->mmap;
-    //task->mm->mmap = vma;
 
     task->mm->brk = HEAP_START;
 
@@ -65,22 +62,17 @@ void allocate_heap(task_struct_t *task)
 
 void allocate_stack(task_struct_t *task)
 {
-    vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
+    vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(sizeof(vm_area_struct_t));
 
     vm_area_struct_t *vma_temp = task->mm->mmap;
     while(vma_temp->vm_next != NULL)
         vma_temp = vma_temp->vm_next;
     vma_temp->vm_next = vma;
 
-    //vma->vm_next = task->mm->mmap;
-    //task->mm->mmap = vma;
-
     vma->vm_type  = VM_STACK;
     vma->vm_mm    = task->mm;
     vma->vm_start = STACK_TOP + PAGE_SIZE;
     vma->vm_end   = STACK_TOP;
-    //vma->vm_start = STACK_TOP;
-    //vma->vm_end   = STACK_TOP + PAGE_SIZE;
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;
@@ -94,14 +86,14 @@ void print_elf_info(task_struct_t *task)
     mm_struct_t *mm_temp = task->mm;
     vm_area_struct_t *vma_temp = task->mm->mmap;
 
-    kprintf("MM Struct: \n");
-    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
-             task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
-             mm_temp->start_data, mm_temp->end_data);
+    klog(INFO, "MM Struct: \n");
+    klog(INFO, "RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
+               task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
+               mm_temp->start_data, mm_temp->end_data);
 
     while(vma_temp != NULL) {
-        kprintf("VM Area Struct: \n");
-        kprintf("VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
+        klog(INFO, "VM Area Struct: \n");
+        klog(INFO, "VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
         vma_temp = vma_temp->vm_next;
     }
 }
@@ -119,12 +111,12 @@ int load_elf(task_struct_t *task, const char *fname)
     Elf64_Phdr *p_hdr = (Elf64_Phdr *) ((uint64_t)e_hdr + e_hdr->e_phoff);
     task->rip = e_hdr->e_entry; //TODO: should be assigned to stack[510], i dont' need rip then
 
-    task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
+    task->mm = (mm_struct_t *) kmalloc(sizeof(mm_struct_t));
 
     for(int i = 0; i < e_hdr->e_phnum; i++)
     {
         if(p_hdr->p_type == 1) {
-            vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(PAGE_SIZE);
+            vm_area_struct_t *vma = (vm_area_struct_t *) kmalloc(sizeof(vm_area_struct_t));
             memset(vma, 0, sizeof(vm_area_struct_t));
 
             vma->vm_mm    = task->mm;
@@ -141,42 +133,26 @@ int load_elf(task_struct_t *task, const char *fname)
                 while(vma_temp->vm_next != NULL)
                     vma_temp = vma_temp->vm_next;
                 vma_temp->vm_next = vma;
-                //vma->vm_next = task->mm->mmap;
-                //task->mm->mmap = vma;
             }
-
-            //TODO: Map process to virtual address
-            /*
-            uint64_t st = align_down(p_hdr->p_vaddr);
-            uint64_t sz = (align_down(vma->vm_end) - align_down(vma->vm_start))/PAGE_SIZE;
-            if(sz == 0) sz = 1;
-            for(int i = 0; i < sz; i++) {
-                uint64_t temp = (uint64_t) kmalloc(PAGE_SIZE);
-                map_proc((temp - KERNAL_BASE_ADDRESS), st);
-                st += PAGE_SIZE;
-            }
-            */
 
             if(vma->vm_flags == (IS_RD + IS_XE))
             {
                 task->mm->start_code = vma->vm_start;
                 task->mm->end_code   = vma->vm_end;
 
-                vma->file = (file_t *) kmalloc(PAGE_SIZE);
+                vma->file = (file_t *) kmalloc(sizeof(file_t));
                 vma->file->f_start = (uint64_t) e_hdr;
                 vma->file->f_pgoff = p_hdr->p_offset;
                 vma->file->f_size  = p_hdr->p_filesz;
-                //memcpy((void*) vma->vm_start, (void*) ((uint64_t) e_hdr + p_hdr->p_offset), p_hdr->p_filesz);
             }
             else if(vma->vm_flags == (IS_RD + IS_WR)) { //TODO: check this condition.
                 task->mm->start_data = vma->vm_start;
                 task->mm->end_data   = vma->vm_end;
 
-                vma->file = (file_t *) kmalloc(PAGE_SIZE);
+                vma->file = (file_t *) kmalloc(sizeof(file_t));
                 vma->file->f_start = (uint64_t) e_hdr;
                 vma->file->f_pgoff = p_hdr->p_offset;
                 vma->file->f_size  = p_hdr->p_filesz;
-                //memcpy((void*) vma->vm_start, (void*) ((uint64_t) e_hdr + p_hdr->p_offset), p_hdr->p_filesz);
             }
         }
         p_hdr++;
@@ -184,7 +160,7 @@ int load_elf(task_struct_t *task, const char *fname)
 
     allocate_heap(task);
     allocate_stack(task);
-    //print_elf_info(task);
+    print_elf_info(task);
 
     return 0;
 }

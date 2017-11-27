@@ -4,7 +4,6 @@
 
 int main(int argc, char **argv, char **envp)
 {
-    puts("----Welcome to SBUnix Os-----");
     puts(">>In init process..");
     puts(">>Executing /etc/rc..(TODO: Not Implemented Yet)");
     puts(">>Executing Sbush..");
@@ -14,12 +13,12 @@ int main(int argc, char **argv, char **envp)
 
     int status;
 
-    puts("Executing fork()");
+    //puts("Executing fork()");
     pid_t pid = fork();
 
     if(pid == 0) {
         //Include the environment facility or change to execve.
-        puts("Executing execvpe()");
+        //puts("Executing execvpe()");
         execvpe(sargv[0], sargv, senvp);
     }
     else {
