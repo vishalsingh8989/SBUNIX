@@ -10,6 +10,8 @@
 #include <sys/utils.h>
 #include <sys/process.h>
 #include <sys/isr.h>
+#include <sys/tarfs.h>
+#include <sys/user.h>
 
 extern uint64_t *abar;
 
@@ -57,14 +59,21 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   print_welcome();
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   __asm__ __volatile__("sti;");
-
+  init_users();
   init_syscall();
+
   init_tarfs();
   //__asm__("int $0");
   //while(1);
 
-  init_proc("bin/init", 0);
+//  __asm__ __volatile__("syscall");
+
+
+  //init_proc("bin/init", 0);
   init_proc("bin/init", 1);
+  //init_proc("bin/init", 1);
+
+
   __asm__ __volatile__("cli;");
 
   //TODO: I guess below statements will never get executed.

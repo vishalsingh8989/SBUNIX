@@ -1,0 +1,337 @@
+#include <sys/defs.h>
+#include <sys/vmm.h>
+#include <sys/mm_types.h>
+#include <sys/utils.h>
+#include <sys/process.h>
+
+#include <sys/elf64.h>
+#include <sys/string.h>
+#include <sys/gdt.h>
+#include <sys/asm_utils.h>
+#include<logger.h>
+
+uint64_t g_pid;
+struct mm_struct *kern_mm;
+
+uint64_t kern_stack;
+uint64_t user_stack;
+
+void dsleep(int s){
+	for(int i=0 ; i< s*999999;i++){
+
+	}
+
+}
+void print_task_list()
+{
+<<<<<<< HEAD
+
+    if(curr_task == NULL) {
+        debug("Tasks in queue are: \n");
+        debug("No tasks in the queue!\n");
+        return;
+    }
+
+    int i = 0;
+    debug("Tasks in queue are: \n");
+    debug("%d : %s\n", i++, curr_task->pcmd_name);
+    task_struct_t * temp =  curr_task->next_task;
+    while(temp != curr_task) {
+        debug("%d : %s\n", i++, temp->pcmd_name);
+        temp = temp->next_task;
+    }
+||||||| merged common ancestors
+    int i = 0;
+    kprintf("Current tasks in queue are: \n");
+    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
+    kprintf("%d : %s\n", i++, curr_task->next_task->pcmd_name);
+=======
+	//
+	dsleep(999);
+    //int i = 0;
+    //kprintf("Current tasks in queue are: \n");
+    //kprintf("%d : %s\n", i++, curr_task->pcmd_name);
+    //kprintf("%d : %s\n", i++, curr_task->next_task->pcmd_name);
+>>>>>>> e6b7680e5219ebb988e754c6b9877e247e68c3b1
+}
+
+pid_t get_pid() {
+    if(g_pid == MAX_PID)
+        g_pid = 300;
+    return g_pid++;
+}
+
+void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
+{
+    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
+    //kern_stack = align_up(curr_task->kern_stack) - 16;
+
+    set_tss_rsp((void *) next_task->kern_stack);
+    kern_stack = next_task->kern_stack;
+
+    debug("In task %s with rip: %p, pid: %d, pml4: %p, rsp; %p, Switching to %s with rip: %p, pid: %d, pml4: %p, rsp: %p\n",
+             prev_task->pcmd_name, prev_task->rip, prev_task->pid, prev_task->pml4, prev_task->stack_p,
+             next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
+
+    /*
+    __asm__ __volatile__ (
+        "movq %%rsp, %0;"
+        "movq %1, %%rsp;"
+        "retq;"
+        ::"r"(&(prev_task->stack_p)),
+          "r"(next_task->stack_p)
+    );
+    */
+
+    __asm__ __volatile__ (
+      "movq $1f, %0;"
+      :"=g"(prev_task->rip)
+    );
+
+    __asm__ __volatile__ (
+      "cli;"
+      "movq %%rsp, (%1);"
+      //"movq $1f, %0;"
+      "movq %2, %%rsp;"
+      //"movq %4, %%cr3;"
+      "pushq %3;"
+      "retq;"
+      "1:\t"
+      :"=g"(prev_task->rip)
+      :"r"(&(prev_task->kern_stack)), "r"(next_task->kern_stack), "r"(next_task->rip), "r"(next_task->pml4)
+    );
+
+
+    /*
+    __asm__ __volatile__ (
+        "sti;"
+        "movq %%rsp, %0;"
+        ::"r"(&(prev_task->stack_p))
+    );
+
+    __asm__ __volatile__ (
+        "movq %0, %%rsp;"
+        ::"r"(next_task->stack_p)
+    );
+
+    __asm__ __volatile__ (
+        "movq $1f, %0;"
+        "pushq %1;"
+        "retq;"
+        "1:\t"
+        :"=g"(prev_task->rip)
+        :"r"(next_task->rip)
+    );
+    */
+}
+
+void add_to_queue(task_struct_t *new_task)
+{
+    if(curr_task == NULL) {
+        curr_task = new_task;
+        curr_task->next_task = curr_task->prev_task = new_task;
+        //print_task_list();
+        return;
+    }
+
+    task_struct_t *curr_next = curr_task->next_task;
+
+    curr_task->next_task = new_task;
+    new_task->prev_task  = curr_task;
+    new_task->next_task  = curr_next;
+    curr_next->prev_task = new_task;
+
+    //print_task_list();
+}
+
+void remove_from_queue(task_struct_t *task)
+{
+     task_struct_t *temp = task;
+
+     while(temp != task) {
+       temp = temp->next_task;
+     }
+
+     task_struct_t *prev_task = temp->prev_task;
+     task_struct_t *next_task = temp->next_task;
+
+     prev_task->next_task = next_task;
+     next_task->prev_task = prev_task;
+}
+
+//TODO: replace this with better schedular
+task_struct_t *get_next_task()
+{
+    return curr_task->next_task;
+}
+
+void schedule()
+{
+
+    //TODO: shouldn't this be atomic?
+    task_struct_t *prev_task = curr_task;
+    curr_task = get_next_task();
+
+    //print_task_list();
+
+    if(curr_task != prev_task) {
+        write_cr3(curr_task->pml4);
+        context_switch(prev_task, curr_task);
+    }
+}
+
+void idle_proc()
+{
+    debug("--Inside IDLE Process--\n");
+
+<<<<<<< HEAD
+    while(1) {
+        //__asm__ __volatile__("hlt;");
+        //__asm__ __volatile__("sti;");
+||||||| merged common ancestors
+    while(1) {
+        //__asm__ __volatile("hlt;");
+        //__asm__ __volatile("sti;");
+=======
+    //while(1) {
+        //__asm__ __volatile("hlt;");
+        //__asm__ __volatile("sti;");
+>>>>>>> e6b7680e5219ebb988e754c6b9877e247e68c3b1
+        schedule();
+    //}
+}
+
+void switch_to_userspace(task_struct_t *task)
+{
+    debug("In task %s with rip: %p, pid: %d, pml4: %p, rsp: %p Switching to userspace!\n",
+             task->pcmd_name, task->rip, task->pid, task->pml4, task->stack_p);
+
+    curr_task = task;
+
+    //uint64_t rsp;
+    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(rsp));
+    //set_tss_rsp((void *) align_up(rsp) - 16);
+    //kern_stack = align_up(rsp) - 16;
+
+    //set_tss_rsp((void *) align_up(curr_task->kern_stack) - 16);
+    //kern_stack = align_up(curr_task->kern_stack) - 16;
+
+    set_tss_rsp((void *) task->kern_stack);
+    kern_stack = task->kern_stack;
+
+    __asm__ __volatile__(
+            "sti;"
+            "movq %0, %%cr3;"
+            "movq $0x23, %%rax;"
+            "movq %%rax, %%ds;"
+            "movq %%rax, %%es;"
+            "movq %%rax, %%fs;"
+            "movq %%rax, %%gs;"
+
+            "pushq %%rax;"
+            "pushq %1;"
+            "pushfq;"
+            "popq %%rax;"
+            "orq $0x200, %%rax;"
+            "pushq %%rax;"
+            "pushq $0x2B;"
+            "pushq %2;"
+            "movq $0x0, %%rax;"
+            "movq $0x0, %%rbx;"
+            "movq $0x0, %%rcx;"
+            "movq $0x0, %%rdx;"
+            "movq $0x0, %%rbp;"
+            "movq $0x0, %%rdi;"
+            "movq $0x0, %%rsi;"
+            "iretq;"
+            ::"r"(task->pml4), "r"(task->stack_p), "r"(task->rip) : "memory", "rax"
+    );
+}
+
+task_struct_t *init_proc(const char *name, int type)
+{
+    task_struct_t *init_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+    if(!init_task) {
+        kpanic("Not able to allocate task struct for init\n");
+        return NULL;
+    }
+    memset(init_task, 0, sizeof(task_struct_t *));
+
+    if (type == 0) {
+        kern_task = (task_struct_t *) kmalloc(sizeof(task_struct_t *));
+        if(!kern_task) {
+            kpanic("Not able to allocate task struct for init\n");
+            return NULL;
+        }
+        memset(kern_task, 0, sizeof(task_struct_t *));
+
+        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
+        if(!kern_mm) {
+            kpanic("Not able to allocate mm struct for init\n");
+            return NULL;
+        }
+    }
+
+    uint64_t * stack = (uint64_t *) kmalloc(PAGE_SIZE);
+    if(!stack) {
+        kpanic("Not able to allocate stack for init\n");
+    }
+
+    init_task->state     = TASK_RUNNABLE;
+    init_task->mm        = kern_mm;
+    init_task->sleep_t   = 0;
+    init_task->pid       = get_pid();
+    init_task->ppid      = 0;
+    init_task->prev_task = NULL;
+    init_task->parent    = NULL;
+    init_task->sibling   = NULL;
+    init_task->child     = NULL;
+    init_task->pml4      = read_cr3();
+    strcpy(init_task->cdir_name, "/bin");
+
+    if (type == 0) { //create idle process
+        strcpy(init_task->pcmd_name, "idle_proc");
+        *(stack + 510) = (uint64_t) &idle_proc;
+        init_task->stack_p = init_task->kern_stack = (uint64_t) &stack[510];
+        init_task->rip = (uint64_t) &idle_proc;
+        add_to_queue(init_task);
+    }
+    else { //Load user process
+        strcpy(init_task->pcmd_name, "bin/init");
+
+        struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
+        struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
+
+        old_pml4 = (struct page_map_level_4 *)((uint64_t) old_pml4 + KERNAL_BASE_ADDRESS); //TODO: use pa_to_va
+
+        new_pml4->pml4e[511] = old_pml4->pml4e[511];
+
+        init_task->pml4 = (uint64_t) new_pml4 - KERNAL_BASE_ADDRESS;
+
+        write_cr3(init_task->pml4);
+
+        init_task->kern_stack = (uint64_t) &stack[510];
+
+        //Load process.
+        int ret = load_elf(init_task, name);
+        if(ret == 0)
+            debug("Loading %s was sucessfull\n", init_task->pcmd_name);
+        else
+            debug("Error loading %s\n", init_task->pcmd_name);
+
+        write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
+
+        add_to_queue(init_task);
+
+        switch_to_userspace(init_task);
+    }
+
+    return init_task;
+}
+
+void delete_task(task_struct_t *task)
+{
+    debug("Removing task: %s from task list\n", task->pcmd_name);
+    remove_from_queue(task);
+    //print_task_list();
+}

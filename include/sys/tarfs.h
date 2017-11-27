@@ -3,6 +3,8 @@
 
 #include <sys/defs.h>
 
+#include <sys/fs.h>
+
 extern char _binary_tarfs_start;
 extern char _binary_tarfs_end;
 
@@ -45,11 +47,10 @@ struct posix_header_ustar {
 #define CONTTYPE 7            /* reserved */
 
 
-
 //https://www.gnu.org/software/tar/manual/html_node/Standard.html
 struct tarfs_fd {
     char name[100];
-    //char match_source[20];
+    file_node_t* fnode;
     int type;
     int mode;
     uint64_t size;
@@ -57,6 +58,8 @@ struct tarfs_fd {
     uint64_t offset;
     void *data;
 };
+
+file_node_t file_nodes[OPEN_FILE_LIMIT];
 
 typedef struct posix_header_ustar posix_header_ustar;
 

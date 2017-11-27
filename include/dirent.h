@@ -9,6 +9,7 @@ struct dirent {
 	long  inode;
 	long  offset;
 	unsigned short len;
+	char f_owner[30];
 	char d_name[NAME_MAX+1];
 };
 

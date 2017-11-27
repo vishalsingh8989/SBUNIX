@@ -15,6 +15,7 @@ typedef struct file_node {
     uint64_t    f_count;
     uint64_t    f_flags;
     off_t       f_pos;
+    int f_owner;
 
     //uint64_t    f_size;
     //uint64_t    f_pgoff;

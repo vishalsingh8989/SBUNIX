@@ -5,13 +5,17 @@
 #include <sys/syscall.h>
 #include <sys/utils.h>
 #include <sys/string.h>
+#include <sys/vmm.h>
+#include <sys/kprintf.h>
+#include <sys/user.h>
+#include <sys/env.h>
 #include <dirent.h>
 #include<logger.h>
 
 
-char cwd[MAX_NAME+1];
+extern char cwd[MAX_NAME+1];
 
-
+//extern char* users[10];
 
 
 //int open(const char* pathname, int flags) {
@@ -56,8 +60,6 @@ void init_tarfs(){
 	debug("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
 	debug("Set root  : / \n");
 	strcpy(cwd, "/");
-	//cwd = "/";
-
 	posix_header_ustar *iterator = (posix_header_ustar *) &_binary_tarfs_start;
 
 	// store root
@@ -69,7 +71,9 @@ void init_tarfs(){
 
 	uint64_t fd_index = 1;
 
-
+	uint64_t* file_addr = kmalloc(PAGE_SIZE);
+	if(file_addr){}
+	file_node_t* fd_node = (file_node_t *)file_addr;
 
 	for(iterator =(posix_header_ustar *) &_binary_tarfs_start; iterator < ( posix_header_ustar *)&_binary_tarfs_end ;){
 		uint64_t name_length = strlen(iterator->name);
@@ -86,6 +90,12 @@ void init_tarfs(){
 			tarfs_fds[fd_index].offset = 0;// read offset
 			tarfs_fds[fd_index].mode = 0; // for flags
 
+
+
+			fd_node->f_owner = admin_uid;
+
+			tarfs_fds[fd_index].fnode = fd_node;
+			fd_node++;
 			if (size) {//file if size not 0
 				tarfs_fds[fd_index].type = REGTYPE;
 				tarfs_fds[fd_index].data =  (void *) ((uint64_t) iterator + sizeof(posix_header_ustar));

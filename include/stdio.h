@@ -1,6 +1,7 @@
 #ifndef _STDIO_H
 #define _STDIO_H
 
+#include <sys/defs.h>
 static const int EOF = -1;
 
 int putchar(int c);
@@ -16,5 +17,6 @@ char *strconcat(char *dst, const char *src);
 char* gets(char *s);
 void memset(void* dest, int value, int count);
 char *itoa(int value, char *str, int base);
-
+int isdigit(char c) ;
+int atoi(char *s);
 #endif

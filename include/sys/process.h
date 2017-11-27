@@ -40,6 +40,7 @@ typedef struct task_struct {
 
     char pcmd_name[MAX_NAME];
     char cdir_name[MAX_NAME];
+
 } task_struct_t;
 
 task_struct_t* init_proc(const char *name, int type);

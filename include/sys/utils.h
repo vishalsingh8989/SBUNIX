@@ -32,4 +32,12 @@ int dir_match(char *dirname, char *patt);
 void sleep(int s);
 char *itoa(int value, char *str, int base);
 
+uint64_t strlen( const char *s);
+uint64_t atoi(char *s);
+uint64_t otod(uint64_t o);
+int strstr(char *a, char *b);
+char *strcopy(char *d, const char *s);
+char *strconcat(char *dst, const char *src);
+int dir_match(char *dirname, char *patt);
+int strcmp(const char * str1, const char * str2);
 #endif

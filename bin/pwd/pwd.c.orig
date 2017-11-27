@@ -1,0 +1,32 @@
+<<<<<<< HEAD
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/defs.h>
+
+int main(int argc, char **argv, char **envp){
+	//puts("*************In pwd*********\n");
+	char buff[NAME_MAX+1];
+	memset(buff, '\0', NAME_MAX+1);
+	getcwd(buff, NAME_MAX+1);
+	//puts("pwd is :");
+	puts(buff);
+	puts("\n");
+	return 0;
+}
+||||||| merged common ancestors
+=======
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/utils.h>
+
+int main(int argc, char **argv, char **envp){
+
+	char buff[500];
+    	getcwd(buff, 500);
+    	puts(buff);
+    return 0;
+}
+>>>>>>> e6b7680e5219ebb988e754c6b9877e247e68c3b1

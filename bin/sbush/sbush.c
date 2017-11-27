@@ -58,12 +58,12 @@ void setenv(const char * var_name, const char * var_value, int overwrite) {
 void setprompt() {
     char *temp;
     temp = getenv("PS1");
-
+    char buff[50];
     if(temp == NULL) {
-       puts("sbush>");
+       printf("%s#sbush>", getcwd(buff, 50));
     }
     else {
-       puts(getenv("PS1"));
+       printf("%s#%s",getcwd(buff, 50),getenv("PS1"));
     }
 }
 
@@ -216,24 +216,34 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
             memseti(str_buf, '\0', sizeof(str_buf));
             perr = gets(str_buf);
-            puts("Input received from user:");
-            puts(str_buf);
-            int idx = 0;
-            memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
-			tokens[idx] = strtok(str_buf, " ");
+            printf("Input received from user:  %s\n", str_buf);
+
+//            int idx = 0;
+//            memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
+//			tokens[idx] = strtok(str_buf, " ");
 
 			//puts(tokens[idx]);
 			//puts(" : ");
-			while (tokens[idx] != NULL) {
-				++idx;
-				memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
-				tokens[idx] = strtok(NULL, " ");
-				//puts(tokens[idx]);
-				//puts(" :");
-			}
-
-			//tokens[0] = str_buf;
-			//tokens[1] = "hello";
+//			while (tokens[idx] != NULL) {
+//				++idx;
+//				memseti(tokens[idx],  '\0', sizeof(tokens[idx]));
+//				tokens[idx] = strtok(NULL, " ");
+//				//puts(tokens[idx]);
+//				//puts(" :");
+//			}
+            if(!strcmp(str_buf, "bin/ls")){
+            		printf("load ls\n");
+				tokens[0] = str_buf;
+				tokens[1] = "hellols";
+				tokens[2] = "testls";
+            }else{
+				printf("load pwd\n");
+				tokens[0] = str_buf;
+				tokens[1] = "hellopwd";
+				tokens[2] = "testpwd";
+            }
+            sleep(9999);
+            sleep(9999);
             //puts("Executing fork()");
             //puts("\n");
             pid_t pid = fork();
@@ -244,8 +254,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
             if(pid == 0) {
                 //Include the environment facility or change to execve.
-                puts("Executing execvpe()");
-                puts("\n");
+            		printf("Executing execvpe()\n");
                 execvpe(tokens[0], tokens, senvp);
 //                if(ret ==-1){
 //                		puts("ret is -1\n");

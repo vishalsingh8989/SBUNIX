@@ -5,12 +5,12 @@
 #include <sys/syscall.h>
 
 <<<<<<< HEAD
-int getdents(int fd,  struct dirent* dir, int size) {
+int getdents(int fd, struct dirent *dir, int size) {
 ||||||| merged common ancestors
 int getdents(int fd, char *dir, int size) {
 =======
-int getdents(int fd, struct dirent *dir, int size) {
->>>>>>> 08b7266844cbb4be3516f08fe89cb34436759b2a
+int getdents(int fd,  struct dirent* dir, int size) {
+>>>>>>> e6b7680e5219ebb988e754c6b9877e247e68c3b1
    uint64_t out;
    out = syscall_3(__NR_getdents, (uint64_t) fd, (uint64_t) dir, (uint64_t) size);
    return out;

@@ -21,14 +21,22 @@ void _start() {
 	char* envp[64] = { NULL };
 
 	//TODO: do dynamic memory allocation to get rid of this limitation.
+	//printf("Arguments count %d , addr : %x \n", argc, &argv);
 	if (argc > 32) {
-		puts("Sbush only supports 32 arguments to main!");
+		printf("Sbush only supports 32 arguments to main!");
 		exit(1);
 	}
 
+
+
+
 	for (int i = 0; i < argc; i++) {
 		argv[i] = (char *) *(sp_addr + offset + i + 1);
+
+
+
 	}
+
 
 	char *temp = (char *) *(sp_addr + offset + argc + 2);
 	int idx = 1;

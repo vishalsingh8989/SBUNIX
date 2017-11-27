@@ -8,12 +8,15 @@
 #include <sys/elf64.h>
 #include <sys/terminal.h>
 #include <sys/tarfs.h>
+#include <sys/kprintf.h>
+#include <sys/user.h>
+#include <sys/env.h>
 #include <dirent.h>
 #include<logger.h>
 
 extern void fork_return(void);
 extern char cwd[MAX_NAME+1];
-
+extern string users[5];
 void sys_exit()
 {
 	//print_task_list();
@@ -196,16 +199,34 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     int arg_cnt = 0;
 
 
+     int argc = 0;
+     int envc = 0;
+     char **av = (char **) kmalloc(PAGE_SIZE);;
+     char **ep = (char **) kmalloc(PAGE_SIZE);;
+     for (argc = 0; argv[argc]; argc++) {
+         av[argc] = (char *) kmalloc(strlen(argv[argc]));
+         strcpy(av[argc], argv[argc]);
+     }
+     for (envc = 0; envp[envc]; envc++) {
+         ep[envc] = (char *) kmalloc(strlen(envp[envc]));
+         strcpy(ep[envc], envp[envc]);
+     }
+     //char fname[100];
+     //strcpy_kernel(fname, &filename[1]);
+
 
 
 
     while(argv[arg_cnt] != NULL && arg_cnt < 5) {
-           args[arg_cnt][0] = '\0';
+           memset(args[arg_cnt] , '\0', sizeof(args[arg_cnt]));
+    			args[arg_cnt][0] = '\0';
            strcpy(args[arg_cnt], argv[arg_cnt]);
            arg_cnt++;
     }
-    for(int i = arg_cnt; i < 5; i++) args[i][0] = '\0';
 
+    for(int i = arg_cnt; i < 5; i++) {
+    		args[i][0] = '\0';
+    }
     //new_task->state     = TASK_RUNNABLE;
     //new_task->mm        = mm;
     //new_task->sleep_t   = 0;
@@ -237,14 +258,17 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
 
     //TODO: copy arguments.TODO: do for envp too.
     uint64_t args_user = (uint64_t) kmalloc(PAGE_SIZE);
+    uint64_t temp;
     uint64_t falign_addr = align_down(STACK_TOP);
     uint64_t page_addr = args_user - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
     map_proc(page_addr, falign_addr);
 
     args_user = STACK_TOP + 0x1000 - 0x10 - sizeof(args);
-    memcpy((void *) args_user, (void *) args, sizeof(args));
-    for(int i = arg_cnt; i > 0; i--)
-       *(uint64_t *)(args_user - 8*i) = args_user + (arg_cnt-i)*64;
+    memcpy((void *) args_user, (void *) args, sizeof(args)*arg_cnt);
+    for(int i = arg_cnt; i > 0; i--){
+    		temp = args_user - 8*i;
+       *(uint64_t *)(temp) = args_user + (arg_cnt-i)*64;
+    }
     *(uint64_t *)(args_user - 8*(arg_cnt+1)) = arg_cnt;
 
     args_user = args_user - 8*(arg_cnt+1);
@@ -253,7 +277,10 @@ uint64_t sys_execve(char *fname, char **argv, char **envp)
     //write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
     //add_to_queue(new_task);
-
+//    kprintf("Arguments count %d , addr : %p syscall. \n", arg_cnt, &args_user);
+//    sleep(999);
+//    sleep(999);
+//    sleep(999);
     switch_to_userspace(new_task);
 
     return -1;
@@ -305,6 +332,8 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
     dir->offset = child_fidx;
     dir->type = tarfs_fds[child_fidx].type;
     dir->size = tarfs_fds[child_fidx].size;
+    strcpy(dir->f_owner , users[tarfs_fds[child_fidx].fnode->f_owner]);
+    //dir->f_owner = tarfs_fds[child_fidx].fnode->f_owner;
     debug("%s\n", dir->d_name);
     return child_fidx;
 }
@@ -380,7 +409,8 @@ uint64_t sys_chdir(char * pathname)
 }
 
 uint64_t sys_open(char * pathname, uint64_t flags){
-	debug("syscall : sys_open()\n");
+	debug("syscall : sys_open() , %d\n", curr_task->pid);
+
 	int fidx = get_index_by_name(pathname);
 	if(fidx == -1){
 

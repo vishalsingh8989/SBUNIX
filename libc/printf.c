@@ -20,65 +20,78 @@ char getnum (uint64_t value, int base) {
     }
 }
 
-void putstring (char * value, char* buff, int idx) {
+void putstring (char * value, char* bufff, int idx) {
     while (*value != '\0') {
-    buff[idx++]= *value++;
+    bufff[idx++]= *value++;
     }
 }
 
-int printf(const char *format, ...)
+int printf(const char *fmt, ...)
 {
 	 va_list val;
-	    int printed = 0;
-	    char buf[64];
-	    va_start(val, format);
-	    while (*format) {
-	        if (*format == '%' && *(format + 1) == 's') {
+	    int count = 0;
+	    char buff[64];
+	    char *space = " ";
+	    va_start(val, fmt);
+	    while (*fmt) {
+	    	if(*fmt == '%'){
+	        if (*(fmt + 1) == 's') {
 	            char *p_str = va_arg(val, char *);
 	            while (p_str && *p_str) {
 	                write(1, p_str++, 1);
 	            }
-	            format += 2;
-	        } else if (*format == '%' && *(format + 1) == 'd') {
-	            memset(buf, 0, 64);
+	            fmt += 2;
+	        } else if (( *(fmt + 1) == 'd')||(isdigit(*(fmt + 1)) && *(fmt + 2) == 'd' )  ) {
+	            memset(buff, 0, 64);
 	            int num = va_arg(val, int);
-	            if (num < 0) {
-	                buf[0] = '-';
-	                write(1, buf, 1);
-	                buf[0] = 0;
-	                num *= -1;
+	            int sp = 0;
+	            if(isdigit(*(fmt + 1))){
+	            		sp = atoi((char*)(fmt + 1));
 	            }
-	            itoa(num, buf, 10);
-	            write(1, buf, strlen(buf));
-	            format += 2;
-	        } else if (*format == '%' && *(format + 1) == 'c') {
+	            if (num < 0) {
+	                buff[0] = '-';
+	                write(1, buff, 1);
+	                buff[0] = 0;
+	                num *= -1;
+	                sp = sp - 1;
+	            }
+	            itoa(num, buff, 10);
+	            sp = sp - strlen(buff);
+	            write(1, buff, strlen(buff));
+	            while(sp>0){
+	            		write(1, space, 1);
+	            		sp--;
+	            }
+	            fmt += 3;
+	        } else if (*(fmt + 1) == 'c') {
 	            int ch = va_arg(val, int);
 	            write(1, &ch, 1);
-	            format += 2;
-	        } else if (*format == '%'
-	                && (*(format + 1) == 'x' || *(format + 1) == 'p')) {
-	            memset(buf, 0, 64);
+	            fmt += 2;
+	        } else if (*(fmt + 1) == 'x' || *(fmt + 1) == 'p') {
+	            memset(buff, 0, 64);
 	            int num = va_arg(val, int);
 	            if (num < 0) {
-	                buf[0] = '-';
-	                write(1, buf, 1);
-	                buf[0] = 0;
+	                buff[0] = '-';
+	                write(1, buff, 1);
+	                buff[0] = 0;
 	                num *= -1;
 	            }
-	            itoa(num, buf, 16);
-	            if (*(format + 1) == 'p') {
+	            itoa(num, buff, 16);
+	            if (*(fmt + 1) == 'p') {
 	                write(1, "0x", 2);
 	            }
-	            write(1, buf, strlen(buf));
-	            format += 2;
-	        } else {
-	            write(1, format, 1);
-	            printed++;
-	            format++;
+	            write(1, buff, strlen(buff));
+	            fmt += 2;
+	        }
+	    }
+	    else {
+	            write(1, fmt, 1);
+	            count++;
+	            fmt++;
 	        }
 	    }
 	    va_end(val);
-	    return printed;
+	    return count;
 	}
 
 
