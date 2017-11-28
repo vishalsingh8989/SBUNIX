@@ -184,10 +184,6 @@ void pchar_xy (char value, char color, int x, int y)
 
 void pchar (char value) //TODO: support tab characters
 {
-    if(value != '\n' &&
-       value != '\r') {
-        pchar_xy(value, term_color, x_cord, y_cord);
-    }
 
     if(value == '\t') {
         int temp = ((x_cord + 4) <= MAX_X) ? 4 : MAX_X - x_cord;
@@ -196,6 +192,19 @@ void pchar (char value) //TODO: support tab characters
             x_cord++;
         }
         return;
+    }
+
+    if(value == BACKSPACE) {
+        if(x_cord > 0) {
+            x_cord--;
+            pchar_xy(' ', term_color, x_cord, y_cord);
+        }
+        return;
+    }
+
+    if(value != '\n' &&
+       value != '\r') {
+        pchar_xy(value, term_color, x_cord, y_cord);
     }
 
     if(x_cord == MAX_X-1 && y_cord == MAX_Y-1) {

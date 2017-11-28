@@ -211,8 +211,14 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
             perr = gets(str_buf);
 
-            tokens[0] = str_buf;
-            tokens[1] = NULL;
+            //tokens[0] = str_buf;
+            //tokens[1] = NULL;
+
+            int idx = 0;
+            tokens[idx] = strtok(str_buf, " ");
+            while (tokens[idx] != NULL) {
+              tokens[++idx] = strtok(NULL, " ");
+            }
 
             int status;
             //puts("Input received from user:");

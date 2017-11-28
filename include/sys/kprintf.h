@@ -35,6 +35,9 @@
 #define MAX_Y   23
 #define STATUS  24
 
+#define BACKSPACE  8
+#define ENTER     10
+
 uint64_t pnum_xy (uint64_t value, int base, char color, int x, int y);
 void puts_xy(const char *str, char color, int x, int y);
 void pchar_xy (char value, char color, int x, int y);
