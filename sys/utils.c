@@ -98,8 +98,8 @@ void print_welcome()
 void kpanic(const char *fmt, ...)
 {
     __asm__ __volatile__("cli;");
-    //kprintf(fmt);
-    //kprintf("\n");
+    kprintf(fmt);
+    kprintf("\n");
     kprintf("Kernal is Panicking!!!\n");
     //kprintf("\t            _  _   \n");
     //kprintf("\t      ___ (~ )( ~) \n");

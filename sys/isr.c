@@ -124,7 +124,11 @@ uint64_t syscall_handler(cpu_regs* regs)
 //        		            (int32_t) arg5,
 //						(uint64_t) arg6);
         		return 0;
+        case __NR_fstat:
+        		debug("Executing shutdown Syscall\n");
 
+        		ret = sys_fstat((int ) arg1, (fstat_t*) arg2);
+        		return ret;
 
         default:
             return -1;
@@ -216,7 +220,9 @@ void keyboard_int_handler() {
           pchar_xy(c  , RED, 70, 24);
           pchar_xy(']', RED, 71, 24);
         }
-        upd_term_buf(c);
+        if(c!=1){ //backspace
+        		upd_term_buf(c);
+        }
     }
 
     pic_send_eoi(1);
@@ -276,6 +282,9 @@ void page_fault_handler(cpu_regs *regs) {
     vm_area_struct_t *vma = curr_task->mm->mmap;
 
     while(vma) {
+        if(vma->vm_type == VM_STACK)
+          if(fault_addr <= vma->vm_start && fault_addr >= vma->vm_end) break;
+
         if(fault_addr >= vma->vm_start && fault_addr <= vma->vm_end) break;
         vma = vma->vm_next;
     }

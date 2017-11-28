@@ -158,3 +158,13 @@ void pnum (uint64_t value, int base) {
         pnum(value - (value/base)*base, base);
     }
 }
+void backspace(){
+
+	pchar(' ');
+	x_cord--;
+	update_cursor(x_cord-- ,y_cord);
+
+
+
+
+}

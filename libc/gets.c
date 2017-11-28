@@ -10,9 +10,16 @@ char * gets(char * buf) {
     //TODO: skip initial spaces.
 
     temp = getchar();
+
     while (temp != '\n' && temp != EOF) {
+
        buf[idx++] = temp;
        temp = getchar();
+       if(temp == -1){
+    	   	   buf[idx] = '\0';
+    	   	   idx--;
+       }
+
     }
     buf[idx] = '\0';
 

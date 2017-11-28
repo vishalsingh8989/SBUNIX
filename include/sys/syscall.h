@@ -2,12 +2,14 @@
 #define SYSCALL_H
 
 #include <sys/defs.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #define __NR_read         0
 #define __NR_write        1
 #define __NR_open         2
 #define __NR_close        3
+#define __NR_fstat		 5
 #define __NR_mmap		 9
 #define __NR_access      21
 #define __NR_pipe        22
@@ -146,5 +148,6 @@ uint64_t sys_access(char * pathname, uint64_t mode);
 uint64_t sys_chdir(char * pathname);
 uint64_t sys_open(char * pathname, uint64_t flags);
 uint64_t sys_close(uint64_t fd);
+uint64_t sys_fstat(int fidx,fstat_t* statbuf);
 
 #endif

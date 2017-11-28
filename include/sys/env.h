@@ -2,6 +2,6 @@
 #define _ENV_H
 
 //char *LOGNAME = "admin";
-char cwd[MAX_NAME+1];
+char PWD[MAX_NAME+1];
 
 #endif

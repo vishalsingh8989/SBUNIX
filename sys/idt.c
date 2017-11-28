@@ -38,7 +38,7 @@ void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
     idt[intr_no].offset_1  = (func >>  0) & 0x0000ffff;
     idt[intr_no].selector  = 0x8;
     idt[intr_no].ist       = 0x0;
-    idt[intr_no].type_attr = type_attr; 
+    idt[intr_no].type_attr = type_attr;
     idt[intr_no].offset_2  = (func >> 16) & 0x0000ffff;
     idt[intr_no].offset_3  = (func >> 32) & 0xffffffff;
     idt[intr_no].zero      = 0x0;
@@ -47,20 +47,19 @@ void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
 void init_idt() {
 
     for(int i = 0; i < 256; i++) {
-       set_idt(i, (uint64_t) &_isrxx  , 0x8e); 
+       set_idt(i, (uint64_t) &_isrxx  , 0x8e);
     }
 
-    set_idt(  0,  (uint64_t) &_isr0   , 0x8e); 
+    set_idt(  0,  (uint64_t) &_isr0   , 0x8e);
     set_idt( 32,  (uint64_t) &_isr32  , 0x8e); 
-    set_idt( 33,  (uint64_t) &_isr33  , 0x8e); 
-    set_idt(  1,  (uint64_t) &_isr1   , 0x8e); 
-    set_idt(  4,  (uint64_t) &_isr4   , 0x8e); 
-    set_idt(  6,  (uint64_t) &_isr6   , 0x8e); 
-    set_idt(  8,  (uint64_t) &_isr8   , 0x8e); 
-    set_idt( 12,  (uint64_t) &_isr12  , 0x8e); 
-    set_idt( 14,  (uint64_t) &_isr14  , 0x8e); 
-    set_idt( 17,  (uint64_t) &_isr17  , 0x8e); 
-    set_idt( 128, (uint64_t) &_isr128 , 0xee); 
+    set_idt( 33,  (uint64_t) &_isr33  , 0x8e);
+    set_idt(  1,  (uint64_t) &_isr1   , 0x8e);
+    set_idt(  4,  (uint64_t) &_isr4   , 0x8e);
+    set_idt(  6,  (uint64_t) &_isr6   , 0x8e);
+    set_idt(  8,  (uint64_t) &_isr8   , 0x8e);
+    set_idt( 12,  (uint64_t) &_isr12  , 0x8e);
+    set_idt( 14,  (uint64_t) &_isr14  , 0x8e);
+    set_idt( 17,  (uint64_t) &_isr17  , 0x8e);
+    set_idt( 128, (uint64_t) &_isr128 , 0xee);
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
 }
-

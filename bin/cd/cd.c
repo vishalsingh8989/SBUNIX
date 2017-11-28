@@ -3,98 +3,152 @@
 #include <unistd.h>
 #include <dirent.h>
 
+void remove_extra(char *str, int n);
+void remove_extra(char *str, int n){
+
+
+	    int len = strlen(str);
+	    int k = 0; // To store index of result
+	    int i = 0;
+	    // Start from second character and add
+	    // unique ones
+	    for (i =1; i< len; i++)
+	    {
+	        // If different, increment k and add
+	        // previous character
+	        if (str[i-1] != str[i])
+	            str[k++] = str[i-1];
+
+	        else
+	            // Keep skipping (removing) characters
+	            // while they are same.
+	            while (str[i-1] == str[i])
+	                i++;
+	    }
+
+	    // Add last character and terminator
+	    str[k++] = str[i-1];
+	    str[k] =  '\0';
+
+	    // Recur for string if there were some removed
+	    // character
+	    if (k != n)
+	    		remove_extra(str, k);// Shlemial Painter's Algorithm
+
+	    // If all characters were unique
+	    //else return str;
+
+
+}
 
 int main(int argc, char **argv, char **envp)
 {
 
-	puts("*************In cd*********\n");
 	char buff[NAME_MAX+1];
-	memset(buff, '\0',  NAME_MAX+1);
-	char *dir = "/lib";// TODO replace dir with argv[1]
 
-	if(dir[0] == '/'){
-    		strcpy(buff, dir);
-    		//strconcat(buff, (const char *)dir);
+	if(argc == 1){
+		return 0;
+	}else if(argc == 2){
+		remove_extra(argv[1], strlen(argv[1]));
+		//getcwd(buff, NAME_MAX+1);
+		if(!strcmp(argv[1], ".")){
+			printf("Move dir\n");
+			return 0;
+		}else if( argv[1][0]=='.' && strlen(argv[1]) !=1 && strcmp(argv[1] , "..")){
+			//char dir[NAME_MAX+1];
+			getcwd(buff, NAME_MAX+1);
+			char *tokens[12];
+			int idx = 0;
+			tokens[idx] = strtok(argv[1], "/");
+			//printf("token :  %s.\n", tokens[idx]);
+			while (tokens[idx] != NULL) {
+				++idx;
+				tokens[idx] = strtok(NULL, "/");
+				strconcat(buff, tokens[idx]);
+				if(tokens[idx] !=NULL){
+					strconcat(buff, "/");
+				}
+			}
 
-    }else{
+			chdir(buff);
+			return 0;
 
-    		if(dir[0] == '.' && dir[1] == '/'){
+		}else if(!strcmp(argv[1] , "..")){
+			//printf("Current dir\n");
+			char par_dir[NAME_MAX+1];
+			getcwd(buff, NAME_MAX+1);
+			dirname(buff, par_dir);
+			chdir(par_dir);
+			return 0;
+		}else if(argv[1][0] == '/'){
+			strcpy(buff,argv[1]);
+			if(strlen(argv[1]) == 1){
+				//TODO change to root.
+			}else{
+				//change to
+				strconcat(buff, "/");
+			}
+			//printf("chdir : %s\n",buff);
+			chdir(buff);
+			//printf("Move from root.\n");
+			return 0;
+		}else{
+			getcwd(buff, NAME_MAX+1);
+			strconcat(buff, argv[1]);
+			strconcat(buff, "/");
+			chdir(buff);
+			return 0;
+		}
 
-    			getcwd(buff, 500);
-    			int len = strlen(buff);
-    			//int dirlen = strlen(dir);
-    			int idx = 2;
-    			while(dir[idx] !='\0'){
-    				buff[len + idx - 2] = dir[idx];
-    				idx++;
-    			}
-    		}else{
-    			getcwd(buff, 500);
-    			strconcat(buff, (const char *)dir);
-
-    		}
-    		//strconcat(buff, (const char *)dir);
+		return 0;
+	}
 
 
-    }
+//	puts("*************In cd*********\n");
+//	char buff[NAME_MAX+1];
+//	memset(buff, '\0',  NAME_MAX+1);
+	//char *dir = "/lib";// TODO replace dir with argv[1]
+//	if(argc == 1){
+//		printf("ARGC");
+//	}
 
-
-    strconcat(buff, "/");
-
-    puts("chdir to:");
-    puts(buff);
-    puts("\n");
-    chdir(buff);
-    	getcwd(buff, 500);
-
-
-
-//    	struct dirent dir_buff ;
-//    struct dirent* ptr_dir = &dir_buff;
-//    ptr_dir->offset=0;
+//	if(argv[0] == '/'){
+//    		strcpy(buff, dir);
+//    		//strconcat(buff, (const char *)dir);
 //
+//    }else{
 //
-//    while(getdents(fidx, ptr_dir, 100) !=-1){
-//    		if(strcmp(ptr_dir->d_name,argv[1]))
-//    		{
-//    			//TODO chdir();
-//    			return 0;
+//    		if(dir[0] == '.' && dir[1] == '/'){
+//
+//    			getcwd(buff, 500);
+//    			int len = strlen(buff);
+//    			//int dirlen = strlen(dir);
+//    			int idx = 2;
+//    			while(dir[idx] !='\0'){
+//    				buff[len + idx - 2] = dir[idx];
+//    				idx++;
+//    			}
+//    		}else{
+//    			getcwd(buff, 500);
+//    			strconcat(buff, (const char *)dir);
+//
 //    		}
-//    		puts("Dir is : ");
-//    		puts(ptr_dir->d_name);
-//    		puts("\n");
-//    }
-
-
-
-
-
-    //char fidxbuff[10];
-    //itoa(fidx, fidxbuff);
-    //puts(fidxbuff);
-    //puts("cwd from sys_call");
-    //puts(buff);
-
-//    char* const sargv[] = {"/bin/sbush", NULL};
-//    char* const senvp[] = {"PATH=/bin:", NULL};
+//    		//strconcat(buff, (const char *)dir);
 //
-//    uint64_t pid;
-//    int status;
 //
-//    puts("Executing fork()");
-//    pid = fork();
+//    }
 //
-//    if(pid == 0) {
-//        //Include to environment facility or change to execve.
-//        puts("Executing execvpe()");
-//        execvpe("/bin/sbush", sargv, senvp);
-//    }
-//    else {
-//        puts("Executing waitpid()");
-//        waitpid(pid, &status);
-//    }
+//
+//    strconcat(buff, "/");
+//
+//    puts("chdir to:");
+//    puts(buff);
+//    puts("\n");
+//    chdir(buff);
+//    	getcwd(buff, 500);
+//
+//
 
-    //while(1);
 
     return 0;
 }

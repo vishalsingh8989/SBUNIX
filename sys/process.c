@@ -137,6 +137,7 @@ void remove_from_queue(task_struct_t *task)
 
      prev_task->next_task = next_task;
      next_task->prev_task = prev_task;
+
 }
 
 //TODO: replace this with better schedular

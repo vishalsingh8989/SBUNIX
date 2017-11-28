@@ -75,11 +75,12 @@ void allocate_stack(task_struct_t *task)
     //vma->vm_next = task->mm->mmap;
     //task->mm->mmap = vma;
 
+    vma->vm_type  = VM_STACK;
     vma->vm_mm    = task->mm;
-    //vma->vm_start = STACK_TOP + PAGE_SIZE;
-    //vma->vm_end   = STACK_TOP;
-    vma->vm_start = STACK_TOP;
-    vma->vm_end   = STACK_TOP + PAGE_SIZE;
+    vma->vm_start = STACK_TOP + PAGE_SIZE;
+    vma->vm_end   = STACK_TOP;
+    //vma->vm_start = STACK_TOP;
+    //vma->vm_end   = STACK_TOP + PAGE_SIZE;
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;

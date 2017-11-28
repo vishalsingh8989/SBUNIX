@@ -2,6 +2,7 @@
 #define _UNISTD_H
 
 #include <sys/defs.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #define PROT_READ	0x1	/* page can be read */
@@ -48,6 +49,8 @@ off_t lseek(int fd, off_t offset, int whence);
 
 // OPTIONAL: implement for ``signals and pipes (+10 pts)''
 int pipe(int pipefd[2]);
+fstat_t* stat(int fidx,fstat_t* statbuf);
+void dirname(char* buff, char* par_buff);
 
 
 #endif

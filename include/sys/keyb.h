@@ -1,5 +1,5 @@
 #include <sys/asm_utils.h>
-
+#include <sys/kprintf.h>
 //Note: for osdev
 // 27 - escape
 // 8  - backspace
@@ -63,7 +63,11 @@ char getchar() {
        case 0x9D:
            return keymap[29];
        
+       case 0x0E:
+    	   	   //kprintf("0x0E pressed\n");
+    	   	   return -1;
        default:
+
            result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
            shift_pressed = 0;
    }

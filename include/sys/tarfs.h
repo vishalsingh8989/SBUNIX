@@ -70,5 +70,6 @@ void *get_bin_info(const char *fname);
 int syscall_open(const char *fname ,  int flag);
 uint32_t get_index_by_name(const char* fname);
 uint32_t get_child(uint32_t fd_idx , uint32_t child_fidx);
-
+int tarfs_size(int fidx);
+int file_level(char *fname);
 #endif

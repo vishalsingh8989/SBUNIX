@@ -13,7 +13,7 @@
 #include<logger.h>
 
 
-extern char cwd[MAX_NAME+1];
+extern char PWD[MAX_NAME+1];
 
 //extern char* users[10];
 
@@ -59,7 +59,7 @@ void *align_tarfs(void *p_val, uint64_t size)
 void init_tarfs(){
 	debug("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
 	debug("Set root  : / \n");
-	strcpy(cwd, "/");
+	strcpy(PWD, "/");
 	posix_header_ustar *iterator = (posix_header_ustar *) &_binary_tarfs_start;
 
 	// store root
@@ -71,9 +71,9 @@ void init_tarfs(){
 
 	uint64_t fd_index = 1;
 
-	uint64_t* file_addr = kmalloc(PAGE_SIZE);
-	if(file_addr){}
-	file_node_t* fd_node = (file_node_t *)file_addr;
+
+
+	file_node_t* fd_node = (file_node_t *)kmalloc(PAGE_SIZE);
 
 	for(iterator =(posix_header_ustar *) &_binary_tarfs_start; iterator < ( posix_header_ustar *)&_binary_tarfs_end ;){
 		uint64_t name_length = strlen(iterator->name);
@@ -90,10 +90,7 @@ void init_tarfs(){
 			tarfs_fds[fd_index].offset = 0;// read offset
 			tarfs_fds[fd_index].mode = 0; // for flags
 
-
-
 			fd_node->f_owner = admin_uid;
-
 			tarfs_fds[fd_index].fnode = fd_node;
 			fd_node++;
 			if (size) {//file if size not 0
@@ -103,7 +100,7 @@ void init_tarfs(){
 				iterator = (posix_header_ustar *) ((uint64_t) iterator + size);
 				tarfs_fds[fd_index].size = size;
 			}else{
-				tarfs_fds[fd_index].data = 0; // dir have 0 data.
+				tarfs_fds[fd_index].data = 0; // dir have 0 data.//TODO add child data size
 				tarfs_fds[fd_index].type = DIRTYPE;
 			}
 			fd_index++;
@@ -114,7 +111,7 @@ void init_tarfs(){
 
 	//testing
 
-	/*
+
 	strcpy(tarfs_fds[fd_index].name, "/bin/sbin/");
 	tarfs_fds[fd_index].size = 0;
 	tarfs_fds[fd_index].offset = 0;
@@ -130,25 +127,25 @@ void init_tarfs(){
 
 
 	strcpy(tarfs_fds[fd_index+2].name, "/bin/config/ifconfig");
-	tarfs_fds[fd_index+2].size = 0;
+	tarfs_fds[fd_index+2].size = 18883;
 	tarfs_fds[fd_index+2].offset = 0;
 	tarfs_fds[fd_index+2].data = 0;
 	tarfs_fds[fd_index+2].type = REGTYPE;
 
 	strcpy(tarfs_fds[fd_index+3].name, "/etc/sbin/config/ifconfig");
-	tarfs_fds[fd_index+3].size = 0;
+	tarfs_fds[fd_index+3].size = 30270;
 	tarfs_fds[fd_index+3].offset = 0;
 	tarfs_fds[fd_index+3].data = 0;
-	tarfs_fds[fd_index+3].type = REGTYPE;
+	tarfs_fds[fd_index+3].type = DIRTYPE;
 
 	fd_index = fd_index+4;
 	debug("tarfs test start..........\n");
-	*/
+
 	test_tarfs_init(fd_index);
 
 
 	debug("tarfs test end ..........\n");
-	sleep(99);
+	sleep(9);
 
 
 
@@ -277,14 +274,31 @@ uint32_t get_child(uint32_t fd_idx , uint32_t child_fidx){
 
 	strcpy(name,tarfs_fds[fd_idx].name);
 
-	for (uint32_t idx = child_fidx + 1; idx <  15 ;idx ++){
+	for (uint32_t idx = child_fidx+1; idx <  100 ;idx ++){
 		strcpy(tempname,tarfs_fds[idx].name);
 		int position = dir_match(name, tempname);
-		if(position ==1){
+		int clevel = file_level(tempname);
+		int plevel = file_level(name);
+		//int test = dir_match(tarfs_fds[child_fidx].name, tempname);
+		if(position ==1 && ((plevel +1 == clevel && tarfs_fds[idx].type == DIRTYPE ) || (plevel == clevel && tarfs_fds[idx].type == REGTYPE)  )    ){
 			//debug("name : %s , position :%d\n",tempname, position );
 			return idx;
 		}
 	}
 	//debug("Name is : %s\n", name);
 	return -1;
+}
+
+int file_level(char *fname){
+	int len = strlen(fname);
+	int level = 0;
+	for(int i = 0 ; i <  len ; i++){
+		if(fname[i] == '/'){
+			level++;
+		}
+	}
+	return level;
+}
+int tarfs_size(int fidx){
+	return tarfs_fds[fidx].size;
 }
