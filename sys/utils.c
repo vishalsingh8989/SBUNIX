@@ -6,9 +6,9 @@
 
 
 void sleep(int s){
-	for(int i = 0 ;i< s*99999; i ++){
-
-	}
+//	for(int i = 0 ;i< s*99999; i ++){
+//
+//	}
 }
 /*
 static void memcpy(void* dest, void* src, int count)

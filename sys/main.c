@@ -12,6 +12,7 @@
 #include <sys/isr.h>
 #include <sys/user.h>
 #include <sys/env.h>
+#include <sys/time.h>
 extern uint64_t *abar;
 
 #define INITIAL_STACK_SIZE 4096
@@ -59,6 +60,7 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   init_users();
   init_syscall();
   init_tarfs();
+  init_time();
 
   __asm__ __volatile__("sti;");
   init_proc("bin/init", 0);

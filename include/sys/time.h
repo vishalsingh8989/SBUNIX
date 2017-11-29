@@ -22,4 +22,8 @@ struct timespec {
     long tv_nsec; // nanoseconds
 };
 
+void init_time();
+void set_system_uptime(char* timestr);
+void get_system_uptime(char *buff);
+
 #endif

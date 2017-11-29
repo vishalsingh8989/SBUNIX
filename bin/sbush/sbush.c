@@ -219,13 +219,11 @@ int main(int argc, char* argv[], char* envp[]) {
         while (TRUE) {
 
             setprompt();
-            //memset(str_buf, '\0', sizeof(str_buf));
+
             perr = gets(str_buf);
-            //setprompt();
-            //perr = gets(path_buf);
-
-            //printf("Input received from user:  %s\n", str_buf);
-
+            if(strlen(str_buf)==0){
+            		continue;
+            }
             int idx = 0;
 			tokens[idx] = strtok(str_buf, " ");
 			while (tokens[idx] != NULL) {
@@ -234,24 +232,18 @@ int main(int argc, char* argv[], char* envp[]) {
 				tokens[idx] = strtok(NULL, " ");
 			}
 
-
             pid_t pid = fork();
             int status;
-
-            //char* const sargv[] = {"bin/ls", NULL};
-
             char *const senvp[] = {"PATH=/bin:", NULL};
 
             if(pid == 0) {
-                //Include the environment facility or change to execve.
-            		//printf("Executing execvpe()\n");
-                execvpe(tokens[0], tokens, senvp);
-//                if(ret ==-1){
-//                		puts("ret is -1\n");
-//                }else{
-//                		puts("ret is not -1\n");
-//                }
-                //exit(0);
+
+            		int ret = 0;
+            		ret = execvpe(tokens[0], tokens, senvp);
+
+                if(ret < 0) {
+                       puts("Command not found!!\n");
+                }
             }
             else {
                 puts("Executing waitpid()");

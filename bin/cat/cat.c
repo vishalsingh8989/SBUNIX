@@ -8,28 +8,27 @@ int main(int argc, char* argv[], char* envp[]) {
 
    int fd;
    int c = 0;
-   int err = -1;
+   int size = 0;
 
    if(argc == 2) {
       fd = open(argv[1], O_RDONLY);
-      printf("fd is : %d\n", fd);
+      //printf("fd is : %d\n", fd);
    }
    else {
+	   //fd = open(argv[1], O_RDONLY);
+	   //TODO check this.
       return 0;
    }
-
    if(fd == -1) {
-	   printf("file not found\n");
-      return 1;
+	   printf("File :  %s not found\n", argv[1]);
+	   return 1;
    }
-   sleep(99);
+   while(size != EOF) {
+      size = read(fd, &c, 1);
+      printf("%c",c);
+   }
 
-   while(err != 0) {
-      err = read(fd, &c, 1);
-      printf("%c\n",c);
-      printf("addr :  %p\n", &c);
-      //sleep(99);
-   }  
-
-   return 0;
+	printf("\n");
+	close(fd);
+	exit(0);
 }

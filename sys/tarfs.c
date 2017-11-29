@@ -45,6 +45,8 @@ void test_tarfs_init(int upper){
 
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
 		klog(INFO,"index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
+
+		//klog(INFO,"index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
 	}
 	sleep(DEBUGWAIT);
 
@@ -142,11 +144,12 @@ void init_tarfs(){
 	fd_index = fd_index+4;
 	klog(INFO,"tarfs test start..........\n");
 
-	test_tarfs_init(fd_index);
+	if(DEBUG)
+		test_tarfs_init(fd_index);
 
 
 	klog(INFO,"tarfs test end ..........\n");
-	sleep(9);
+
 
 
 }

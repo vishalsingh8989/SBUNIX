@@ -13,6 +13,7 @@
 #include <sys/user.h>
 #include <sys/env.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <dirent.h>
 #include<logger.h>
 
@@ -48,6 +49,8 @@ uint64_t sys_fork()
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
+
+    get_system_uptime(child_task->start_time);
     child_task->fdoffset = 4;
     child_task->state   = TASK_RUNNABLE;
     child_task->pid     = get_pid();
@@ -274,27 +277,34 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     return -1;
 }
 
-uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
+uint64_t sys_read(uint64_t fd, void* addr, uint64_t size)
 {
 
 
 	//klog(INFO,"Inside syscall read start: %d ,  %p\n", fd, addr);
 
     if(fd == STDIN) {
-        term_read(addr, size);
+        term_read((uint64_t)addr, size);
+        return 1;
     }else{
-    			file_node_t* fnode_ptr  = curr_task->fd[fd];
-    			//klog(INFO,"In read : fd : %d ,  seek : %d,", fd,fnode_ptr->fseek, fnode_ptr->fsize);
-    			fnode_ptr->fseek++;
+    			file_node_t* fnode_ptr  = (file_node_t*)curr_task->fd[fd];
+
+
+    			if( fnode_ptr->fseek < fnode_ptr->fsize){
+    				//debug("\nIn read : size : %d, seek : %d.", fnode_ptr->fsize, fnode_ptr->fseek);
+    				//klog(INFO,"In read : fd : %d ,  seek : %d,", fd, fnode_ptr->fseek, fnode_ptr->fsize);
+    				strcpy(addr,fnode_ptr->private_data + fnode_ptr->fseek);
+    				fnode_ptr->fseek++;
+    				return 1;
+    			}
     			//TODO. init other values in fnode_ptr. At this point .I don't care.
-
-
+    			return -1;
     }
 
 
     //klog(INFO,"Inside syscall read end: %d ,  %p\n", fd, addr);
 
-    return 1;
+
 }
 
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
@@ -426,18 +436,23 @@ uint64_t sys_open(char * pathname, uint64_t flags){
 		fnode_ptr->fmode = 0;
 		fnode_ptr->fseek = 0;
 		fnode_ptr->fsize = tarfs_fds[fidx].size;
+		fnode_ptr->private_data = (void*)tarfs_fds[fidx].data;
 		//TODO. init other values in fnode_ptr. At this point .I don't care.
-
-		curr_task->fd[curr_task->fdoffset] = fnode_ptr;
 		curr_task->fdoffset++;
+		curr_task->fd[curr_task->fdoffset] = fnode_ptr;
+
 		klog(INFO,"fname : %s ,  flags : %p, found at idx : %d, fdoffset :%d\n", pathname, flags, fidx, curr_task->fdoffset);
 	}
-	return curr_task->fdoffset-1; //return offset in curr task. so that calling process can acccess it using fdoffset.
+	return curr_task->fdoffset; //return offset in curr task. so that calling process can acccess it using fdoffset.
 }
 
 uint64_t sys_close(uint64_t fd)
 {
-    //TODO:
+
+
+
+	curr_task->fd[fd] = NULL;
+
     return 0;
 }
 
@@ -493,8 +508,9 @@ uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence){
     return 0;
 }
 
-uint64_t syscall_ps(uint64_t buff){
+uint64_t syscall_ps(){
+	//debug("");
 	print_task_list();
-	if(buff){}
+	//if(buff){}
 	return 0;
 }

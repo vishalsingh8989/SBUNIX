@@ -8,9 +8,10 @@
 #include <sys/string.h>
 #include <sys/gdt.h>
 #include <sys/asm_utils.h>
+#include <sys/time.h>
 #include<logger.h>
 
-uint64_t g_pid;
+uint64_t g_pid = 1500;
 struct mm_struct *kern_mm;
 
 uint64_t kern_stack;
@@ -29,10 +30,12 @@ void print_task_list()
     klog(INFO, "Tasks in queue are: \n");
     klog(INFO, "%d : %s\n", i++, curr_task->pcmd_name);
     task_struct_t * temp =  curr_task->next_task;
+    kprintf("PID      TIME    CMD\n");
     while(temp != curr_task) {
-        klog(INFO, "%d : %s\n", i++, temp->pcmd_name);
+        kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
         temp = temp->next_task;
     }
+    kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
 }
 
 pid_t get_pid() {
@@ -234,6 +237,8 @@ task_struct_t *init_proc(const char *name, int type)
         kpanic("Not able to allocate stack for init\n");
     }
 
+
+    get_system_uptime(init_task->start_time);
     init_task->state     = TASK_RUNNABLE;
     init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;

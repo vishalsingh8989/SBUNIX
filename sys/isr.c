@@ -9,6 +9,7 @@
 #include <sys/asm_utils.h>
 #include <sys/syscall.h>
 #include <sys/terminal.h>
+#include <sys/time.h>
 #include <dirent.h>
 #include <logger.h>
 
@@ -43,7 +44,7 @@ uint64_t syscall_handler(cpu_regs* regs)
 
         case __NR_read:
             klog(INFO,"Executing Read Syscall\n");
-            ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
+            ret = sys_read((uint64_t) arg1, (void *) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_write:
@@ -133,9 +134,9 @@ uint64_t syscall_handler(cpu_regs* regs)
         		klog(INFO,"Executing __NR_lseek Syscall\n");
         		ret = syscall_lseek((uint32_t) arg1, (uint64_t) arg2, (uint32_t) arg3);
         		return  ret;
-        case __NR_syslog:
+        case __NR_ps:
         		klog(INFO,"Executing __NR_syslog Syscall\n");
-        		ret = syscall_ps((uint64_t) arg1);
+        		ret = syscall_ps();
         		return  ret;
         default:
             return -1;
@@ -192,18 +193,44 @@ void timer_int_handler() {
    char hl = (char) (h%10+48);
    char hh = (char) (h/10+48);
 
-   pchar_xy(sl , GREEN, 79, 24);
-   pchar_xy(sh , GREEN, 78, 24);
-   pchar_xy(':', GREEN, 77, 24);
-   pchar_xy(ml , GREEN, 76, 24);
-   pchar_xy(mh , GREEN, 75, 24);
-   pchar_xy(':', GREEN, 74, 24);
-   pchar_xy(hl , GREEN, 73, 24);
-   pchar_xy(hh , GREEN, 72, 24);
 
+	//time
+
+   	pchar_xy(']' , GREEN, 79, 24);
+	pchar_xy(sl , GREEN, 78, 24);
+	pchar_xy(sh , GREEN, 77, 24);
+	pchar_xy(':', GREEN, 76, 24);
+	pchar_xy(ml , GREEN, 75, 24);
+	pchar_xy(mh , GREEN, 74, 24);
+	pchar_xy(':', GREEN, 73, 24);
+	pchar_xy(hl , GREEN, 72, 24);
+	pchar_xy(hh , GREEN, 71, 24);
+
+	pchar_xy('[' , GREEN, 70, 24);
+	pchar_xy('e' , GREEN, 69, 24);
+	pchar_xy('m' , GREEN, 68, 24);
+	pchar_xy('i' , GREEN, 67, 24);
+	pchar_xy('t' , GREEN, 66, 24);
+	//pchar_xy(' ' , GREEN, 65, 24);
+	pchar_xy('p' , GREEN, 65, 24);
+	pchar_xy('u' , GREEN, 64, 24);
    //pnum_xy(pages_used, 10, 60);
 
-   pic_send_eoi(0);
+
+	char time_buff[9] = {0};
+	time_buff[0] = hh;
+	time_buff[1] = hl;
+	time_buff[2] = ':';
+	time_buff[3] = mh;
+	time_buff[4] = ml;
+	time_buff[5] = ':';
+	time_buff[6] = sl;
+	time_buff[7] = sh;
+	time_buff[8] = '\0';
+
+
+	set_system_uptime(time_buff);
+	pic_send_eoi(0);
 }
 
 void div0_int_handler(cpu_regs *regs) {

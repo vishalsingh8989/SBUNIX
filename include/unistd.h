@@ -52,5 +52,6 @@ int pipe(int pipefd[2]);
 fstat_t* stat(int fidx,fstat_t* statbuf);
 void dirname(char* buff, char* par_buff);
 
+uint64_t procps();
 
 #endif

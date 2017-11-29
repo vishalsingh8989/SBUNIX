@@ -23,6 +23,7 @@ typedef struct task_struct {
     int pid;
     int ppid;
     int state;
+    char start_time[12];
     int exit_code;
 
     mm_struct_t *mm;

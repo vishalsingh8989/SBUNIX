@@ -21,7 +21,7 @@ int main(int argc, char* argv[], char* envp[]) {
 	DIR *dir = opendir(buff);
 	struct dirent *dirent;
 	uint32_t size = 0;
-	printf("\n");
+
 	while ((dirent = readdir(dir))) {
 			printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dirent->type], (dirent->size)/1024,dirent->fowner, dirent->d_name);
 				size = size + dirent->size;

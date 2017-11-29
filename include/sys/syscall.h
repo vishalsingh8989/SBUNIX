@@ -24,7 +24,7 @@
 #define __NR_chdir       80
 #define __NR_sched_yield 24
 #define __NR_shutdown    48
-#define __NR_syslog		103 //for ps.
+#define __NR_ps		103 //for ps.
 
 static inline uint64_t syscall_0(uint64_t s_no) {
 
@@ -141,7 +141,7 @@ uint64_t sys_fork();
 uint64_t sys_pipe(uint64_t* fds);
 uint64_t sys_execve(char *fname, char **argv, char **envp);
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size);
-uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size);
+uint64_t sys_read(uint64_t fd, void* addr, uint64_t size);
 uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options);
 uint64_t sys_dup2(uint64_t old_fd, uint64_t new_fd);
 uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size);
@@ -154,6 +154,6 @@ uint64_t sys_fstat(int fidx,fstat_t* statbuf);
 uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
         int32_t flags, int32_t fd, uint64_t offset);
 uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
-uint64_t syscall_ps(uint64_t buff);
+uint64_t syscall_ps();
 
 #endif

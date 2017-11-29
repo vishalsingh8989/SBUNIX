@@ -1,0 +1,1 @@
+The great benefit of the Local APIC timer is that it is hardwired to each CPU core, unlike the Programmable Interval Timer which is a separate circuit. Because of this, there is no need for any resource management, which makes things easier.
