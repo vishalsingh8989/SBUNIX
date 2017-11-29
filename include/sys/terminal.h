@@ -6,5 +6,5 @@
 void upd_term_buf(char c);
 void term_read(uint64_t addr, uint64_t size);
 void term_write(uint64_t addr, uint64_t size);
-
+int termidx();
 #endif

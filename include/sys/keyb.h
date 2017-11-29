@@ -1,5 +1,9 @@
+#ifndef _KEYB_H
+#define _KEYB_H
+
 #include <sys/asm_utils.h>
 #include <sys/kprintf.h>
+
 //Note: for osdev
 // 27 - escape
 // 8  - backspace
@@ -7,14 +11,14 @@
 // 10 - enter
 // 17 - left cntl
 // 18 - left/right shift
-// 19 - left/right alt 
+// 19 - left/right alt
 // 20 - Capslock
 char keymap[128] = {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
     8,   9, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
    10,  17, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
    18, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 18, '*',
-   19, ' ', 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', 
+   19, ' ', 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-',
    '4', '5', '6', '+', '1', '2', '3', '0', '.'};
 
 int kread() {
@@ -62,21 +66,16 @@ char getchar() {
        case 0x1D:
        case 0x9D:
            return keymap[29];
-       
-           //backspace handling start
-       //case 0x0E:
-    	   	   //kprintf("0x0E pressed\n");
-    	   	//   return -1;
-           //backspace handling send
-       default:
 
+       default:
            result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
            shift_pressed = 0;
    }
-   
+
    if (c & 0x80)
        return 0;
    else
        return result;
 }
 
+#endif

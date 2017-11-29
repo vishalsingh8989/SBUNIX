@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/defs.h>
+#include <sys/env.h>
 
 #define MAX_INPUT 512
 #define TRUE 1
@@ -20,50 +21,52 @@ char* senvp[] = {"PATH=/bin:", NULL};
 int   err;
 char* perr;
 
+extern char PWD[MAX_NAME+1];
+extern char PS1[MAX_NAME+1];
 
 void memseti(void* dest, int value, int count){
 	//puts("memset called\n");
 	memset(dest, value, count);
 }
-char* getenv(const char * var_name) {
-   if(!strcmp(var_name, "PATH"))
-      return path_var;
-   else if(!strcmp(var_name, "PS1"))
-      return ps1_var;
-   else
-      return NULL;
-}
+//char* getenv(const char * var_name) {
+//   if(!strcmp(var_name, "PATH"))
+//      return path_var;
+//   else if(!strcmp(var_name, "PS1"))
+//      return ps1_var;
+//   else
+//      return NULL;
+//}
 
-void setenv(const char * var_name, const char * var_value, int overwrite) {
-   int idx=0;
-   //TODO: Implement strcpy
-   if(!strcmp(var_name, "PATH")){
-      while(var_value[idx] != '\0') {
-         path_var[idx] = var_value[idx];
-         idx++;
-      }
-      path_var[idx] = '\0';
-   }
-   else if(!strcmp(var_name, "PS1")){
-      while(var_value[idx] != '\0') {
-         ps1_var[idx] = var_value[idx];
-         idx++;
-      }
-      ps1_var[idx] = '\0';
-   }
-}
+//void setenv(const char * var_name, const char * var_value, int overwrite) {
+//   int idx=0;
+//   //TODO: Implement strcpy
+//   if(!strcmp(var_name, "PATH")){
+//      while(var_value[idx] != '\0') {
+//         path_var[idx] = var_value[idx];
+//         idx++;
+//      }
+//      path_var[idx] = '\0';
+//   }
+//   else if(!strcmp(var_name, "PS1")){
+//      while(var_value[idx] != '\0') {
+//         ps1_var[idx] = var_value[idx];
+//         idx++;
+//      }
+//      ps1_var[idx] = '\0';
+//   }
+//}
 
 
 //TODO: do some more processing here.
 void setprompt() {
     char *temp;
-    temp = getenv("PS1");
+    temp = getenv(ENV_PS1);
     char buff[50];
     if(temp == NULL) {
        printf("%s#sbush>", getcwd(buff, 50));
     }
     else {
-       printf("%s#%s",getcwd(buff, 50),getenv("PS1"));
+       printf("%s#%s",getcwd(buff, 50),PS1);
     }
 }
 
@@ -209,7 +212,7 @@ void setprompt() {
 
 int main(int argc, char* argv[], char* envp[]) {
 
-
+	setenv(ENV_PS1, "sbush>");
 
     puts("---Welcome to SBUSH shell---\n");
     if(argc == 1) {

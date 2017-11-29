@@ -9,17 +9,6 @@
 char *file_type = "-lscbdfc";
 int main(int argc, char* argv[], char* envp[]) {
 
-//	printf("************In ls argv*************\n");
-//
-//
-//	for(int i=0 ;i < argc ; i++){
-//		printf("%s at %p\n", argv[i], &argv[i]);
-//
-//	}
-//	printf("************In ls argv************* %d \n", argc);
-
-
-
 	char buff[NAME_MAX+1];
 	memset(buff, '\0', NAME_MAX+1);
 	if(argc == 1){
@@ -30,12 +19,6 @@ int main(int argc, char* argv[], char* envp[]) {
 		printf("Multiple directories not supported\n");
 	}
 	DIR *dir = opendir(buff);
-	printf("dir founa at index : %d\n", dir->dfd);
-	//struct dirent dir_buff;
-	//struct dirent* ptr_dir = &dir_buff;
-	//ptr_dir->offset=fidx;
-	//memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
-
 	struct dirent *dirent;
 	uint32_t size = 0;
 	printf("\n");
@@ -44,19 +27,9 @@ int main(int argc, char* argv[], char* envp[]) {
 				size = size + dirent->size;
 	        //printf("%s  \n", dirent->d_name);
 	    }
-
-
-
-
-//	while(getdents(fidx, ptr_dir, 100) !=-1 && fidx != -1){
-//		printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dir_buff.type], dir_buff.size/1024,dir_buff.f_owner, ptr_dir->d_name);
-//		size = size + dir_buff.size;
-//		memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
-//
-//	}
 	if(dir != NULL){
-	printf("drwx--x--x    %4dKB     %s  %s\n", size/1024,"admin", ".");
-	printf("drwx--x--x    %4dKB     %s  %s\n", 0,"admin", "..");
+		printf("drwx--x--x    %4dKB     %s  %s\n", size/1024,"admin", ".");
+		printf("drwx--x--x    %4dKB     %s  %s\n", 0,"admin", "..");
 	}else{
 		printf("ls: %s: No such file or directory,\n", argv[1]);
 	}

@@ -1,4 +1,5 @@
 #include <sys/tarfs.h>
+#include <sys/kprintf.h>
 #include <sys/defs.h>
 #include <sys/utils.h>
 #include <sys/elf64.h>
@@ -28,7 +29,7 @@ extern char PWD[MAX_NAME+1];
 //{
 //    int dir_fd = -1;
 //    if (-1 == (dir_fd = open(name, O_DIRECTORY | O_RDONLY))) {
-//        debug("open fail\n");
+//        klog(INFO,"open fail\n");
 //        return NULL;
 //    }
 //    DIR dir;//(DIR *) malloc(sizeof(DIR));
@@ -43,7 +44,7 @@ void test_tarfs_init(int upper){
 
 
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
-		debug("index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
+		klog(INFO,"index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
 	}
 	sleep(DEBUGWAIT);
 
@@ -57,8 +58,8 @@ void *align_tarfs(void *p_val, uint64_t size)
 }
 
 void init_tarfs(){
-	debug("Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
-	debug("Set root  : / \n");
+	klog(INFO,"Init tarfs : %p - %p\n", &_binary_tarfs_start , &_binary_tarfs_end);
+	klog(INFO,"Set root  : / \n");
 	strcpy(PWD, "/");
 	posix_header_ustar *iterator = (posix_header_ustar *) &_binary_tarfs_start;
 
@@ -83,7 +84,7 @@ void init_tarfs(){
 			memset(tempname, '\0', sizeof(tempname));
 			strcpy(tempname,"/");
 			strconcat(tempname, iterator->name);
-			//debug("name=%s size=%p\n", iterator->name, size);
+			//klog(INFO,"name=%s size=%p\n", iterator->name, size);
 			memset(tarfs_fds[fd_index].name, '\0', sizeof(tarfs_fds[fd_index].name));
 			strcpy(tarfs_fds[fd_index].name, tempname);
 			tarfs_fds[fd_index].size = size;
@@ -139,71 +140,22 @@ void init_tarfs(){
 	tarfs_fds[fd_index+3].type = DIRTYPE;
 
 	fd_index = fd_index+4;
-	debug("tarfs test start..........\n");
+	klog(INFO,"tarfs test start..........\n");
 
 	test_tarfs_init(fd_index);
 
 
-	debug("tarfs test end ..........\n");
+	klog(INFO,"tarfs test end ..........\n");
 	sleep(9);
 
 
-
-	//DIR* dir = opendir("/bin");
-
-	//debug("Dir :%d\n", dir->dfd);
-	//char   buf[2048+1];
-
-
-//	//getcwd(buf, (size_t) 2048+1);
-//	uint64_t out = 10;
-//	char   dir_path[500];
-//	char *dir = "/lib";
-//	uint32_t idx = get_index_by_name(dir);
-//	uint32_t child_fidx = idx;
-//
-//	while ((child_fidx = get_child(idx, &child_fidx) )!=-1){
-//		debug("name : %s\n",tarfs_fds[child_fidx].name , child_fidx);
-//
-//
-//	}
-
-//	char dst[100];
-//	char src[100];
-//	strcopy(dst, "/hello");
-//	strcopy(src, "bin/etc");
-//
-//	strconcat(dst, (const char *)src);
-//	debug("Concatenation :  %s\n", dst);
-
-
-	//uint32_t out;
-//
-//
-//	//out = syscall_2(__NR_open, (uint64_t) dir, (uint64_t) 0);// open
-//
-//
-//	out = syscall_2(__NR_getcwd, (uint64_t) dir_path, (uint64_t) 500);
-////	//out = syscall_1(__NR_chdir, (uint64_t)dir);
-//	out = syscall_2(__NR_getcwd, (uint64_t) dir_path, (uint64_t) 500);
-////	//out = syscall_0(__NR_open);
-//	//struct dirent *dirp =NULL;
-////	out = 1;
-////	while(out != -1){
-////
-////		out = syscall_3(__NR_getdents, (uint64_t) 4,(uint64_t) dir, (uint64_t) out);
-//debug("Open call res , %d\n",out);
-//	}
-
-	//syscall_1(__NR_exit, (uint64_t) 0);
-	//syscall_1(__NR_exit, (uint64_t) 0);
 }
 
 uint32_t get_index_by_name(const char* fname){
 	uint64_t idx = 0;
 	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
 		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-			debug("Found : %s at idx %d\n",fname,  idx);
+			klog(INFO,"Found : %s at idx %d\n",fname,  idx);
 			return idx;
 		}
 	}
@@ -220,25 +172,9 @@ void* get_bin_info(const char *fname){
 		return &tarfs_fds[idx];
 	}
 	return NULL;
-//	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
-//		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-//			debug("Found : %s at idx %d\n",fname,  idx);
-//			return
-//		}
-//	}
-	//TODO. not found then search bin_tarfs_start to bin_tarfs_end and store in tarfs_fd.
-
 
 }
 
-//int sys_call_open(const char* fname){
-//	if(!fname) return -1;
-//
-//
-//
-//
-//
-//}
 
 int syscall_open(const char *fname ,  int flag){
 	//TODO respect flags
@@ -248,12 +184,6 @@ int syscall_open(const char *fname ,  int flag){
 		tarfs_fds[idx].mode = flag; // TODO
 	}
 	return idx;
-//	for(idx = 0 ;idx <  OPEN_FILE_LIMIT ; idx++ ){
-//		if(-1 != strstr(tarfs_fds[idx].name, (char*)fname)){
-//			debug("Found : %s at idx %d\n",fname,  idx);
-//			return &tarfs_fds[idx];
-//		}
-//	}
 }
 
 int syscall_close(uint64_t fd){
@@ -281,11 +211,11 @@ uint32_t get_child(uint32_t fd_idx , uint32_t child_fidx){
 		int plevel = file_level(name);
 		//int test = dir_match(tarfs_fds[child_fidx].name, tempname);
 		if(position ==1 && ((plevel +1 == clevel && tarfs_fds[idx].type == DIRTYPE ) || (plevel == clevel && tarfs_fds[idx].type == REGTYPE)  )    ){
-			//debug("name : %s , position :%d\n",tempname, position );
+			//klog(INFO,"name : %s , position :%d\n",tempname, position );
 			return idx;
 		}
 	}
-	//debug("Name is : %s\n", name);
+	//klog(INFO,"Name is : %s\n", name);
 	return -1;
 }
 

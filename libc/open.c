@@ -10,8 +10,6 @@
 int open(const char* pathname, int flags) {
    uint64_t out;
 
-   	char* k = (char*)malloc(100);
-   	printf("allocated :  %p\n", k);
 
    out = syscall_2(__NR_open, (uint64_t) pathname, (uint64_t) flags);
    return (int) out;

@@ -55,7 +55,7 @@ int main(int argc, char **argv, char **envp)
 		//remove_extra(argv[1], strlen(argv[1]));
 		//getcwd(buff, NAME_MAX+1);
 		if(!strcmp(argv[1], ".")){
-			printf("Move dir\n");
+			//printf("Move dir\n");
 			return 0;
 		}else if( argv[1][0]=='.' && strlen(argv[1]) !=1 && strcmp(argv[1] , "..")){
 			//char dir[NAME_MAX+1];

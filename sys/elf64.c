@@ -53,7 +53,7 @@ void allocate_heap(task_struct_t *task)
     //task->mm->mmap = vma;
 
     uint64_t heap_start = (uint64_t)kmalloc(PAGE_SIZE);
-    kprintf("heap start :  %p\n", heap_start - KERNAL_BASE_ADDRESS);
+    klog(INFO,"heap start :  %p\n", heap_start - KERNAL_BASE_ADDRESS);
     task->mm->brk = heap_start;
 
     vma->vm_type = VM_HEAP;
@@ -63,6 +63,7 @@ void allocate_heap(task_struct_t *task)
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;
+
 
 }
 
@@ -98,14 +99,14 @@ void print_elf_info(task_struct_t *task)
     mm_struct_t *mm_temp = task->mm;
     vm_area_struct_t *vma_temp = task->mm->mmap;
 
-    kprintf("MM Struct: \n");
-    kprintf("RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
+    klog(INFO,"MM Struct: \n");
+    klog(INFO,"RIP: %p, PML4: %p, Start Code: %p, End Code: %p, Start Data: %p, End Data: %p\n",
              task->rip, mm_temp->pml4, mm_temp->start_code, mm_temp->end_code,
              mm_temp->start_data, mm_temp->end_data);
 
     while(vma_temp != NULL) {
-        kprintf("VM Area Struct: \n");
-        kprintf("VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
+        klog(INFO,"VM Area Struct: \n");
+        klog(INFO,"VM_START: %p, VM_END: %p, VM_FLAGS: %p\n", vma_temp->vm_start, vma_temp->vm_end, vma_temp->vm_flags);
         vma_temp = vma_temp->vm_next;
     }
 }

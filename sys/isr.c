@@ -30,93 +30,93 @@ uint64_t syscall_handler(cpu_regs* regs)
     uint64_t arg6  = regs->r9;
     uint64_t ret;
 
-    //debug("In the syscall handler, syscall no: %d\n", s_num);
-    //debug("arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
+    //klog(INFO,"In the syscall handler, syscall no: %d\n", s_num);
+    //klog(INFO,"arg1: %x, arg2: %x, arg3: %x\n", arg1, arg2, arg3);
 
     //TODO: change char* to const char * and cast to uint64_t is not needed.
     switch(s_num) {
 
         case __NR_exit:
-            debug("Executing Exit Syscall\n");
+            klog(INFO,"Executing Exit Syscall\n");
             sys_exit();
             return 0;
 
         case __NR_read:
-            debug("Executing Read Syscall\n");
+            klog(INFO,"Executing Read Syscall\n");
             ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_write:
-            //debug("Executing Write Syscall\n");
+            //klog(INFO,"Executing Write Syscall\n");
             ret = sys_write((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_fork:
-        		debug("Executing Fork Syscall\n");
+        		klog(INFO,"Executing Fork Syscall\n");
             ret = sys_fork();
             return ret;
 
         case __NR_execve:
-            debug("Executing Execve Syscall\n");
+            klog(INFO,"Executing Execve Syscall\n");
             ret = sys_execve((char *) arg1, (char **) arg2, (char **) arg3);
             return ret;
 
         case __NR_wait4:
-        		debug("Executing Wait4 Syscall\n");
+        		klog(INFO,"Executing Wait4 Syscall\n");
             ret = sys_waitpid((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_open:
-        		debug("Executing Open Syscall\n");
+        		klog(INFO,"Executing Open Syscall\n");
             ret = sys_open((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_close:
-        		debug("Executing Close Syscall\n");
+        		klog(INFO,"Executing Close Syscall\n");
             ret = sys_close((uint64_t) arg1);
             return ret;
 
         case __NR_access:
-            debug("Executing access Syscall\n");
+            klog(INFO,"Executing access Syscall\n");
             ret = sys_access((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_pipe:
-            debug("Executing pipe Syscall\n");
+            klog(INFO,"Executing pipe Syscall\n");
             ret = sys_pipe((uint64_t*) arg1);
             return ret;
 
         case __NR_dup2:
-            debug("Executing dup2 Syscall\n");
+            klog(INFO,"Executing dup2 Syscall\n");
             ret = sys_dup2((uint64_t) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_getdents:
-        		debug("Executing getdents Syscall\n");
+        		klog(INFO,"Executing getdents Syscall\n");
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_getcwd:
-        		debug("Executing getcwd Syscall\n");
+        		klog(INFO,"Executing getcwd Syscall\n");
             ret = sys_getcwd((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_chdir:
-            debug("Executing chdir Syscall\n");
+            klog(INFO,"Executing chdir Syscall\n");
             ret = sys_chdir((char *) arg1);
             return ret;
 
         case __NR_sched_yield:
-            debug("Executing yield Syscall\n");
+            klog(INFO,"Executing yield Syscall\n");
             sys_sched_yield();
             return 0;
 
         case __NR_shutdown:
-            debug("Executing shutdown Syscall\n");
+            klog(INFO,"Executing shutdown Syscall\n");
             sys_shutdown((uint64_t) arg1);
             return 0;
         case __NR_mmap:
-        		debug("Executing __NR_mmap Syscall\n");
+        		klog(INFO,"Executing __NR_mmap Syscall\n");
         		ret = sys_mmap((void *) arg1,
         					(uint64_t) arg2,
         		        		(int32_t) arg3,
@@ -125,16 +125,16 @@ uint64_t syscall_handler(cpu_regs* regs)
 						(uint64_t) arg6);
         		return ret;
         case __NR_fstat:
-        		debug("Executing __NR_fstat Syscall\n");
+        		klog(INFO,"Executing __NR_fstat Syscall\n");
         		ret = sys_fstat((int ) arg1, (fstat_t*) arg2);
         		return ret;
 
         case __NR_lseek:
-        		debug("Executing __NR_lseek Syscall\n");
+        		klog(INFO,"Executing __NR_lseek Syscall\n");
         		ret = syscall_lseek((uint32_t) arg1, (uint64_t) arg2, (uint32_t) arg3);
         		return  ret;
         case __NR_syslog:
-        		debug("Executing __NR_syslog Syscall\n");
+        		klog(INFO,"Executing __NR_syslog Syscall\n");
         		ret = syscall_ps((uint64_t) arg1);
         		return  ret;
         default:
@@ -154,16 +154,16 @@ void init_syscall()
     wrmsr(SFMASK, 0xC0000084);
 }
 
-void pnum_xy (uint64_t value, int base, int x) {
-    if (value <= (base-1)) {
-        if (value < 10) pchar_xy((char) (value+48), RED, x++, 24);
-        else pchar_xy((char) (value+87), RED, x++, 24);
-    }
-    else {
-        pnum_xy(value/base, base, x++);
-        pnum_xy(value - (value/base)*base, base, x++);
-    }
-}
+//void pnum_xy (uint64_t value, int base, int x) {
+//    if (value <= (base-1)) {
+//        if (value < 10) pchar_xy((char) (value+48), RED, x++, 24);
+//        else pchar_xy((char) (value+87), RED, x++, 24);
+//    }
+//    else {
+//        pnum_xy(value/base, base, x++);
+//        pnum_xy(value - (value/base)*base, base, x++);
+//    }
+//}
 
 void timer_int_handler() {
    static int i = 0, s = 0, m = 0, h = 0;
@@ -201,7 +201,7 @@ void timer_int_handler() {
    pchar_xy(hl , GREEN, 73, 24);
    pchar_xy(hh , GREEN, 72, 24);
 
-   pnum_xy(pages_used, 10, 60);
+   //pnum_xy(pages_used, 10, 60);
 
    pic_send_eoi(0);
 }
@@ -227,9 +227,15 @@ void keyboard_int_handler() {
           pchar_xy(c  , RED, 70, 24);
           pchar_xy(']', RED, 71, 24);
         }
-        if(c!=1){ //backspace
+        //if(c!=1){ //backspace
+        //int prompt_len = strlen(PWD) + strlen(PS1);
+        //int termidx = term_idx();
+
+        //if(termidx  > prompt_len && c == BACKSPACE){
+
         		upd_term_buf(c);
-        }
+        //}else if()
+
     }
 
     pic_send_eoi(1);
@@ -243,10 +249,7 @@ void overflow_handler() {
     kpanic("-- Overflow Exception Fired --");
 }
 
-void invalid_opcode_handler() {
-    //while(1);
-    kpanic("-- Invalid Opcode Exception Fired --");
-}
+
 
 void double_fault_handler() {
     kpanic("-- Double Fault Exception Fired --");
@@ -256,18 +259,15 @@ void stack_fault_handler() {
     kpanic("-- Stack Fault Exception Fired --");
 }
 
-void alignment_check_handler() {
-    kpanic("-- Alignment Check Exception Fired --");
-}
 
 void page_fault_handler(cpu_regs *regs) {
-    debug("-- Page Fault Execption Fired --\n");
+    klog(INFO,"-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    debug("Int Id: %d, Error: %d\n", regs->int_id, error);
+    klog(INFO,"Int Id: %d, Error: %d\n", regs->int_id, error);
 
     uint64_t fault_addr = read_cr2();
-    debug("Faulting address: %p\n", fault_addr);
+    klog(INFO,"Faulting address: %p\n", fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
@@ -277,12 +277,12 @@ void page_fault_handler(cpu_regs *regs) {
 
 
     if(p_prot_err & !p_write_err) {
-        debug("Page Fault at addr: %p\n", fault_addr);
+        klog(INFO,"Page Fault at addr: %p\n", fault_addr);
         kpanic("Read permission error");
     }
 
     if(p_rsvd_err) {
-        debug("Page Fault at addr: %p\n", fault_addr);
+        klog(INFO,"Page Fault at addr: %p\n", fault_addr);
         kpanic("Reserved page error");
     }
 
@@ -297,7 +297,7 @@ void page_fault_handler(cpu_regs *regs) {
     }
 
     if(vma == NULL) {
-        debug("Growing Stack!\n");
+        klog(INFO,"Growing Stack!\n");
         uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
         page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
@@ -308,14 +308,14 @@ void page_fault_handler(cpu_regs *regs) {
         //TODO: Grow heap
         //TODO: Stack Overflow!
         //TODO: Segmention Fault!
-        //debug("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+        //klog(INFO,"TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
         //TODO: this should be for seq fault only
         //kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
-        debug("Doing Copy On Write\n");
+        klog(INFO,"Doing Copy On Write\n");
         //uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
         //page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
@@ -338,7 +338,7 @@ void page_fault_handler(cpu_regs *regs) {
     uint64_t src, dst;
     int size;
 
-    debug("Copying file contents to %p\n", vma->vm_start);
+    klog(INFO,"Copying file contents to %p\n", vma->vm_start);
     if(falign_addr <= vma->vm_start){
         src = vma->file->f_start + vma->file->f_pgoff;
         dst = vma->vm_start;
@@ -361,6 +361,64 @@ void page_fault_handler(cpu_regs *regs) {
     memcpy((void *) dst, (void*) src, size);
 }
 
+
+void nmi_int_handler() {
+    kpanic("-- NMI Interrupt Fired --");
+}
+
+void breakpoint_excep_handler() {
+    kpanic("-- Breakpoint Exception Fired --");
+}
+
+void range_exeed_excep_handler() {
+    kpanic("-- Bound Range Exceeded Exception Fired --");
+}
+
+void invalid_opcode_handler() {
+    kpanic("-- Invalid Opcode Exception Fired --");
+}
+
+void no_device_excep_handler() {
+    kpanic("-- No device found Exception Fired --");
+}
+
+void coproc_seg_overrun_handler() {
+    kpanic("-- Coprocessor segment overrun Interrupt Fired --");
+}
+
+void invalid_tss_excep_handler() {
+    kpanic("-- Invalid TSS exception Fired --");
+}
+
+void segment_not_present_handler() {
+    kpanic("-- Segment not found exception Fired --");
+}
+
+void general_prot_fault_handler() {
+    kpanic("-- General protection fault exception Fired --");
+}
+
+
+
+void alignment_check_handler() {
+    kpanic("-- Alignment Check Exception Fired --");
+}
+
+void fpu_error_handler() {
+    kpanic("-- FPU error interrupt Fired --");
+}
+
+void machine_check_handler() {
+    kpanic("-- Machine check Exception Fired --");
+}
+
+void simd_fpu_excep_handler() {
+    kpanic("-- SIMD FPU Exception Fired --");
+}
+
+void virtualization_excep_handler() {
+    kpanic("-- Virtualiztion Exception Fired --");
+}
 
 void default_int_handler() {
     //while(1);

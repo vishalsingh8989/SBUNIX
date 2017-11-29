@@ -17,7 +17,7 @@ uint16_t pic_read (uint8_t bus, uint8_t slot, uint8_t func,
 
     address = (uint32_t)((lbus << 16) | (lslot << 11) |
                          (lfunc << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
-                             
+
     outl (PCI_CONFIG_ADDR, address);
 
     tmp = (uint16_t)((inl (PCI_CONFIG_DATA) >> ((offset & 2) * 8)) & 0xffff);
@@ -34,30 +34,29 @@ void pci_check_func(int bus, int dev, int func) {
     base_class = pic_read(bus, dev, func, PCI_CLASS) >> 8;
     sub_class  = pic_read(bus, dev, func, PCI_CLASS) & 0xff;
 
-    kprintf("CLASS: %x, SUB_CLASS: %x\n", base_class, sub_class);
+    klog(IMP, "CLASS: %x, SUB_CLASS: %x\n", base_class, sub_class);
 
     if(base_class == 0x01 && sub_class == 0x06) {
-        kprintf("AHCI Found!!, bus: %x, dev: %x, func: %x\n", bus, dev, func);
+        klog(IMP, "AHCI Found!!, bus: %x, dev: %x, func: %x\n", bus, dev, func);
         uint32_t address = (uint32_t)((bus << 16) | (dev << 11) |
                            (func << 8) | 0x24 | ((uint32_t)0x80000000));
         outl(PCI_CONFIG_ADDR, address);
         volatile uint64_t bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
-        kprintf("BAR before Remap: %p\n", bar);
+        klog(IMP, "BAR before Remap: %p\n", bar);
 
         bar = 0xffffffff;
         outl(PCI_CONFIG_ADDR, address);
         outl(PCI_CONFIG_DATA, bar);
         bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
-        kprintf("BAR Range: %p\n", bar);
+        klog(INFO, "BAR Range: %p\n", bar);
 
         //bar = 0x10010000;
-        bar = 0xa6000; 
-        //bar = 0xfc20400; 
+        bar = 0xa6000;
+        //bar = 0xfc20400;
         outl(PCI_CONFIG_ADDR, address);
         outl(PCI_CONFIG_DATA, bar);
         bar = inl(PCI_CONFIG_DATA) & 0xffffffff;
         abar = (uint64_t *) bar;
-        kprintf("ABAR: %p\n", abar);
     }
 
     if((base_class == 0x06) && (sub_class == 0x04)) {
@@ -68,7 +67,7 @@ void pci_check_func(int bus, int dev, int func) {
 
 void pci_scan_dev(int bus, int dev) {
     if(pic_read(bus, dev, 0, PCI_VENDOR_ID) != PCI_INVALID_VID) {
-        kprintf("Device Found -->  \n");
+        klog(IMP, "Device Found -->  \n");
         pci_check_func(bus, dev, 0);
         if((pic_read(bus, dev, 0, PCI_HEADER_TYPE) & 0x80) != 0) {
             for(int func = 1; func < 8; func++) {
@@ -85,18 +84,18 @@ void pci_scan_bus(int bus) {
     }
 }
 
-void init_pci () 
+void init_pci ()
 {
-    kprintf("Scanning PCI busses!\n");
+    klog(INFO, "Scanning PCI busses!\n");
 
     if((pic_read(0, 0, 0, PCI_HEADER_TYPE) & 0x80) == 0) {
-        kprintf("Only 1 Bus connected!\n");
+        klog(INFO, "Only 1 Bus connected!\n");
         pci_scan_bus(0);
     }
     else {
         for(int func = 0; func < 8; func++) {
             if (pic_read(0, 0, func, PCI_VENDOR_ID) != PCI_INVALID_VID) {
-                kprintf("Detected bus: %d\n", func);
+                klog(IMP, "Detected bus: %d\n", func);
                 pci_scan_bus(func);
             }
         }

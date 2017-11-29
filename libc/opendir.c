@@ -14,6 +14,7 @@ DIR *opendir(const char *name)
         return NULL;
     }
     DIR *dir = (DIR *) malloc(sizeof(DIR));
+
     dir->dfd = fd;
     dir->ptr_dir = (struct dirent *) malloc(sizeof(struct dirent));
     return dir;

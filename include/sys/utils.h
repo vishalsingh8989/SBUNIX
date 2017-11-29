@@ -3,8 +3,6 @@
 
 #include <sys/defs.h>
 
-//static inline void memset(void* dest, int value, int count);
-//static inline void memcpy(void* dest, void* src, int count);
 static inline void memcpy(void* dest, void* src, int count)
 {
     uint8_t * dest_t = (uint8_t *) dest;

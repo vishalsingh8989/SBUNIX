@@ -115,10 +115,10 @@ uint64_t sys_fork()
       //child_task->stack_p = child_task->kern_stack;
       //uint64_t * temp = (uint64_t *) child_task->kern_stack;
       //temp[0] = rip_loc;
-      //kprintf("In Parent!\n");
+      //klog(INFO,"In Parent!\n");
       //schedule();
 
-      kprintf("In Parent!\n");
+      klog(INFO,"In Parent!\n");
       *(uint64_t *) child_task->kern_stack = rip_loc;
       child_task->stack_p = child_task->kern_stack;
       child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
@@ -127,7 +127,7 @@ uint64_t sys_fork()
       return child_task->pid;
     }
     else {
-      kprintf("In Child!\n");
+      klog(INFO,"In Child!\n");
       //outb(0x20, 0x20);
       return 0;
     }
@@ -160,9 +160,9 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     task_struct_t *new_task = curr_task;
     int * retp = (int *) get_bin_addr(fname);
     if(retp != NULL)
-        debug("Loading %s was sucessfull\n", fname);
+        klog(INFO,"Loading %s was sucessfull\n", fname);
     else {
-        debug("Error loading %s\n", fname);
+        klog(INFO,"Error loading %s\n", fname);
         return -1;
     }
 
@@ -201,12 +201,12 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
      char **ep = (char **) kmalloc(PAGE_SIZE);;
      for (argc = 0; argv[argc]; argc++) {
          av[argc] = (char *) kmalloc(strlen(argv[argc]));
-         //kprintf("argv : %s\n", av[argc]);
+         //klog(INFO,"argv : %s\n", av[argc]);
          strcpy(av[argc], argv[argc]);
      }
      for (envc = 0; envp[envc]; envc++) {
          ep[envc] = (char *) kmalloc(strlen(envp[envc]));
-         //kprintf("env : %s\n", ep[envc]);
+         //klog(INFO,"env : %s\n", ep[envc]);
          strcpy(ep[envc], envp[envc]);
      }
 
@@ -278,13 +278,13 @@ uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
 {
 
 
-	//kprintf("Inside syscall read start: %d ,  %p\n", fd, addr);
+	//klog(INFO,"Inside syscall read start: %d ,  %p\n", fd, addr);
 
     if(fd == STDIN) {
         term_read(addr, size);
     }else{
     			file_node_t* fnode_ptr  = curr_task->fd[fd];
-    			//kprintf("In read : fd : %d ,  seek : %d,", fd,fnode_ptr->fseek, fnode_ptr->fsize);
+    			//klog(INFO,"In read : fd : %d ,  seek : %d,", fd,fnode_ptr->fseek, fnode_ptr->fsize);
     			fnode_ptr->fseek++;
     			//TODO. init other values in fnode_ptr. At this point .I don't care.
 
@@ -292,7 +292,7 @@ uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
     }
 
 
-    //kprintf("Inside syscall read end: %d ,  %p\n", fd, addr);
+    //klog(INFO,"Inside syscall read end: %d ,  %p\n", fd, addr);
 
     return 1;
 }
@@ -333,8 +333,8 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
     dir->type = tarfs_fds[child_fidx].type;
     dir->size = tarfs_fds[child_fidx].size;
     strcpy(dir->fowner , users[tarfs_fds[child_fidx].fnode->fowner]);
-    //dir->f_owner = tarfs_fds[child_fidx].fnode->f_owner;
-    debug("%s\n", dir->d_name);
+    //dir->fowner = tarfs_fds[child_fidx].fnode->fowner;
+    klog(INFO,"%s\n", dir->d_name);
     return child_fidx;
 }
 
@@ -352,26 +352,26 @@ uint64_t sys_pipe(uint64_t* fds)
 
 uint64_t sys_getcwd(char *buf, uint64_t size)
 {
-  //debug("Inside sys_getcwd\n");
+  //klog(INFO,"Inside sys_getcwd\n");
 	strcpy(buf ,PWD);
-	//debug("cwd: %s\n", cwd);
-	debug("Buff from getcwd      : %s\n", buf);
+	//klog(INFO,"cwd: %s\n", cwd);
+	klog(INFO,"Buff from getcwd      : %s\n", buf);
 	return 0;
 }
 
 uint64_t sys_access(char * pathname, uint64_t mode)
 {
-	debug("Inside sys_chdir old  : %s \n", PWD);
-	debug("Inside sys_chdir new  : %s \n", pathname);
+	klog(INFO,"Inside sys_chdir old  : %s \n", PWD);
+	klog(INFO,"Inside sys_chdir new  : %s \n", pathname);
 	for(uint32_t idx = 0 ;idx< 500 ; idx++){
 		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
 			if(tarfs_fds[idx].type == DIRTYPE){
 				strcpy(PWD, pathname);
-				debug("Change dir to         : %s\n",pathname);
+				klog(INFO,"Change dir to         : %s\n",pathname);
 
 			}
 			else{
-				kprintf("cd: %s: No such file or directory\n",pathname);
+				klog(INFO,"cd: %s: No such file or directory\n",pathname);
 			}
 			return 0;
 		}
@@ -379,7 +379,7 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 
 	//PWD = (char *)pathname;
-	debug("Not found Change dir :  %s\n",pathname);
+	klog(INFO,"Not found Change dir :  %s\n",pathname);
 	return 0;
 
     return 0;
@@ -387,16 +387,16 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 uint64_t sys_chdir(char * pathname)
 {
-	//kprintf("Inside sys_chdir old  : %s \n", cwd);
-	//kprintf("Inside sys_chdir new  : %s \n", pathname);
+	//klog(INFO,"Inside sys_chdir old  : %s \n", cwd);
+	//klog(INFO,"Inside sys_chdir new  : %s \n", pathname);
 	for(uint32_t idx = 0 ;idx< 500 ; idx++){
 		if(!strcmp((const char *)tarfs_fds[idx].name, pathname)){
 			if(tarfs_fds[idx].type == DIRTYPE){
 				strcpy(PWD, pathname);
-				//kprintf("Change dir to         : %s\n",pathname);
+				//klog(INFO,"Change dir to         : %s\n",pathname);
 			}
 			else{
-				//kprintf("cd: %s: No such file or directory\n",pathname);
+				//klog(INFO,"cd: %s: No such file or directory\n",pathname);
 			}
 			return 0;
 		}
@@ -404,24 +404,24 @@ uint64_t sys_chdir(char * pathname)
 
 
 	//cwd = (char *)pathname;
-	kprintf("Not found Change dir :  %s\n",pathname);
+	klog(INFO,"Not found Change dir :  %s\n",pathname);
 	return 0;
 }
 
 uint64_t sys_open(char * pathname, uint64_t flags){
-	debug("syscall : sys_open() , %d\n", curr_task->pid);
+	klog(INFO,"syscall : sys_open() , %d\n", curr_task->pid);
 
 	int fidx = get_index_by_name(pathname);
 
 	if(O_DIRECTORY  & flags){
-		kprintf("Open dir.\n");
+		klog(INFO,"Open dir.\n");
 		return fidx;
 	}
 	if(fidx == -1){
 		return ENOTDIR;
 	}else{
 
-		kprintf("Open file.\n");
+		klog(INFO,"Open file.\n");
 		file_node_t* fnode_ptr  = (file_node_t*)kmalloc(PAGE_SIZE);
 		fnode_ptr->fmode = 0;
 		fnode_ptr->fseek = 0;
@@ -430,7 +430,7 @@ uint64_t sys_open(char * pathname, uint64_t flags){
 
 		curr_task->fd[curr_task->fdoffset] = fnode_ptr;
 		curr_task->fdoffset++;
-		kprintf("fname : %s ,  flags : %p, found at idx : %d, fdoffset :%d\n", pathname, flags, fidx, curr_task->fdoffset);
+		klog(INFO,"fname : %s ,  flags : %p, found at idx : %d, fdoffset :%d\n", pathname, flags, fidx, curr_task->fdoffset);
 	}
 	return curr_task->fdoffset-1; //return offset in curr task. so that calling process can acccess it using fdoffset.
 }
@@ -456,26 +456,29 @@ uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
         int32_t flags, int32_t fd, uint64_t offset){
 
 
-	kprintf("length =: %d\n", length);
+	klog(INFO,"length =: %d\n", length);
 	vm_area_struct_t * mmap = curr_task->mm->mmap;
 	while(mmap !=NULL && mmap->vm_type !=VM_HEAP){
-		//kprintf("addr :  %p\n", mmap->vm_start);
-		//kprintf("addr :  %p\n", mmap->vm_end);
+		//klog(INFO,"addr :  %p\n", mmap->vm_start);
+		//klog(INFO,"addr :  %p\n", mmap->vm_end);
 		mmap = mmap->vm_next;
 	}
 
+	if(mmap ==NULL){
+		klog(INFO,"mmap is null\n");
+	}
 	if(mmap->vm_start + length < mmap->vm_end){
 		uint64_t vm_start = mmap->vm_start;
 		mmap->vm_start = mmap->vm_start + length;
-		kprintf("vm_start : %p. type: %d.\n", vm_start, mmap->vm_type);
+		klog(INFO,"vm_start : %p. type: %d.\n", vm_start, mmap->vm_type);
 		return mmap->vm_start - KERNAL_BASE_ADDRESS;
 	}
-
+	klog(INFO,"malloc is null\n");
     return 0;
 
 }
 uint64_t sys_fstat(int fidx, fstat_t* statbuf){
-	kprintf("Inside sys_fstat*****\n");
+	klog(INFO,"Inside sys_fstat*****\n");
 	memset(statbuf,  '\0', sizeof(statbuf));
 	statbuf->st_size  = tarfs_size(fidx);
 	//statbuf->st_size  = tarfs_owner(fidx);
@@ -485,7 +488,7 @@ uint64_t sys_fstat(int fidx, fstat_t* statbuf){
 
 uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence){
     //TODO : handle rootdir. idc not required not working.
-	kprintf("lseek offset :  %d\n", offset);
+	klog(INFO,"lseek offset :  %d\n", offset);
 	tarfs_fds[fildes].offset = offset;
     return 0;
 }
