@@ -11,7 +11,6 @@
 #define __NR_close        3
 #define __NR_fstat		 5
 #define __NR_lseek       8
-
 #define __NR_mmap		 9
 #define __NR_access      21
 #define __NR_pipe        22

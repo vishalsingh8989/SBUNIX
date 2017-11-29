@@ -6,7 +6,7 @@
 #include <sys/syscall.h>
 
 
-DIR *opendir(char *name)
+DIR *opendir(const char *name)
 {
     int fd = -1;
     if (-1 == (fd = open(name,  O_DIRECTORY))) {

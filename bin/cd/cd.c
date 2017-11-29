@@ -47,8 +47,8 @@ int main(int argc, char **argv, char **envp)
 	char buff[NAME_MAX+1];
 
 
-	char* m = (char*)malloc(100);
-	printf("allocated :  %p\n", m);
+	//char* m = (char*)malloc(100);
+	//printf("allocated :  %p\n", m);
 	if(argc == 1){
 		return 0;
 	}else if(argc == 2){
