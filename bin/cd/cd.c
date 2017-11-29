@@ -46,10 +46,13 @@ int main(int argc, char **argv, char **envp)
 
 	char buff[NAME_MAX+1];
 
+
+	char* m = (char*)malloc(100);
+	printf("allocated :  %p\n", m);
 	if(argc == 1){
 		return 0;
 	}else if(argc == 2){
-		remove_extra(argv[1], strlen(argv[1]));
+		//remove_extra(argv[1], strlen(argv[1]));
 		//getcwd(buff, NAME_MAX+1);
 		if(!strcmp(argv[1], ".")){
 			printf("Move dir\n");
@@ -104,50 +107,6 @@ int main(int argc, char **argv, char **envp)
 	}
 
 
-//	puts("*************In cd*********\n");
-//	char buff[NAME_MAX+1];
-//	memset(buff, '\0',  NAME_MAX+1);
-	//char *dir = "/lib";// TODO replace dir with argv[1]
-//	if(argc == 1){
-//		printf("ARGC");
-//	}
-
-//	if(argv[0] == '/'){
-//    		strcpy(buff, dir);
-//    		//strconcat(buff, (const char *)dir);
-//
-//    }else{
-//
-//    		if(dir[0] == '.' && dir[1] == '/'){
-//
-//    			getcwd(buff, 500);
-//    			int len = strlen(buff);
-//    			//int dirlen = strlen(dir);
-//    			int idx = 2;
-//    			while(dir[idx] !='\0'){
-//    				buff[len + idx - 2] = dir[idx];
-//    				idx++;
-//    			}
-//    		}else{
-//    			getcwd(buff, 500);
-//    			strconcat(buff, (const char *)dir);
-//
-//    		}
-//    		//strconcat(buff, (const char *)dir);
-//
-//
-//    }
-//
-//
-//    strconcat(buff, "/");
-//
-//    puts("chdir to:");
-//    puts(buff);
-//    puts("\n");
-//    chdir(buff);
-//    	getcwd(buff, 500);
-//
-//
 
 
     return 0;

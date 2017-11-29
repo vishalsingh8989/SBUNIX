@@ -26,8 +26,8 @@ uint64_t syscall_handler(cpu_regs* regs)
     uint64_t arg2  = regs->rsi;
     uint64_t arg3  = regs->rdx;
     //uint64_t arg4  = regs->r10;
-    //uint64_t arg5  = regs->r8;
-    //uint64_t arg6  = regs->r9;
+    uint64_t arg5  = regs->r8;
+    uint64_t arg6  = regs->r9;
     uint64_t ret;
 
     //debug("In the syscall handler, syscall no: %d\n", s_num);
@@ -42,7 +42,7 @@ uint64_t syscall_handler(cpu_regs* regs)
             return 0;
 
         case __NR_read:
-            //debug("Executing Read Syscall\n");
+            debug("Executing Read Syscall\n");
             ret = sys_read((uint64_t) arg1, (uint64_t) arg2, (uint64_t) arg3);
             return ret;
 
@@ -116,20 +116,27 @@ uint64_t syscall_handler(cpu_regs* regs)
             sys_shutdown((uint64_t) arg1);
             return 0;
         case __NR_mmap:
-        		debug("Executing shutdown Syscall\n");
-//        		sys_mmap((void *) arg1,
-//        					(uint64_t) arg2,
-//        		        		(int32_t) arg3,
-//						(int32_t) arg4,
-//        		            (int32_t) arg5,
-//						(uint64_t) arg6);
-        		return 0;
+        		debug("Executing __NR_mmap Syscall\n");
+        		ret = sys_mmap((void *) arg1,
+        					(uint64_t) arg2,
+        		        		(int32_t) arg3,
+						(int32_t) arg3,
+        		            (int32_t) arg5,
+						(uint64_t) arg6);
+        		return ret;
         case __NR_fstat:
-        		debug("Executing shutdown Syscall\n");
-
+        		debug("Executing __NR_fstat Syscall\n");
         		ret = sys_fstat((int ) arg1, (fstat_t*) arg2);
         		return ret;
 
+        case __NR_lseek:
+        		debug("Executing __NR_lseek Syscall\n");
+        		ret = syscall_lseek((uint32_t) arg1, (uint64_t) arg2, (uint32_t) arg3);
+        		return  ret;
+        case __NR_syslog:
+        		debug("Executing __NR_syslog Syscall\n");
+        		ret = syscall_ps((uint64_t) arg1);
+        		return  ret;
         default:
             return -1;
     }

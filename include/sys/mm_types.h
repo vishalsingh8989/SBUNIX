@@ -8,6 +8,7 @@
 #define VM_HEAP  1
 #define VM_STACK 2
 
+
 typedef struct file {
     uint64_t f_start;
     uint64_t f_size;
@@ -37,5 +38,10 @@ typedef struct vm_area_struct {
     uint64_t vm_page_prot;
     uint64_t vm_flags;
 } vm_area_struct_t;
+
+typedef struct vm_struct {
+    size_t size;
+    struct vm_struct *next;
+} vm_struct_t;
 
 #endif

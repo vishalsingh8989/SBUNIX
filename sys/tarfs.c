@@ -90,7 +90,7 @@ void init_tarfs(){
 			tarfs_fds[fd_index].offset = 0;// read offset
 			tarfs_fds[fd_index].mode = 0; // for flags
 
-			fd_node->f_owner = admin_uid;
+			fd_node->fowner = admin_uid;
 			tarfs_fds[fd_index].fnode = fd_node;
 			fd_node++;
 			if (size) {//file if size not 0

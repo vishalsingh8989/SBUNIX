@@ -28,17 +28,18 @@ void putstring (char * value, char* bufff, int idx) {
 
 int printf(const char *fmt, ...)
 {
-	 va_list val;
-	    int count = 0;
+
 	    char buff[64];
+	    int count = 0;
 	    char *space = " ";
+	    va_list val;
 	    va_start(val, fmt);
 	    while (*fmt) {
 	    	if(*fmt == '%'){
 	        if (*(fmt + 1) == 's') {
-	            char *p_str = va_arg(val, char *);
-	            while (p_str && *p_str) {
-	                write(1, p_str++, 1);
+	            char *str_ptr = va_arg(val, char *);
+	            while (str_ptr && *str_ptr) {
+	                write(1, str_ptr++, 1);
 	            }
 	            fmt += 2;
 	        } else if (( *(fmt + 1) == 'd')||(isdigit(*(fmt + 1)) && *(fmt + 2) == 'd' )  ) {

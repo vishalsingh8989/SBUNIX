@@ -20,17 +20,17 @@ void print_task_list()
 {
 
     if(curr_task == NULL) {
-        debug("Tasks in queue are: \n");
-        debug("No tasks in the queue!\n");
+    	info("Tasks in queue are: \n");
+    	info("No tasks in the queue!\n");
         return;
     }
 
     int i = 0;
-    debug("Tasks in queue are: \n");
-    debug("%d : %s\n", i++, curr_task->pcmd_name);
+    info("Tasks in queue are: \n");
+    info("%d : %s\n", i++, curr_task->pcmd_name);
     task_struct_t * temp =  curr_task->next_task;
     while(temp != curr_task) {
-        debug("%d : %s\n", i++, temp->pcmd_name);
+    		info("%d : %s\n", i++, temp->pcmd_name);
         temp = temp->next_task;
     }
 }
@@ -247,7 +247,7 @@ task_struct_t *init_proc(const char *name, int type)
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
     }
-
+    init_task->fdoffset = 4; //0,1,2,3 reversed for STDIN , OUT ERR etc.
     init_task->state     = TASK_RUNNABLE;
     init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;

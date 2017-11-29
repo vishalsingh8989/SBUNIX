@@ -3,23 +3,28 @@
 
 #define NAME_MAX 512
 
+//ERROR CODES
+#define ENOTDIR -1
+
+
 struct dirent {
 	int type;
 	int size;
 	long  inode;
 	long  offset;
 	unsigned short len;
-	char f_owner[30];
+	char fowner[30];
 	char d_name[NAME_MAX+1];
 };
 
-//struct DIR {
-//   struct dirent ent;
-//};
+typedef struct dir {
+    int dfd;
+    struct dirent *ptr_dir;
+} DIR;
 
-typedef struct DIR DIR;
 
-DIR *opendir(const char *name);
+
+DIR *opendir(char *name);
 struct dirent *readdir(DIR *dirp);
 int closedir(DIR *dirp);
 int getdents(int fd, struct dirent *dir, int size);

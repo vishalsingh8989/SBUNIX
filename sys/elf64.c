@@ -52,11 +52,14 @@ void allocate_heap(task_struct_t *task)
     //vma->vm_next = task->mm->mmap;
     //task->mm->mmap = vma;
 
-    task->mm->brk = HEAP_START;
+    uint64_t heap_start = (uint64_t)kmalloc(PAGE_SIZE);
+    kprintf("heap start :  %p\n", heap_start - KERNAL_BASE_ADDRESS);
+    task->mm->brk = heap_start;
 
+    vma->vm_type = VM_HEAP;
     vma->vm_mm    = task->mm;
-    vma->vm_start = HEAP_START;
-    vma->vm_end   = HEAP_START + PAGE_SIZE;
+    vma->vm_start = heap_start;
+    vma->vm_end   = heap_start + PAGE_SIZE;
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;
@@ -77,16 +80,17 @@ void allocate_stack(task_struct_t *task)
 
     vma->vm_type  = VM_STACK;
     vma->vm_mm    = task->mm;
-    vma->vm_start = STACK_TOP + PAGE_SIZE;
-    vma->vm_end   = STACK_TOP;
+    uint64_t vm_start = (uint64_t)kmalloc(PAGE_SIZE);
+    vma->vm_start = vm_start  + PAGE_SIZE;
+    vma->vm_end   = vm_start;
     //vma->vm_start = STACK_TOP;
     //vma->vm_end   = STACK_TOP + PAGE_SIZE;
     vma->vm_flags = (IS_RD + IS_WR);
     vma->file     = NULL;
     vma->vm_next  = NULL;
 
-    task->mm->brk  = STACK_TOP;
-    task->stack_p = (uint64_t) (STACK_TOP + PAGE_SIZE - 16);
+    task->mm->brk  = vm_start;
+    task->stack_p = (uint64_t) (vm_start + PAGE_SIZE - 16);
 }
 
 void print_elf_info(task_struct_t *task)

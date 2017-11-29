@@ -7,5 +7,6 @@
 #define INFO  1
 #define DEBUGWAIT 100
 void debug(const char *fmt, ...);
+void info(const char *fmt, ...);
 
 #endif

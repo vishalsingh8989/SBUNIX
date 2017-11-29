@@ -29,32 +29,43 @@ int main(int argc, char* argv[], char* envp[]) {
 	}else{
 		printf("Multiple directories not supported\n");
 	}
-	int fidx = open(buff, 0);
-	struct dirent dir_buff;
-	struct dirent* ptr_dir = &dir_buff;
-	ptr_dir->offset=fidx;
-	memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
+	DIR *dir = opendir(buff);
+	printf("dir founa at index : %d\n", dir->dfd);
+	//struct dirent dir_buff;
+	//struct dirent* ptr_dir = &dir_buff;
+	//ptr_dir->offset=fidx;
+	//memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
 
-	//fstat_t curr_dir_stat;
-	//fstat_t par_dir_stat;
-	//stat(fidx, &curr_dir_stat);
-	//stat(fidx, &curr_dir_stat);
-	//printf("size : %d\n", curr_dir_stat.st_size);
-	//printf("drwx--x--x    %4dKB     %s  %s\n", file_type[dir_buff.type], dir_buff.size/1024,dir_buff.f_owner, ptr_dir->d_name);
-
+	struct dirent *dirent;
 	uint32_t size = 0;
-	while(getdents(fidx, ptr_dir, 100) !=-1 && fidx != -1){
-		printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dir_buff.type], dir_buff.size/1024,dir_buff.f_owner, ptr_dir->d_name);
-		size = size + dir_buff.size;
-		memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
+	printf("\n");
+	while ((dirent = readdir(dir))) {
+			printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dirent->type], (dirent->size)/1024,dirent->fowner, dirent->d_name);
+				size = size + dirent->size;
+	        //printf("%s  \n", dirent->d_name);
+	    }
 
-	}
-	if(fidx != -1){
+
+
+
+//	while(getdents(fidx, ptr_dir, 100) !=-1 && fidx != -1){
+//		printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dir_buff.type], dir_buff.size/1024,dir_buff.f_owner, ptr_dir->d_name);
+//		size = size + dir_buff.size;
+//		memset(dir_buff.d_name, '\0', sizeof(dir_buff.d_name));
+//
+//	}
+	if(dir != NULL){
 	printf("drwx--x--x    %4dKB     %s  %s\n", size/1024,"admin", ".");
 	printf("drwx--x--x    %4dKB     %s  %s\n", 0,"admin", "..");
 	}else{
 		printf("ls: %s: No such file or directory,\n", argv[1]);
 	}
+	return 0;
+
+//	char* m = (char*)malloc(100);
+//	char* k = (char*)malloc(100);
+//	printf("allocated :  %p\n", m);
+//	printf("allocated :  %p\n", k);
 
 
 

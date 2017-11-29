@@ -15,6 +15,69 @@
 //sstatic uint64_t video_p = 0xffffffff800b8000;
 
 
+void info(const char *fmt, ...)
+{
+	if(!INFO){
+		return;
+	}
+
+    va_list args;
+    va_start(args, fmt);
+
+    int idx = 0;
+
+    while (*(fmt+idx) != '\0') {
+        char temp1 = *(fmt+idx);
+        char ctemp;
+        char *stemp;
+        int ntemp;
+        uint64_t ptemp;
+
+        if (temp1 == '%') {
+            idx++;
+            char temp2 = *(fmt+idx);
+            switch (temp2) {
+                case 'c' :
+                    ctemp = va_arg(args, int);
+                    pchar(ctemp);
+                    break;
+                case 'd' :
+                    ntemp = va_arg(args, int);
+                    if (ntemp < 0) {
+                        pchar('-');
+                        ntemp = -ntemp;
+                    }
+                    pnum(ntemp, 10);
+                    break;
+                case 'x' :
+                    ptemp = va_arg(args, uint64_t);
+                    pnum(ptemp, 16);
+                    break;
+                case 's' :
+                    stemp = va_arg(args, char*);
+                    pstring(stemp);
+                    break;
+                case 'p' :
+                    ptemp = va_arg(args, uint64_t);
+                    pstring("0x");
+                    pnum(ptemp, 16);
+                    break;
+                default:
+                    pstring("Invalid Format String: ");
+                    pchar(temp2);
+                    pchar('\n');
+            }
+        }
+        else {
+            pchar(temp1);
+        }
+        idx++;
+    }
+
+    va_end(args);
+}
+
+
 void error(const char *fmt, ...)
 {
 	if(!ERROR){

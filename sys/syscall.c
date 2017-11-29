@@ -48,6 +48,7 @@ uint64_t sys_fork()
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
+    child_task->fdoffset = 4;
     child_task->state   = TASK_RUNNABLE;
     child_task->pid     = get_pid();
     child_task->ppid    = curr_task->pid;
@@ -255,7 +256,7 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     uint64_t page_addr = args_user - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
     map_proc(page_addr, falign_addr);
 
-    args_user = STACK_TOP + 0x1000 - 0x10 - sizeof(args);
+    args_user = args_user + 0x1000 - 0x10 - sizeof(args);
     memcpy((void *) args_user, (void *) args, sizeof(args));
     for(int i = arg_cnt; i > 0; i--)
        *(uint64_t *)(args_user - 8*i) = args_user + (arg_cnt-i)*64;
@@ -275,12 +276,23 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 
 uint64_t sys_read(uint64_t fd, uint64_t addr, uint64_t size)
 {
-	debug("Inside read..");
+
+
+	//kprintf("Inside syscall read start: %d ,  %p\n", fd, addr);
 
     if(fd == STDIN) {
         term_read(addr, size);
+    }else{
+    			file_node_t* fnode_ptr  = curr_task->fd[fd];
+    			//kprintf("In read : fd : %d ,  seek : %d,", fd,fnode_ptr->fseek, fnode_ptr->fsize);
+    			fnode_ptr->fseek++;
+    			//TODO. init other values in fnode_ptr. At this point .I don't care.
+
+
     }
-    //kprintf("%c", addr);
+
+
+    //kprintf("Inside syscall read end: %d ,  %p\n", fd, addr);
 
     return 1;
 }
@@ -320,7 +332,7 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
     dir->offset = child_fidx;
     dir->type = tarfs_fds[child_fidx].type;
     dir->size = tarfs_fds[child_fidx].size;
-    strcpy(dir->f_owner , users[tarfs_fds[child_fidx].fnode->f_owner]);
+    strcpy(dir->fowner , users[tarfs_fds[child_fidx].fnode->fowner]);
     //dir->f_owner = tarfs_fds[child_fidx].fnode->f_owner;
     debug("%s\n", dir->d_name);
     return child_fidx;
@@ -400,12 +412,27 @@ uint64_t sys_open(char * pathname, uint64_t flags){
 	debug("syscall : sys_open() , %d\n", curr_task->pid);
 
 	int fidx = get_index_by_name(pathname);
-	if(fidx == -1){
 
-	}else{
-		debug("fname : %s ,  flags : %p, found at idx : %d\n", pathname, flags, fidx);
+	if(O_DIRECTORY  & flags){
+		kprintf("Open dir.\n");
+		return fidx;
 	}
-	return fidx;
+	if(fidx == -1){
+		return ENOTDIR;
+	}else{
+
+		kprintf("Open file.\n");
+		file_node_t* fnode_ptr  = (file_node_t*)kmalloc(PAGE_SIZE);
+		fnode_ptr->fmode = 0;
+		fnode_ptr->fseek = 0;
+		fnode_ptr->fsize = tarfs_fds[fidx].size;
+		//TODO. init other values in fnode_ptr. At this point .I don't care.
+
+		curr_task->fd[curr_task->fdoffset] = fnode_ptr;
+		curr_task->fdoffset++;
+		kprintf("fname : %s ,  flags : %p, found at idx : %d, fdoffset :%d\n", pathname, flags, fidx, curr_task->fdoffset);
+	}
+	return curr_task->fdoffset-1; //return offset in curr task. so that calling process can acccess it using fdoffset.
 }
 
 uint64_t sys_close(uint64_t fd)
@@ -426,24 +453,45 @@ void sys_shutdown(uint64_t code)
 }
 
 uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
-        int32_t flags, int32_t fd, uint64_t offset)
-{
+        int32_t flags, int32_t fd, uint64_t offset){
 
-//	 task_struct_t *temp = curr_task;
-//    uint64_t anon_brk = curr_task->proc.mm->anon_mem_brk;
-//    if (!start && 0 == offset && MAP_ANONYMOUS | MAP_PRIVATE) {
-//        struct vm_area_struct *vma =
-//            add_vma(curr_task->proc.mm, anon_brk, length);
-//        curr_task->proc.mm->anon_mem_brk = vma->vm_end;
-//    }
-//    return anon_brk;
-	return 0;
+
+	kprintf("length =: %d\n", length);
+	vm_area_struct_t * mmap = curr_task->mm->mmap;
+	while(mmap !=NULL && mmap->vm_type !=VM_HEAP){
+		//kprintf("addr :  %p\n", mmap->vm_start);
+		//kprintf("addr :  %p\n", mmap->vm_end);
+		mmap = mmap->vm_next;
+	}
+
+	if(mmap->vm_start + length < mmap->vm_end){
+		uint64_t vm_start = mmap->vm_start;
+		mmap->vm_start = mmap->vm_start + length;
+		kprintf("vm_start : %p. type: %d.\n", vm_start, mmap->vm_type);
+		return mmap->vm_start - KERNAL_BASE_ADDRESS;
+	}
+
+    return 0;
+
 }
-uint64_t sys_fstat(int fidx,fstat_t* statbuf){
+uint64_t sys_fstat(int fidx, fstat_t* statbuf){
 	kprintf("Inside sys_fstat*****\n");
 	memset(statbuf,  '\0', sizeof(statbuf));
 	statbuf->st_size  = tarfs_size(fidx);
 	//statbuf->st_size  = tarfs_owner(fidx);
 	return (uint64_t)statbuf;
 
+}
+
+uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence){
+    //TODO : handle rootdir. idc not required not working.
+	kprintf("lseek offset :  %d\n", offset);
+	tarfs_fds[fildes].offset = offset;
+    return 0;
+}
+
+uint64_t syscall_ps(uint64_t buff){
+	print_task_list();
+	if(buff){}
+	return 0;
 }

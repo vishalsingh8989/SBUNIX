@@ -26,8 +26,8 @@ typedef struct task_struct {
     int exit_code;
 
     mm_struct_t *mm;
-    fd_t *fd[MAX_FILES];
-
+    file_node_t *fd[MAX_FILES];
+    uint32_t fdoffset;
     struct task_struct *next_task, *prev_task;
     struct task_struct *next_run, *prev_run;
     struct task_struct *parent, *sibling, *child;

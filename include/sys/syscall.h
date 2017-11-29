@@ -10,6 +10,8 @@
 #define __NR_open         2
 #define __NR_close        3
 #define __NR_fstat		 5
+#define __NR_lseek       8
+
 #define __NR_mmap		 9
 #define __NR_access      21
 #define __NR_pipe        22
@@ -23,6 +25,7 @@
 #define __NR_chdir       80
 #define __NR_sched_yield 24
 #define __NR_shutdown    48
+#define __NR_syslog		103 //for ps.
 
 static inline uint64_t syscall_0(uint64_t s_no) {
 
@@ -149,5 +152,9 @@ uint64_t sys_chdir(char * pathname);
 uint64_t sys_open(char * pathname, uint64_t flags);
 uint64_t sys_close(uint64_t fd);
 uint64_t sys_fstat(int fidx,fstat_t* statbuf);
+uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
+        int32_t flags, int32_t fd, uint64_t offset);
+uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
+uint64_t syscall_ps(uint64_t buff);
 
 #endif

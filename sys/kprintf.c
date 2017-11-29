@@ -1,6 +1,7 @@
 #include <sys/kprintf.h>
 #include <sys/defs.h>
 #include <sys/asm_utils.h>
+#include <sys/utils.h>
 #include <stdarg.h>
 
 static int x_cord = 0;
@@ -37,6 +38,8 @@ void scroll() {
 
 void kprintf(const char *fmt, ...)
 {
+
+
     va_list args;
     va_start(args, fmt);
 

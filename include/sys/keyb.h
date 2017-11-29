@@ -63,9 +63,11 @@ char getchar() {
        case 0x9D:
            return keymap[29];
        
-       case 0x0E:
+           //backspace handling start
+       //case 0x0E:
     	   	   //kprintf("0x0E pressed\n");
-    	   	   return -1;
+    	   	//   return -1;
+           //backspace handling send
        default:
 
            result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
