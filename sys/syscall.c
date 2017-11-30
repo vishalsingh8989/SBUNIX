@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <dirent.h>
 #include<logger.h>
+#include<sys/time.h>
 
 extern void fork_return(void);
 extern char PWD[MAX_NAME+1];
@@ -419,6 +420,7 @@ uint64_t sys_chdir(char * pathname)
 }
 
 uint64_t sys_open(char * pathname, uint64_t flags){
+	//read_rtc();
 	klog(INFO,"syscall : sys_open() , %d\n", curr_task->pid);
 
 	int fidx = get_index_by_name(pathname);
@@ -513,4 +515,16 @@ uint64_t syscall_ps(){
 	print_task_list();
 	//if(buff){}
 	return 0;
+}
+
+uint64_t sys_gettimeofday(struct tm* tm_time){
+	read_rtc(tm_time);
+
+
+	return 1;
+}
+uint64_t syscall_clear_term(){
+
+    clr_term();
+    return 0;
 }

@@ -84,6 +84,8 @@ void clr_term()
     for(int i = 0; i < MAX_Y; i++)
         for(int j = 0; j < MAX_X*2; j++)
             kprintf(" ");
+
+	reset_cord();
 }
 
 void print_welcome()

@@ -3,6 +3,7 @@
 
 #include <sys/defs.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <dirent.h>
 
 #define __NR_read         0
@@ -22,8 +23,11 @@
 #define __NR_getdents    78
 #define __NR_getcwd      79
 #define __NR_chdir       80
+#define __NR_gettimeofday 96
 #define __NR_sched_yield 24
 #define __NR_shutdown    48
+#define __NR_clearterm    117
+
 #define __NR_ps		103 //for ps.
 
 static inline uint64_t syscall_0(uint64_t s_no) {
@@ -155,5 +159,7 @@ uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
         int32_t flags, int32_t fd, uint64_t offset);
 uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
 uint64_t syscall_ps();
+uint64_t sys_gettimeofday(struct tm* tim_time);
+uint64_t syscall_clear_term();
 
 #endif

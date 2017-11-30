@@ -46,5 +46,5 @@ void pstring (char* value);
 void pnum (uint64_t value, int base);
 void kprintf(const char *fmt, ...);
 void klog(int severity, const char *fmt, ...);
-
+void reset_cord();
 #endif

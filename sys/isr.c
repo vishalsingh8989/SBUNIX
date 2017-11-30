@@ -14,6 +14,34 @@
 #include <logger.h>
 
 
+
+
+char weekdayname[7][4] = {
+    "Mon",
+    "Tue",
+	"Wed",
+	"Thu",
+	"Fri",
+	"Sat",
+	"Sun"
+};
+
+char monthname[13][5] = {
+    "Jan",
+    "Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Oct",
+	"Sep",
+	"Nov",
+	"Dec"
+};
+
+
 extern void _isr128(void);
 uint64_t k_rsp;
 uint64_t u_rsp;
@@ -138,6 +166,13 @@ uint64_t syscall_handler(cpu_regs* regs)
         		klog(INFO,"Executing __NR_syslog Syscall\n");
         		ret = syscall_ps();
         		return  ret;
+        case __NR_gettimeofday:
+        		klog(INFO,"Executing __NR_gettimeofday Syscall\n");
+        		ret = sys_gettimeofday((struct tm*)arg1);
+        		return ret;
+        case __NR_clearterm:
+                klog(INFO,"Executing __NR_gettimeofday Syscall\n");
+                ret =  syscall_clear_term();
         default:
             return -1;
     }
@@ -167,7 +202,12 @@ void init_syscall()
 //}
 
 void timer_int_handler() {
-   static int i = 0, s = 0, m = 0, h = 0;
+
+
+	struct tm utc;
+	read_rtc(&utc);
+
+	static int i = 0, s = 0, m = 0, h = 0;
 
    i++;
    if(i == 18) {
@@ -186,35 +226,93 @@ void timer_int_handler() {
        h = 0;
    }
 
+    // uptime start
    char sl = (char) (s%10+48);
    char sh = (char) (s/10+48);
    char ml = (char) (m%10+48);
    char mh = (char) (m/10+48);
    char hl = (char) (h%10+48);
    char hh = (char) (h/10+48);
+    // uptime end
+
+    //UTC start
+	char usl = (char) (utc.tm_sec%10+48);
+	char ush = (char) (utc.tm_sec/10+48);
+	char uml = (char) (utc.tm_min%10+48);
+	char umh = (char) (utc.tm_min/10+48);
+	char uhl = (char) (utc.tm_hour%10+48);
+	char uhh = (char) (utc.tm_hour/10+48);
+
+	//char dl = (char) (utc.tm_mday%10+48);
+	//char dh = (char) (utc.tm_mday/10+48);
+	//char monl = (char) (utc.tm_mon%10+48);
+	//char monh = (char) (utc.tm_mon/10+48);
+
+	char yl1 = (char) (utc.tm_year%10+48);
+	utc.tm_year = utc.tm_year/10;
+	char yl2 = (char) (utc.tm_year%10+48);
+	utc.tm_year = utc.tm_year/10;
+	char yh1 = (char) (utc.tm_year%10+48);
+	utc.tm_year = utc.tm_year/10;
+	char yh2 = (char) (utc.tm_year%10+48);
+    //UTC end
 
 
-	//time
+    //uptime set start
 
-   	pchar_xy(']' , GREEN, 79, 24);
-	pchar_xy(sl , GREEN, 78, 24);
-	pchar_xy(sh , GREEN, 77, 24);
-	pchar_xy(':', GREEN, 76, 24);
-	pchar_xy(ml , GREEN, 75, 24);
-	pchar_xy(mh , GREEN, 74, 24);
-	pchar_xy(':', GREEN, 73, 24);
-	pchar_xy(hl , GREEN, 72, 24);
-	pchar_xy(hh , GREEN, 71, 24);
+	pchar_xy(sl , GREEN, 79, 24);
+	pchar_xy(sh , GREEN, 78, 24);
+	pchar_xy(':', GREEN, 77, 24);
+	pchar_xy(ml , GREEN, 76, 24);
+	pchar_xy(mh , GREEN, 75, 24);
+	pchar_xy(':', GREEN, 74, 24);
+	pchar_xy(hl , GREEN, 73, 24);
+	pchar_xy(hh , GREEN, 72, 24);
 
-	pchar_xy('[' , GREEN, 70, 24);
-	pchar_xy('e' , GREEN, 69, 24);
-	pchar_xy('m' , GREEN, 68, 24);
-	pchar_xy('i' , GREEN, 67, 24);
-	pchar_xy('t' , GREEN, 66, 24);
+	pchar_xy(' ' , GREEN, 71, 24);
+	pchar_xy('e' , GREEN, 70, 24);
+	pchar_xy('m' , GREEN, 69, 24);
+	pchar_xy('i' , GREEN, 68, 24);
+	pchar_xy('T' , GREEN, 67, 24);
 	//pchar_xy(' ' , GREEN, 65, 24);
-	pchar_xy('p' , GREEN, 65, 24);
-	pchar_xy('u' , GREEN, 64, 24);
+	pchar_xy('p' , GREEN, 66, 24);
+	pchar_xy('U' , GREEN, 65, 24);
    //pnum_xy(pages_used, 10, 60);
+    //uptime set end
+
+
+    pchar_xy('|' , GREEN, 63, 24);
+    // UTC set start
+    pchar_xy(yl1, GREEN, 61, 24);
+    pchar_xy(yl2, GREEN, 60, 24);
+    pchar_xy(yh1, GREEN, 59, 24);
+    pchar_xy(yh2, GREEN, 58, 24);
+    pchar_xy(' ', GREEN, 57, 24);
+    pchar_xy('C', GREEN, 56, 24);
+    pchar_xy('T', GREEN, 55, 24);
+    pchar_xy('U', GREEN, 54, 24);
+    pchar_xy(' ', GREEN, 53, 24);
+    pchar_xy(usl, GREEN, 52, 24);
+    pchar_xy(ush, GREEN, 51, 24);
+    pchar_xy(':', GREEN, 50, 24);
+    pchar_xy(uml, GREEN, 49, 24);
+    pchar_xy(umh, GREEN, 48, 24);
+    pchar_xy(':', GREEN, 47, 24);
+    pchar_xy(uhl, GREEN, 46, 24);
+    pchar_xy(uhh, GREEN, 45, 24);
+
+    pchar_xy(' ', GREEN, 44, 24);
+    pchar_xy(monthname[utc.tm_mon][2], GREEN, 43, 24);
+	pchar_xy(monthname[utc.tm_mon][1] , GREEN, 42, 24);
+	pchar_xy(monthname[utc.tm_mon][0] , GREEN, 41, 24);
+
+
+    //kprintf("month name: %s\n", weekdayname[utc.tm_wday]);
+	pchar_xy(' ' , GREEN, 40, 24);
+	pchar_xy(weekdayname[utc.tm_wday][2] , GREEN, 39, 24);
+	pchar_xy(weekdayname[utc.tm_wday][1] , GREEN, 38, 24);
+	pchar_xy(weekdayname[utc.tm_wday][0] , GREEN, 37, 24);
+    //UTC set end
 
 
 	char time_buff[9] = {0};
@@ -227,9 +325,9 @@ void timer_int_handler() {
 	time_buff[6] = sl;
 	time_buff[7] = sh;
 	time_buff[8] = '\0';
-
-
 	set_system_uptime(time_buff);
+
+
 	pic_send_eoi(0);
 }
 

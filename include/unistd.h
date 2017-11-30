@@ -3,6 +3,7 @@
 
 #include <sys/defs.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <dirent.h>
 
 #define PROT_READ	0x1	/* page can be read */
@@ -53,5 +54,6 @@ fstat_t* stat(int fidx,fstat_t* statbuf);
 void dirname(char* buff, char* par_buff);
 
 uint64_t procps();
+uint64_t gettime(struct tm* tm_time);
 
 #endif

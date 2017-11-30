@@ -11,6 +11,10 @@ static int y_cord = 0;
 //TODO: change to define.
 char* video_p = (char *) 0xffffffff800b8000;
 char term_color = LIGHT_GRAY;
+void reset_cord(){
+	x_cord = 0;
+	y_cord = 0;
+}
 
 void update_cursor(int x, int y)
 {
