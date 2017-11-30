@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/defs.h>
+#include <sys/env.h>
 
 #define MAX_INPUT 512
 #define TRUE 1
@@ -10,53 +11,62 @@
 char  str_buf[MAX_INPUT];
 char  path_buf[MAX_INPUT];
 char* pipes[64];
-char* tokens[64];
+char* tokens[8];
 char* mod_tokens[64];
 char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
+char* sargv[] = {"bin/ls", NULL};
+char* senvp[] = {"PATH=/bin:", NULL};
 
 int   err;
 char* perr;
 
-char* getenv(const char * var_name) {
-   if(!strcmp(var_name, "PATH"))
-      return path_var;
-   else if(!strcmp(var_name, "PS1"))
-      return ps1_var;
-   else
-      return NULL;
-}
+extern char PWD[MAX_NAME+1];
+extern char PS1[MAX_NAME+1];
 
-void setenv(const char * var_name, const char * var_value, int overwrite) {
-   int idx=0;
-   //TODO: Implement strcpy
-   if(!strcmp(var_name, "PATH")){
-      while(var_value[idx] != '\0') {
-         path_var[idx] = var_value[idx];
-         idx++;
-      }
-      path_var[idx] = '\0';
-   }
-   else if(!strcmp(var_name, "PS1")){
-      while(var_value[idx] != '\0') {
-         ps1_var[idx] = var_value[idx];
-         idx++;
-      }
-      ps1_var[idx] = '\0';
-   }
+void memseti(void* dest, int value, int count){
+	//puts("memset called\n");
+	memset(dest, value, count);
 }
+//char* getenv(const char * var_name) {
+//   if(!strcmp(var_name, "PATH"))
+//      return path_var;
+//   else if(!strcmp(var_name, "PS1"))
+//      return ps1_var;
+//   else
+//      return NULL;
+//}
+
+//void setenv(const char * var_name, const char * var_value, int overwrite) {
+//   int idx=0;
+//   //TODO: Implement strcpy
+//   if(!strcmp(var_name, "PATH")){
+//      while(var_value[idx] != '\0') {
+//         path_var[idx] = var_value[idx];
+//         idx++;
+//      }
+//      path_var[idx] = '\0';
+//   }
+//   else if(!strcmp(var_name, "PS1")){
+//      while(var_value[idx] != '\0') {
+//         ps1_var[idx] = var_value[idx];
+//         idx++;
+//      }
+//      ps1_var[idx] = '\0';
+//   }
+//}
 
 
 //TODO: do some more processing here.
 void setprompt() {
     char *temp;
-    temp = getenv("PS1");
-
+    temp = getenv(ENV_PS1);
+    char buff[50];
     if(temp == NULL) {
-       puts("sbush>");
+       printf("%s#sbush>", getcwd(buff, 50));
     }
     else {
-       puts(getenv("PS1"));
+       printf("%s#%s",getcwd(buff, 50),PS1);
     }
 }
 
@@ -80,7 +90,7 @@ int execute(char* cmd, int pos, char * envp[]) {
         return 0;
     }
     else if (!strcmp(tokens[0], "export")) {
-        setenv(tokens[1], tokens[2], 1);
+        //setenv(tokens[1], tokens[2], 1);
         return 0;
     }
 
@@ -98,7 +108,7 @@ int execute(char* cmd, int pos, char * envp[]) {
         mod_tokens[i] = tokens[i];
     for(int i = idx; i < 64; i++)
         mod_tokens[i] = NULL;
-    
+
     int idx1 = 0;
     while(path_var[idx1] != '\0'){
         path_buf[idx1] = path_var[idx1];
@@ -125,7 +135,7 @@ int execute(char* cmd, int pos, char * envp[]) {
     //PATH code
 
     pid_t pid = fork();
-    
+
     if (pid == 0) {
 
         if (pos == 0) {
@@ -180,19 +190,19 @@ int execute_line(char* cmd, char* envp[]) {
    while (pipes[idx] != NULL) {
        pipes[++idx] = strtok(NULL, "|");
    }
-   
+
    if(!strcmp(pipes[0], "exit")) exit(0);
    else {
        for(int i = 0; i < idx; i++) {
            int pos;
-   
-           if (i == idx-1) 
+
+           if (i == idx-1)
                pos = 2;
            else if (i == 0)
                pos = 0;
-           else 
+           else
                pos = 1;
-   
+
            execute(pipes[i], pos, envp);
        }
    }
@@ -201,14 +211,46 @@ int execute_line(char* cmd, char* envp[]) {
 }
 
 int main(int argc, char* argv[], char* envp[]) {
-    
+
+	setenv(ENV_PS1, "sbush>");
+
+    puts("---Welcome to SBUSH shell---\n");
     if(argc == 1) {
         while (TRUE) {
 
             setprompt();
             perr = gets(str_buf);
+            if(strlen(str_buf)==0){
+            		continue;
+            }
+            int idx = 0;
+			tokens[idx] = strtok(str_buf, " ");
+			while (tokens[idx] != NULL) {
+				////printf("%s\n",tokens[idx]);
+				++idx;
+				tokens[idx] = strtok(NULL, " ");
+			}
 
-            execute_line(str_buf, envp);
+            int status;
+            //puts("Input received from user:");
+            //puts(str_buf);
+
+            pid_t pid = fork();
+
+            if(pid == 0) {
+                //Include the environment facility or change to execve.
+                //int ret = execvpe(sargv[0],  sargv, senvp);
+                int ret = execvpe(tokens[0], tokens, senvp);
+                if(ret < 0) {
+                       puts("Command not found!!\n");
+                }
+            }
+            else {
+                puts("Executing waitpid()");
+                waitpid(pid, &status);
+            }
+
+            //execute_line(str_buf, envp);
         }
     }
     else {
@@ -244,4 +286,3 @@ int main(int argc, char* argv[], char* envp[]) {
 
     return 0;
 }
-

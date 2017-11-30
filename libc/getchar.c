@@ -4,7 +4,7 @@
 
 int getchar()
 {
-  int c;
+  int c = 0;
   read(0, &c, (size_t) 1); 
   return c;
 }

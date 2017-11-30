@@ -6,9 +6,9 @@
 #include <sys/mm_types.h>
 
 #define MAX_NAME      150
-#define MAX_FILES      50
-#define MAX_PROCESS    50
-#define MAX_PID      (4 * 1024 * 1024)
+#define MAX_FILES     50
+#define MAX_PROCESS   1000
+#define MAX_PID       (4 * 1024 * 1024)
 
 enum state {
     TASK_RUNNING  = 1,
@@ -23,11 +23,12 @@ typedef struct task_struct {
     int pid;
     int ppid;
     int state;
+    char start_time[12];
     int exit_code;
-    
-    mm_struct_t *mm;
-    fd_t *fd[MAX_FILES];
 
+    mm_struct_t *mm;
+    file_node_t *fd[MAX_FILES];
+    uint32_t fdoffset;
     struct task_struct *next_task, *prev_task;
     struct task_struct *next_run, *prev_run;
     struct task_struct *parent, *sibling, *child;
@@ -47,15 +48,22 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task);
 pid_t get_pid();
 void schedule();
 void switch_to_userspace(task_struct_t *task);
+void add_to_queue(task_struct_t *task);
+void add_to_zombie_queue(task_struct_t *task);
+void remove_from_queue(task_struct_t *task);
+void delete_task(task_struct_t *task);
+void print_task_list();
 
-task_struct_t *curr_task;
+task_struct_t *curr_task;   //Running Task queue
+task_struct_t *zombie_task; //Zombie Task queue
 task_struct_t *init_task;
 task_struct_t *kern_task;
 task_struct_t *prev_task;
 
-extern uint64_t kern_stack; 
+extern uint64_t kern_stack;
 extern uint64_t user_stack;
 
 uint64_t pages_used;
+uint64_t total_pages;
 
 #endif

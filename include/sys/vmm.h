@@ -5,6 +5,8 @@
 
 #define PAGE_SIZE 4096
 #define KERNAL_BASE_ADDRESS 0xffffffff80000000
+#define HEAP_START  0x03000000
+#define STACK_TOP   0x50000000
 
 //From 4.13.5 linux kernal source.
 #define _PAGE_BIT_PRESENT	  0	    /* is present */
@@ -40,12 +42,18 @@
 #define PF_R   (1 << 3)  //When set, the page fault was caused by reading a 1 in a reserved field.
 #define PF_I   (1 << 4)  //When set, the page fault was caused by an instruction fetch.
 
+struct smap {
+   uint64_t base, length;
+   uint32_t type;
+}__attribute__((packed));
+
 struct PageStat {
     struct PageStat *next;
     uint16_t ref;
 }__attribute__((__packed__));
 
 typedef struct PageStat page_stat_t;
+typedef struct smap smap_t;
 
 struct page_table {
     uint64_t pte[512];
@@ -64,15 +72,12 @@ struct page_map_level_4 {
 }__attribute__((aligned(0x20)));
 
 void vmm_init(uint32_t *modulep, void *physbase, void *physfree);
-
 void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr, uint64_t size);
-
 void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr);
-
 void map_proc(uint64_t paddr, uint64_t vaddr);
-
 void setup_child_ptables(uint64_t child_pml4);
-
+void delete_ptables(uint64_t pml4);
 uint64_t * kmalloc(uint64_t size);
+void kfree(uint64_t *addr);
 
-#endif 
+#endif

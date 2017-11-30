@@ -8,75 +8,133 @@
 #include <sys/string.h>
 #include <sys/gdt.h>
 #include <sys/asm_utils.h>
+#include <sys/time.h>
 
-uint64_t g_pid;
+uint64_t g_pid = 1500;
 struct mm_struct *kern_mm;
 
-uint64_t kern_stack; 
+uint64_t kern_stack;
 uint64_t user_stack;
 
 void print_task_list()
 {
+
+    if(curr_task == NULL) {
+        klog(IMP, "Tasks in queue are: \n");
+        klog(IMP, "No tasks in the queue!\n");
+        return;
+    }
+
     int i = 0;
-    kprintf("Current tasks in queue are: \n");
-    kprintf("%d : %s\n", i++, curr_task->pcmd_name);
-    kprintf("%d : %s\n", i++, curr_task->next_task->pcmd_name);
+    klog(INFO, "Tasks in queue are: \n");
+    klog(INFO, "%d : %s\n", i++, curr_task->pcmd_name);
+    task_struct_t * temp =  curr_task->next_task;
+    kprintf("PID      TIME    CMD\n");
+    while(temp != curr_task) {
+        kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
+        temp = temp->next_task;
+    }
+    kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
 }
 
 pid_t get_pid() {
     if(g_pid == MAX_PID)
-        g_pid = 300;
+        g_pid = 1000;
     return g_pid++;
 }
 
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
-    //TODO: does this have to be atomic.
-    __asm__ __volatile__ ( 
-        //"pushq %%rax;"
-        //"pushq %%rbx;"
-	    //"pushq %%rcx;"
-	    //"pushq %%rdx;"
-	    //"pushq %%rbp;"
-	    //"pushq %%rsi;"
-	    //"pushq %%rdi;"
-	    //"pushq %%r8;"
-	    //"pushq %%r9;"
-	    //"pushq %%r10;"
-	    //"pushq %%r11;"
-	    //"pushq %%r12;"
-	    //"pushq %%r13;"
-	    //"pushq %%r14;"
-	    //"pushq %%r15;"
-        "movq %%rsp, %0;"
-        "movq %1, %%rsp;"
-	    //"popq %%r15;"
-	    //"popq %%r14;"
-	    //"popq %%r13;"
-	    //"popq %%r12;"
-	    //"popq %%r11;"
-	    //"popq %%r10;"
-	    //"popq %%r9;"
-	    //"popq %%r8;"
-	    //"popq %%rdi;"
-	    //"popq %%rsi;"
-	    //"popq %%rbp;"
-	    //"popq %%rdx;"
-	    //"popq %%rcx;"
-	    //"popq %%rbx;"
-	    //"popq %%rax;"
-        "retq;"
-        ::"r"(&(prev_task->stack_p)),
-          "r"(next_task->stack_p)
+
+    set_tss_rsp((void *) next_task->kern_stack);
+    kern_stack = next_task->kern_stack;
+
+    klog(IMP, "In task %s with rip: %p, pid: %d, pml4: %p, rsp; %p, Switching to %s with rip: %p, pid: %d, pml4: %p, rsp: %p\n",
+              prev_task->pcmd_name, prev_task->rip, prev_task->pid, prev_task->pml4, prev_task->stack_p,
+              next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
+
+    __asm__ __volatile__ (
+      "movq $1f, %0;"
+      :"=g"(prev_task->rip)
+    );
+
+    __asm__ __volatile__ (
+      "cli;"
+      "movq %%rsp, (%1);"
+      //"movq $1f, %0;"
+      "movq %2, %%rsp;"
+      //"movq %4, %%cr3;"
+      "pushq %3;"
+      "retq;"
+      "1:\t"
+      :"=g"(prev_task->rip)
+      :"r"(&(prev_task->kern_stack)), "r"(next_task->kern_stack), "r"(next_task->rip), "r"(next_task->pml4)
     );
 }
 
-void add_to_queue(task_struct_t *task)
+void add_to_queue(task_struct_t *new_task)
 {
-    task_struct_t *temp;
-    temp = curr_task->next_task;
-    curr_task->next_task = task;
-    task->next_task = temp;
+    if(curr_task == NULL) {
+        curr_task = new_task;
+        curr_task->next_task = curr_task->prev_task = new_task;
+        //print_task_list();
+        return;
+    }
+
+    task_struct_t *curr_next = curr_task->next_task;
+
+    curr_task->next_task = new_task;
+    new_task->prev_task  = curr_task;
+    new_task->next_task  = curr_next;
+    curr_next->prev_task = new_task;
+
+    //print_task_list();
+}
+
+/*
+void add_to_zombie_queue(task_struct_t *task)
+{
+    if(zombie_task == NULL) {
+        task->next_task = NULL;
+        task->prev_task = NULL;
+        zombie_task = task;
+    }
+    else {
+        task->next_task = zombie_task;
+        task->prev_task = NULL;
+        zombie_task = task;
+    }
+}
+*/
+
+void remove_from_queue(task_struct_t *task)
+{
+     task->state = TASK_ZOMBIE;
+     klog(IMP, "Adding %s to zombie queue\n", curr_task->pcmd_name);
+     zombie_task = task; //TODO: used add_to_zombie_queue
+     //add_to_zombie_queue(curr_task);
+
+     task_struct_t *prev_task = task->prev_task;
+     task_struct_t *next_task = task->next_task;
+
+     prev_task->next_task = next_task;
+     next_task->prev_task = prev_task;
+     //task->next_task = prev_task;
+}
+
+void reap_zombies()
+{
+    if(zombie_task == NULL) {
+      return;
+    }
+    else {
+      task_struct_t *temp = zombie_task;
+      zombie_task = zombie_task->next_task;
+      klog(IMP, "Reaper is freeing memory of %s\n", temp->pcmd_name);
+      delete_task(temp);
+      //reap_zombies();
+    }
+
 }
 
 //TODO: replace this with better schedular
@@ -87,38 +145,37 @@ task_struct_t *get_next_task()
 
 void schedule()
 {
-
-    //TODO: shouldn't this be atomic? 
+    //TODO: shouldn't this be atomic?
     task_struct_t *prev_task = curr_task;
     curr_task = get_next_task();
 
-    //struct mm_struct *curr_mm, *prev_mm;
-    //curr_mm = curr_task->mm;
-    //prev_mm = prev_task->mm;
+    //print_task_list();
 
-    //if(prev_mm != curr_mm) 
-    //    write_cr3(curr_mm->pml4);
-
-    print_task_list();
-   
-    if(curr_task != prev_task)
+    if(curr_task != prev_task) {
+        write_cr3(curr_task->pml4);
         context_switch(prev_task, curr_task);
+    }
 }
 
-//TODO: change the name to idle.
-void idle_proc() 
+void idle_proc()
 {
-    kprintf("--Inside IDLE Process--\n");
 
     while(1) {
-        //__asm__ __volatile("hlt;");
-        //__asm__ __volatile("sti;");
+        klog(IMP, "--Inside IDLE Process--\n");
+        if (zombie_task != NULL) {
+           reap_zombies(); //Not safe.
+        }
         schedule();
     }
 }
 
 void switch_to_userspace(task_struct_t *task)
 {
+    klog(IMP, "In task %s with rip: %p, pid: %d, pml4: %p, rsp: %p Switching to userspace!\n",
+              task->pcmd_name, task->rip, task->pid, task->pml4, task->stack_p);
+
+    curr_task = task;
+
     set_tss_rsp((void *) task->kern_stack);
     kern_stack = task->kern_stack;
 
@@ -139,6 +196,11 @@ void switch_to_userspace(task_struct_t *task)
             "pushq %%rax;"
             "pushq $0x2B;"
             "pushq %2;"
+            "movq $0x0, %%rax;"
+            "movq $0x0, %%rbx;"
+            "movq $0x0, %%rcx;"
+            "movq $0x0, %%rdx;"
+            "movq $0x0, %%rbp;"
             "movq $0x0, %%rdi;"
             "movq $0x0, %%rsi;"
             "iretq;"
@@ -163,7 +225,7 @@ task_struct_t *init_proc(const char *name, int type)
         }
         memset(kern_task, 0, sizeof(task_struct_t *));
 
-        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE); 
+        kern_mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
         if(!kern_mm) {
             kpanic("Not able to allocate mm struct for init\n");
             return NULL;
@@ -175,26 +237,29 @@ task_struct_t *init_proc(const char *name, int type)
         kpanic("Not able to allocate stack for init\n");
     }
 
+
+    get_system_uptime(init_task->start_time);
     init_task->state     = TASK_RUNNABLE;
     init_task->mm        = kern_mm;
     init_task->sleep_t   = 0;
     init_task->pid       = get_pid();
-    init_task->ppid      = -1;
+    init_task->ppid      = 0;
     init_task->prev_task = NULL;
     init_task->parent    = NULL;
     init_task->sibling   = NULL;
     init_task->child     = NULL;
+    init_task->pml4      = read_cr3();
     strcpy(init_task->cdir_name, "/bin");
 
     if (type == 0) { //create idle process
-        strcpy(init_task->pcmd_name, "idle");
-        *(stack + 510) = (uint64_t) &idle_proc;;
-        init_task->stack_p   = init_task->kern_stack = (uint64_t) &stack[510];
-        init_task->next_task = init_task;
-        curr_task = init_task;;
+        strcpy(init_task->pcmd_name, "idle_proc");
+        *(stack + 510) = (uint64_t) &idle_proc;
+        init_task->stack_p = init_task->kern_stack = (uint64_t) &stack[510];
+        init_task->rip = (uint64_t) &idle_proc;
+        add_to_queue(init_task);
     }
     else { //Load user process
-        strcpy(init_task->pcmd_name, "/bin/init");
+        strcpy(init_task->pcmd_name, "bin/init");
 
         struct page_map_level_4* old_pml4 = (struct page_map_level_4*) read_cr3();
         struct page_map_level_4* new_pml4 = (struct page_map_level_4*) kmalloc(PAGE_SIZE);
@@ -211,20 +276,46 @@ task_struct_t *init_proc(const char *name, int type)
 
         //Load process.
         int ret = load_elf(init_task, name);
-        if(ret == 0) 
-            kprintf("Loading Exe Sucessfull\n");
+        if(ret == 0)
+            klog(INFO, "Loading %s was sucessfull\n", init_task->pcmd_name);
         else
-            kprintf("Error Loading Exe\n");
+            klog(ERR, "Error loading %s\n", init_task->pcmd_name);
 
         write_cr3((uint64_t)old_pml4 - KERNAL_BASE_ADDRESS);
 
-        //add_to_queue(init_task);
-        init_task->next_task = curr_task;
-        curr_task = init_task;
-        
+        add_to_queue(init_task);
+
         switch_to_userspace(init_task);
     }
 
     return init_task;
 }
 
+void delete_task(task_struct_t *task)
+{
+    //print_task_list();
+
+    //Remove MM amd VMA recursively.
+    klog(INFO, "Freeing MM and VMA's for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
+    if(task->mm != NULL) {
+        vm_area_struct_t *vma = task->mm->mmap;
+        while(vma != NULL) {
+          vm_area_struct_t *temp = vma;
+          vma = vma->vm_next;
+          kfree((uint64_t*) temp);
+        }
+    }
+    kfree((uint64_t *) task->mm);
+
+    //Remove stack.
+    klog(INFO, "Freeing kernal STACK for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
+    kfree((uint64_t *) align_down(task->kern_stack));
+
+    //Remove page tables.
+    //klog(INFO, "Freeing page tables for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
+    //delete_ptables(task->pml4); //This throws error, Need to debug this.
+
+    //Remove task_struct.
+    klog(INFO, "Freeing task structure for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
+    kfree((uint64_t *) task);
+}

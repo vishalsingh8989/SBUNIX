@@ -49,18 +49,17 @@ static inline void wrmsr(uint32_t msr_id, uint64_t msr_value) {
     __asm__ __volatile__ ("wrmsr" : : "a"(lo), "d"(hi), "c"(msr_id));
 }
 
-/*
-inline void wrmsr(uint32_t msr_id, uint64_t msr_value)
-{
-    __asm__ __volatile__( "wrmsr" : : "c" (msr_id), "A" (msr_value) );
-}
-*/
-
-inline uint64_t rdmsr(uint32_t msr_id)
+static inline uint64_t rdmsr(uint32_t msr_id)
 {
     uint64_t msr_value;
     __asm__ __volatile__( "rdmsr" : "=A" (msr_value) : "c" (msr_id) );
     return msr_value;
+}
+
+static inline void tlb_flush(uint64_t pml4)
+{
+   __asm__ __volatile__("movq %%cr3, %%rax;"
+                        "movq %%rax, %%cr3;" : : "r"(pml4));
 }
 
 static inline void invlpg(void* m)

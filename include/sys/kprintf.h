@@ -3,6 +3,16 @@
 
 #include <sys/defs.h>
 
+#define EN_INFO  0
+#define EN_IMP   1
+#define EN_ERR   1
+#define EN_FATAL 1
+
+#define INFO  0
+#define IMP   1
+#define ERR   2
+#define FATAL 3
+
 #define BLACK            0
 #define BLUE             1
 #define GREEN            2
@@ -19,15 +29,22 @@
 #define LIGHT_MAGENTA   13
 #define YELLO           14
 #define WHITE           15
+#define DEFAULT_COLOR    7
 
 #define MAX_X   80
-#define MAX_Y   24
+#define MAX_Y   23
+#define STATUS  24
 
+#define BACKSPACE  8
+#define ENTER     10
+
+uint64_t pnum_xy (uint64_t value, int base, char color, int x, int y);
+void puts_xy(const char *str, char color, int x, int y);
 void pchar_xy (char value, char color, int x, int y);
 void pchar (char value);
 void pstring (char* value);
 void pnum (uint64_t value, int base);
-
 void kprintf(const char *fmt, ...);
-
+void klog(int severity, const char *fmt, ...);
+void reset_cord();
 #endif

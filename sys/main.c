@@ -10,7 +10,9 @@
 #include <sys/utils.h>
 #include <sys/process.h>
 #include <sys/isr.h>
-
+#include <sys/user.h>
+#include <sys/env.h>
+#include <sys/time.h>
 extern uint64_t *abar;
 
 #define INITIAL_STACK_SIZE 4096
@@ -21,11 +23,8 @@ extern char kernmem, physbase;
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
 
-
   //hba_mem_t * abar_t = (hba_mem_t *) abar;
   //probe_port(abar_t);
-
-  //__asm__("int $0");
 
   /*
   uint8_t * dwr_buf = (uint8_t *) 0x100000;
@@ -52,22 +51,22 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
   */
 
+  klog(INFO, "tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+  vmm_init(modulep, physbase, physfree);
+
   clr_term();
-  vmm_init(modulep, physbase, physfree); //TODO: This has to be moved before clr_term
   print_welcome();
-  kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-  __asm__ __volatile__("sti;");
-
+  init_env();
+  init_users();
   init_syscall();
-  //__asm__("int $0");
-  //while(1);
+  init_tarfs();
+  init_time();
 
+  __asm__ __volatile__("sti;");
   init_proc("bin/init", 0);
   init_proc("bin/init", 1);
-  __asm__ __volatile__("cli;");
 
   //TODO: I guess below statements will never get executed.
-
   while(1) {
       __asm__ __volatile("sti;");
       __asm__ __volatile("hlt;");
@@ -100,6 +99,6 @@ void boot(void)
     (uint64_t*)(uint64_t)loader_stack[4]
   );
 
-  kprintf("!!!!! start() returned !!!!!\n");
+  klog(ERR, "!!!!! start() returned !!!!!\n");
   while(1) __asm__ volatile ("hlt");
 }

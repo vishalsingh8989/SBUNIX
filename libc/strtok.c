@@ -30,9 +30,15 @@ char* strtok(char * str1, const char * str2) {
       }
       pos++;
    }
-   
-   if (str[start] == '\0') 
+
+   if (str[start] == '\0') {
+	  //puts("RETURN NULL\n");
       return NULL;
-   else
+   }
+   else{
+	   //puts("RETURN  not NULL ");
+	   //puts(&str[start]);
+	   //puts("\n");
       return &str[start];
+   }
 }

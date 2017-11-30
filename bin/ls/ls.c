@@ -3,38 +3,36 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/defs.h>
+#include <sys/user.h>
 
+char *file_type = "-lscbdfc";
 int main(int argc, char* argv[], char* envp[]) {
 
-   int    num_dirs;
-   int    fd;
-   char   dir_struct[2048];
-   struct dirent* p;
-   char   dir_path[NAME_MAX+1];
+	char buff[NAME_MAX+1];
+	memset(buff, '\0', NAME_MAX+1);
+	if(argc == 1){
+		getcwd(buff, NAME_MAX+1);
+	}else if(argc == 2){
+		strcpy(buff, argv[1]);
+	}else{
+		printf("Multiple directories not supported\n");
+	}
 
-   if(argc == 1) {
-     getcwd(dir_path, (size_t) NAME_MAX+1);
-     fd = open(dir_path, O_RDONLY | O_DIRECTORY); 
-   }
-   else {
-     fd = open(argv[1], O_RDONLY | O_DIRECTORY);
-   }
+	DIR *dir = opendir(buff);
+	struct dirent *dirent;
+	uint32_t size = 0;
 
-   if(fd == -1) {
-     puts("Directory not found");
-     return 1;
-   }
-
-   num_dirs = getdents(fd, dir_struct, 1024);
-
-   int pos = 0;
-   while(pos < num_dirs) {
-     p = (struct dirent *) (dir_struct + pos);
-     puts(p->d_name);
-     pos += p->reclen;
-   }
-  
-   close(fd);
-
-   return 0;
+	while ((dirent = readdir(dir))) {
+			printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dirent->type], (dirent->size)/1024,dirent->fowner, dirent->d_name);
+				size = size + dirent->size;
+	        //printf("%s  \n", dirent->d_name);
+	    }
+			
+	if(dir != NULL){
+		printf("drwx--x--x    %4dKB     %s  %s\n", size/1024,"admin", ".");
+		printf("drwx--x--x    %4dKB     %s  %s\n", 0,"admin", "..");
+	}else{
+		printf("ls: %s: No such file or directory,\n", argv[1]);
+	}
+	return 0;
 }
