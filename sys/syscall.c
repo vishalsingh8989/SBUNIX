@@ -43,6 +43,7 @@ uint64_t sys_fork()
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
+    get_system_uptime(child_task->start_time);
     child_task->fdoffset = 4;
     child_task->state    = TASK_RUNNABLE;
     child_task->pid      = get_pid();
