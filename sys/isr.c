@@ -10,6 +10,7 @@
 #include <sys/syscall.h>
 #include <sys/terminal.h>
 #include <sys/time.h>
+#include <sys/env.h>
 #include <dirent.h>
 #include <logger.h>
 
@@ -173,6 +174,11 @@ uint64_t syscall_handler(cpu_regs* regs)
         case __NR_clearterm:
                 klog(INFO,"Executing __NR_gettimeofday Syscall\n");
                 ret =  syscall_clear_term();
+                return ret;
+        case __NR_setuid:
+                kprintf("Executing __NR_setuid Syscall\n");
+                ret = sys_setuid(arg1);
+                return ret;
         default:
             return -1;
     }
@@ -326,6 +332,7 @@ void timer_int_handler() {
 	time_buff[7] = sh;
 	time_buff[8] = '\0';
 	set_system_uptime(time_buff);
+
 
 
 	pic_send_eoi(0);

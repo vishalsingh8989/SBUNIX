@@ -93,8 +93,9 @@ void print_welcome()
     kprintf("\n\n");
     kprintf("\t\t===========================\n");
     kprintf("\t\t=----Welcome to SBUnix----=\n");
-    kprintf("\t\t===========================\n");
-    kprintf("\n\n");
+    kprintf("\t\t=----   Version 1.0   ----=\n");
+	kprintf("\t\t===========================\n");
+    
 }
 
 void kpanic(const char *fmt, ...)

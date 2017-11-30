@@ -18,6 +18,7 @@
 #include<logger.h>
 #include<sys/time.h>
 
+
 extern void fork_return(void);
 extern char PWD[MAX_NAME+1];
 extern string users[5];
@@ -527,4 +528,11 @@ uint64_t syscall_clear_term(){
 
     clr_term();
     return 0;
+}
+
+uint64_t sys_setuid( uint64_t user_id){
+    kprintf("Inside  sys_setuid\n");
+    set_uid(user_id);
+    return 0;
+
 }

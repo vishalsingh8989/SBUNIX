@@ -26,6 +26,7 @@
 #define __NR_gettimeofday 96
 #define __NR_sched_yield 24
 #define __NR_shutdown    48
+#define __NR_setuid		105
 #define __NR_clearterm    117
 
 #define __NR_ps		103 //for ps.
@@ -161,5 +162,7 @@ uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
 uint64_t syscall_ps();
 uint64_t sys_gettimeofday(struct tm* tim_time);
 uint64_t syscall_clear_term();
+
+uint64_t sys_setuid(uint64_t user_id);
 
 #endif

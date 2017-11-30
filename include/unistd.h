@@ -55,5 +55,5 @@ void dirname(char* buff, char* par_buff);
 
 uint64_t procps();
 uint64_t gettime(struct tm* tm_time);
-
+int setuid(int uid);
 #endif

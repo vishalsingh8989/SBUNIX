@@ -4,9 +4,10 @@
 
 int main(int argc, char **argv, char **envp)
 {
-    puts(">>In init process..");
-    puts(">>Executing /etc/rc..(TODO: Not Implemented Yet)");
-    puts(">>Executing Sbush..");
+    //puts(">>In init process..");
+    //puts(">>Executing /etc/rc..(TODO: Not Implemented Yet)");
+    //puts(">>Executing Sbush..");
+    
 
     char* const sargv[] = {"bin/sbush", NULL};
     char* const senvp[] = {"PATH=/bin:", NULL};

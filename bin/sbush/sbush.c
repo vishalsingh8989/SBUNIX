@@ -4,6 +4,7 @@
 #include <sys/defs.h>
 #include <sys/env.h>
 
+
 #define MAX_INPUT 512
 #define TRUE 1
 #define FALSE 0
@@ -23,41 +24,32 @@ char* perr;
 
 extern char PWD[MAX_NAME+1];
 extern char PS1[MAX_NAME+1];
+char weekdayn[7][4] = {
+    "Mon",
+    "Tue",
+	"Wed",
+	"Thu",
+	"Fri",
+	"Sat",
+	"Sun"
+};
 
-void memseti(void* dest, int value, int count){
-	//puts("memset called\n");
-	memset(dest, value, count);
-}
-//char* getenv(const char * var_name) {
-//   if(!strcmp(var_name, "PATH"))
-//      return path_var;
-//   else if(!strcmp(var_name, "PS1"))
-//      return ps1_var;
-//   else
-//      return NULL;
-//}
-
-//void setenv(const char * var_name, const char * var_value, int overwrite) {
-//   int idx=0;
-//   //TODO: Implement strcpy
-//   if(!strcmp(var_name, "PATH")){
-//      while(var_value[idx] != '\0') {
-//         path_var[idx] = var_value[idx];
-//         idx++;
-//      }
-//      path_var[idx] = '\0';
-//   }
-//   else if(!strcmp(var_name, "PS1")){
-//      while(var_value[idx] != '\0') {
-//         ps1_var[idx] = var_value[idx];
-//         idx++;
-//      }
-//      ps1_var[idx] = '\0';
-//   }
-//}
+char monthn[13][5] = {
+    "Jan",
+    "Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"July",
+	"Aug",
+	"Oct",
+	"Sept",
+	"Nov",
+	"Dec"
+};
 
 
-//TODO: do some more processing here.
 void setprompt() {
     char *temp;
     temp = getenv(ENV_PS1);
@@ -66,155 +58,69 @@ void setprompt() {
        printf("%s#sbush>", getcwd(buff, 50));
     }
     else {
-       printf("%s#%s",getcwd(buff, 50),PS1);
+       //bprintf("cwd :  %s. %s.\n", getcwd(buff, 50), temp);
+       printf("%s#%s",getcwd(buff, 50), temp);
     }
 }
 
-//int execute(char* cmd, int pos, char * envp[]) {
-//
-//    int pipe_ids[2];
-//    static int pipe_prev;
-//
-//    err = pipe(pipe_ids);
-//
-//    int idx = 0;
-//    tokens[idx] = strtok(cmd, " ");
-//    while (tokens[idx] != NULL) {
-//        tokens[++idx] = strtok(NULL, " ");
-//    }
-//
-//    if (idx == 0) return 0;
-//
-//    if (!strcmp(tokens[0], "cd")) {
-//        err = chdir(tokens[1]);
-//        return 0;
-//    }
-//    else if (!strcmp(tokens[0], "export")) {
-//        setenv(tokens[1], tokens[2], 1);
-//        return 0;
-//    }
-//
-//    int pd, bp, status;
-//    if(tokens[idx-1][0] == '&') {
-//        bp = TRUE;
-//    }
-//    else {
-//        bp = FALSE;
-//    }
-//
-//    //PATH code
-//    mod_tokens[0] = path_buf;
-//    for(int i = 1; i < idx; i++)
-//        mod_tokens[i] = tokens[i];
-//    for(int i = idx; i < 64; i++)
-//        mod_tokens[i] = NULL;
-//
-//    int idx1 = 0;
-//    while(path_var[idx1] != '\0'){
-//        path_buf[idx1] = path_var[idx1];
-//        idx1++;
-//    }
-//    int idx2 = 0;
-//    while(tokens[0][idx2] != '\0'){
-//        path_buf[idx1+idx2] = tokens[0][idx2];
-//        idx2++;
-//    }
-//    path_buf[idx1+idx2] = '\0';
-//
-//    if(tokens[0][0] != '/' && access(path_buf, X_OK) != -2) pd = 1;
-//    else pd = 0;
-//
-//    if (pd == 0) {
-//       int idx2 = 0;
-//       while(tokens[0][idx2] != '\0'){
-//           path_buf[idx2] = tokens[0][idx2];
-//           idx2++;
-//       }
-//       path_buf[idx2] = '\0';
-//    }
-//    //PATH code
-//
-//    pid_t pid = fork();
-//
-//    if (pid == 0) {
-//
-//        if (pos == 0) {
-//            dup2(pipe_ids[1], 1);
-//        }
-//        else if (pos == 1) {
-//            dup2(pipe_prev, 0);
-//            dup2(pipe_ids[1], 1);
-//        }
-//        else {
-//            dup2(pipe_prev, 0);
-//        }
-//
-//        int err = execvpe(mod_tokens[0], mod_tokens, envp);
-//
-//        //TODO: why does it return -2 instead of -1, put the errno functionality in execvpe wrapper and always return -1 for error.
-//        if (err == -2 || err == -1) {
-//            puts("Invalid command!");
-//            exit(1);
-//        }
-//
-//    }
-//    else if (pid < 0) {
-//        puts("Failed to fork!");
-//    }
-//    else {
-//        if (bp == FALSE) waitpid(pid, &status);
-//    }
-//
-//    if (pos == 0) {
-//        close(pipe_ids[1]);
-//        pipe_prev = pipe_ids[0];
-//    }
-//    else if (pos == 1) {
-//        if (pipe_prev != 0) close(pipe_prev);
-//        close(pipe_ids[1]);
-//        pipe_prev = pipe_ids[0];
-//    }
-//    else {
-//        if (pipe_prev != 0) close(pipe_prev);
-//        close(pipe_ids[1]);
-//        close(pipe_ids[0]);
-//    }
-//
-//    return 0;
-//}
-
-//int execute_line(char* cmd, char* envp[]) {
-//
-//   int idx = 0;
-//   pipes[idx] = strtok(str_buf, "|");
-//   while (pipes[idx] != NULL) {
-//       pipes[++idx] = strtok(NULL, "|");
-//   }
-//
-//   if(!strcmp(pipes[0], "exit")) exit(0);
-//   else {
-//       for(int i = 0; i < idx; i++) {
-//           int pos;
-//
-//           if (i == idx-1)
-//               pos = 2;
-//           else if (i == 0)
-//               pos = 0;
-//           else
-//               pos = 1;
-//
-//           execute(pipes[i], pos, envp);
-//       }
-//   }
-//
-//   return 0;
-//}
 
 int main(int argc, char* argv[], char* envp[]) {
 
-	setenv(ENV_PS1, "sbush>");
+    setenv(ENV_PS1, "sbush>");
+	printf("Users : jvishal, aahangir, user1. Password is root.\n");
+
+	char username[30];
+	char password[30];
+	printf("\n");
+	LOGOUT:while(1){
+		printf("username:");
+		perr = gets(username);
+		printf("password:");
+		perr = gets(password);
+
+
+        //int user_id = 0;
+		if(!strcmp("jvishal", username) && !strcmp("root", password))
+		{
+			printf("Welcome Vishal.\n");
+			setenv(ENV_HOME, "/usr/jvishal/");
+            //setuid(user_id);
+			chdir("/usr/jvishal/");
+			break;
+
+		}
+
+        if(!strcmp("aahangir", username) && !strcmp("root", password)){
+			puts("Welcome Atif ahangir.\n");
+			setenv(ENV_HOME, "/usr/aahangir/");
+            //user_id = 1;
+            //setuid(user_id);
+			chdir("/usr/aahangir/");
+			break;
+		}
+
+        // With 3 users prompt is messed up. #weird.
+        // if(!strcmp("user1", username) && !strcmp("root", password)){
+        //     printf("Welcome user1 .\n");
+        //     setenv(ENV_HOME, "/usr/user1/");
+        //     chdir("/usr/user1/");
+        //     break;
+        // }
+
+		puts("Incorrect username or password.\n");
+
+
+	}
+
+
+	struct tm tm_time;
+	gettime(&tm_time);
+	//printf("%d\n", tm_time.tm_wday);
+	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
+
 
     puts("---Welcome to SBUSH shell---\n");
+
     if(argc == 1) {
         while (TRUE) {
 
@@ -223,7 +129,10 @@ int main(int argc, char* argv[], char* envp[]) {
             perr = gets(str_buf);
             if(strlen(str_buf)==0){
             		continue;
-            }
+            }else if(!strcmp("logout", str_buf)){
+				printf("Logged out\n");
+				goto LOGOUT;
+			}
             int idx = 0;
 			tokens[idx] = strtok(str_buf, " ");
 			while (tokens[idx] != NULL) {
