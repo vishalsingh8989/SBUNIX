@@ -22,6 +22,7 @@
 extern void fork_return(void);
 extern char PWD[MAX_NAME+1];
 extern string users[5];
+
 void sys_exit()
 {
     remove_from_queue(curr_task);
@@ -42,8 +43,6 @@ uint64_t sys_fork()
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
-
-    get_system_uptime(child_task->start_time);
     child_task->fdoffset = 4;
     child_task->state    = TASK_RUNNABLE;
     child_task->pid      = get_pid();
@@ -67,7 +66,6 @@ uint64_t sys_fork()
     uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
     uint64_t * curr_stack = (uint64_t *) curr_task->kern_stack;
     memcpy(chld_stack-510, curr_stack-510, 4080); //TODO: debug this.
-    //memcpy(child_task->fd, curr_task->fd, sizeof(file_node_t) * MAX_FILES);
     memcpy(child_task->fd, curr_task->fd, sizeof(fd_t) * MAX_FILES);
     memcpy(child_task->mm, curr_task->mm, sizeof(mm_struct_t));
     if(curr_task->mm->mmap != NULL) {
@@ -359,8 +357,6 @@ uint64_t sys_open(char * pathname, uint64_t flags){
 
 uint64_t sys_close(uint64_t fd)
 {
-
-
 
 	curr_task->fd[fd] = NULL;
 

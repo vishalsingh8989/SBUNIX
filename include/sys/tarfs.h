@@ -45,7 +45,6 @@ struct posix_header_ustar {
 #define FIFOTYPE 6            /* FIFO special */
 #define CONTTYPE 7            /* reserved */
 
-
 //https://www.gnu.org/software/tar/manual/html_node/Standard.html
 struct tarfs_fd {
     char name[100];

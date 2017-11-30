@@ -4,29 +4,11 @@
 #include <sys/string.h>
 #include <sys/vmm.h>
 
-
 void sleep(int s){
 //	for(int i = 0 ;i< s*99999; i ++){
 //
 //	}
 }
-/*
-static void memcpy(void* dest, void* src, int count)
-{
-    uint8_t * dest_t = (uint8_t *) dest;
-    uint8_t * src_t = (uint8_t *) src;
-
-    for(int i = 0; i < count; i++)
-        *dest_t++ = *src_t++;
-}
-
-static void memset(void* dest, int value, int count)
-{
-    uint8_t *dest_t = (uint8_t *) dest;
-    for(int i = 0; i < count; i++)
-        *dest_t++ = value;
-}
-*/
 
 int dir_match(char *dirname, char *patt){
 	if (strlen(dirname) > strlen(patt)){
@@ -100,8 +82,8 @@ void print_welcome()
 void kpanic(const char *fmt, ...)
 {
     __asm__ __volatile__("cli;");
-    kprintf(fmt);
-    kprintf("\n");
+    //kprintf(fmt);
+    //kprintf("\n");
     kprintf("Kernal is Panicking!!!\n");
     //kprintf("\t            _  _   \n");
     //kprintf("\t      ___ (~ )( ~) \n");

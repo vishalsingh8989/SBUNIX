@@ -16,32 +16,7 @@
 
 extern char PWD[MAX_NAME+1];
 
-//extern char* users[10];
-
-
-//int open(const char* pathname, int flags) {
-//   uint64_t out;
-//   out = syscall_2(__NR_open, (uint64_t) pathname, (uint64_t) flags);
-//   return (int) out;
-//}
-//
-//DIR* opendir(const char *name)
-//{
-//    int dir_fd = -1;
-//    if (-1 == (dir_fd = open(name, O_DIRECTORY | O_RDONLY))) {
-//        klog(INFO,"open fail\n");
-//        return NULL;
-//    }
-//    DIR dir;//(DIR *) malloc(sizeof(DIR));
-//    dir.dfd = dir_fd;
-//    //dir.ptrdir = (struct dirent *) malloc(sizeof(struct dirent));
-//    return dir;
-//}
-
-
-
 void test_tarfs_init(int upper){
-
 
 	for(int iterator = 0 ;iterator < upper ; iterator++ ){
 		klog(INFO,"index :  %d, Name :  %s, size : %p ,  data  : %p\n" ,iterator,tarfs_fds[iterator].name,  tarfs_fds[iterator].size, tarfs_fds[iterator].data);
@@ -76,7 +51,6 @@ void init_tarfs(){
 
 
 	file_node_t* fd_node = (file_node_t *)kmalloc(PAGE_SIZE);
-
 	for(iterator =(posix_header_ustar *) &_binary_tarfs_start; iterator < ( posix_header_ustar *)&_binary_tarfs_end ;){
 		uint64_t name_length = strlen(iterator->name);
 		if(name_length){
@@ -95,6 +69,7 @@ void init_tarfs(){
 			fd_node->fowner = admin_uid;
 			tarfs_fds[fd_index].fnode = fd_node;
 			fd_node++;
+
 			if (size) {//file if size not 0
 				tarfs_fds[fd_index].type = REGTYPE;
 				tarfs_fds[fd_index].data =  (void *) ((uint64_t) iterator + sizeof(posix_header_ustar));
@@ -112,41 +87,6 @@ void init_tarfs(){
 	}
 
 	//testing
-
-
-	strcpy(tarfs_fds[fd_index].name, "/bin/sbin/");
-	tarfs_fds[fd_index].size = 0;
-	tarfs_fds[fd_index].offset = 0;
-	tarfs_fds[fd_index].data = 0;
-	tarfs_fds[fd_index].type = DIRTYPE;
-
-
-	strcpy(tarfs_fds[fd_index+1].name, "/bin/config/");
-	tarfs_fds[fd_index+1].size = 0;
-	tarfs_fds[fd_index+1].offset = 0;
-	tarfs_fds[fd_index+1].data = 0;
-	tarfs_fds[fd_index+1].type = DIRTYPE;
-
-
-	strcpy(tarfs_fds[fd_index+2].name, "/bin/config/ifconfig");
-	tarfs_fds[fd_index+2].size = 18883;
-	tarfs_fds[fd_index+2].offset = 0;
-	tarfs_fds[fd_index+2].data = 0;
-	tarfs_fds[fd_index+2].type = REGTYPE;
-
-	strcpy(tarfs_fds[fd_index+3].name, "/etc/sbin/config/ifconfig");
-	tarfs_fds[fd_index+3].size = 30270;
-	tarfs_fds[fd_index+3].offset = 0;
-	tarfs_fds[fd_index+3].data = 0;
-	tarfs_fds[fd_index+3].type = DIRTYPE;
-
-	fd_index = fd_index+4;
-	klog(INFO, "tarfs test start..........\n");
-
-
-	klog(INFO,"tarfs test end ..........\n");
-
-
 
 }
 

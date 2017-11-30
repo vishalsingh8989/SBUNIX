@@ -536,6 +536,7 @@ uint64_t * kmalloc(uint64_t size)
     }
 
     pages_used += num_pages;
+    //kprintf("Pages Used: %d\n", pages_used);
 
     return addr;
 }
