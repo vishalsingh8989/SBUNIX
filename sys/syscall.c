@@ -162,6 +162,7 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
     }
     memset(new_task, 0, sizeof(task_struct_t *));
     */
+
     task_struct_t *new_task = curr_task;
     int * retp = (int *) get_bin_addr(fname);
     if(retp != NULL)

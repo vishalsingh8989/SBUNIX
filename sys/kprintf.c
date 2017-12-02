@@ -114,7 +114,13 @@ void klog(int severity, const char *fmt, ...)
         kprintf("FATAL>> ");
         kprintf_log(fmt, args);
         term_color = DEFAULT_COLOR;
-    }
+    }else if(severity == BOOTLOG) {
+        term_color = GREEN;
+        kprintf("BOOT>> ");
+        kprintf_log(fmt, args);
+        term_color = DEFAULT_COLOR;
+		sleep(99);
+	}
 }
 
 void kprintf(const char *fmt, ...)

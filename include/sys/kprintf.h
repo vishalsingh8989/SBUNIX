@@ -8,10 +8,12 @@
 #define EN_ERR   0
 #define EN_FATAL 1
 
+
 #define INFO  0
 #define IMP   1
 #define ERR   2
 #define FATAL 3
+#define BOOTLOG 4
 
 #define BLACK            0
 #define BLUE             1

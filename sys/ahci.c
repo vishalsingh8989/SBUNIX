@@ -3,6 +3,7 @@
 #include <sys/ahci.h>
 #include <sys/kprintf.h>
 #include <sys/utils.h>
+#include <sys/vmm.h>
 
 #define ATA_CMD_READ_DMA_EX 0x25
 #define ATA_CMD_WRITE_DMA_EX 0x35
@@ -64,6 +65,8 @@ void port_rebase(hba_port_t *port, int portno) {
     stop_cmd(port);
 
     uint64_t AHCI_BASE = (uint64_t) 0x9000;
+    uint64_t vahci_base = (uint64_t )kmalloc(PAGE_SIZE);
+    map_proc(AHCI_BASE, vahci_base);
 
     port->clb = AHCI_BASE + (portno<<10);
     memset((void*)(port->clb), 0, 1024);
@@ -97,7 +100,7 @@ void probe_port(hba_mem_t *abar)
 
     uint32_t pi = abar->pi;
 
-    klog(INFO, "In probe port: %x, pi: %x\n", abar, pi);
+    klog(BOOTLOG, "In probe port: %x, pi: %x\n", abar, pi);
 
     int i = 0;
     while (i < 32) {
@@ -106,29 +109,32 @@ void probe_port(hba_mem_t *abar)
             if(dt == AHCI_DEV_SATA) {
                 klog(INFO,"SATA Drive found at port %d\n", i);
                 sata_port[i] = &abar->ports[i];
-                if (i == 0) {
+                if (i == 1) {
                     port_rebase((hba_port_t *) &abar->ports[i], i);
-                    //klog(INFO,"port rebase done!\n");
+                    klog(BOOTLOG,"port rebase done!\n");
                     return;
                 }
             }
             else if(dt == AHCI_DEV_SATAPI) {
-                klog(IMP, "SATAPI Drive found at port %d\n", i);
+                klog(BOOTLOG, "SATAPI Drive found at port %d\n", i);
             }
             else if(dt == AHCI_DEV_SEMB) {
-                klog(IMP, "SEMB Drive found at port %d\n", i);
+                klog(BOOTLOG, "SEMB Drive found at port %d\n", i);
             }
             else if(dt == AHCI_DEV_PM) {
-                klog(IMP, "PM Drive found at port %d\n", i);
+                klog(BOOTLOG, "PM Drive found at port %d\n", i);
             }
             else {
-                klog(INFO, "No Drive found at port %d\n", i);
+                klog(BOOTLOG, "No Drive found at port %d\n", i);
             }
         }
         pi >>= 1;
         i++;
     }
-    klog(INFO,"\n");
+
+
+
+    klog(BOOTLOG,"\n");
 }
 
 

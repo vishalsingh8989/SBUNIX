@@ -3,7 +3,9 @@
 #include <stdio.h>
 
 void init_env(){
+	klog(BOOTLOG, "Set environment variable.\n");
 	strcpy(PS1, "#sbush>");
+	strcpy(PATH, "/bin:/shared/bin:/usr/local/sbin");
 }
 
 char* getenv(int env){

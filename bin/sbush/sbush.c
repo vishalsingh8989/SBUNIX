@@ -17,7 +17,7 @@ char* mod_tokens[64];
 char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
-char* senvp[] = {"PATH=/bin:", NULL};
+char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
 
 int   err;
 char* perr;
@@ -67,6 +67,7 @@ void setprompt() {
 int main(int argc, char* argv[], char* envp[]) {
 
     setenv(ENV_PS1, "sbush>");
+    setenv(ENV_PATH, "/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin:/usr/sbin");
 	printf("Users : jvishal, aahangir, user1. Password is root.\n");
 
 	char username[30];
@@ -116,11 +117,14 @@ int main(int argc, char* argv[], char* envp[]) {
 	struct tm tm_time;
 	gettime(&tm_time);
 	//printf("%d\n", tm_time.tm_wday);
-	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
+	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday-1],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
 
-
+    char* paths = (char*)malloc(sizeof(char)*200);
+    char* cmd  = (char*)malloc(sizeof(char)*100);
     puts("---Welcome to SBUSH shell---\n");
 
+    strcpy(paths, getenv(ENV_PATH));
+    //printf("env found :  %s         \n\n", paths);
     if(argc == 1) {
         while (TRUE) {
 
@@ -140,18 +144,66 @@ int main(int argc, char* argv[], char* envp[]) {
 				++idx;
 				tokens[idx] = strtok(NULL, " ");
 			}
+pid_t pid = fork();
+int status;
 
-            pid_t pid = fork();
-            int status;
-            char *const senvp[] = {"PATH=/bin:", NULL};
+            char *curr_path;
+            memset(paths, '\0', sizeof(paths));
+            strcpy(paths, getenv(ENV_PATH));
 
+            curr_path = strtok(paths, ":");
+
+            int flag = 0;
+            int fd;
+
+            while(curr_path != NULL){
+                curr_path = strtok(NULL, ":");
+                memset(cmd, '\0', 100);
+                strconcat(cmd, curr_path+1);
+                if(strlen(curr_path) != 0){
+                    strconcat(cmd, "/");
+                    strconcat(cmd, tokens[0]);
+                }else{
+
+                    strconcat(cmd, tokens[0]+1);
+                }
+                fd = open(cmd, O_RDONLY);
+                if(fd !=-1){
+                    flag = 1;
+                    close(fd);
+                    break;
+                }else{
+
+                }
+
+            }
+
+
+            tokens[0] = cmd;
+            if(flag == 0){
+                memset(cmd, '\0', sizeof(cmd));
+                if(tokens[0][0] =='/'){
+                    cmd++;
+                }
+
+                fd = open(tokens[0], O_RDONLY);
+                close(fd);
+                if(fd !=-1){
+                    tokens[0] = cmd;
+                }else{
+                    printf("CONTINUE\n");
+                    continue;
+                    }
+            }
+
+
+            char* senvp[] = {"PATH=/home/jvishal/bin /home/jvishal/.local/bin /shared/bin:", NULL};
             if(pid == 0) {
-
-            		int ret = 0;
-            		ret = execvpe(tokens[0], tokens, senvp);
-
+                int ret = 0;
+                //printf("execute : %s  \n",tokens[0]);
+                ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
-                       puts("Command not found!!\n");
+                    printf("Command not found!!\n");
                 }
             }
             else {

@@ -14,6 +14,7 @@
 
 uint64_t curr_uid;
 void init_users(){
+	klog(BOOTLOG, "Intialize users.\n");
 	users[0] = "jvishal";
 	users[1] = "aahangir";
 	users[2] = "admin";
@@ -22,7 +23,7 @@ void init_users(){
 	pchar_xy('e' , GREEN, 2, 24);
 	pchar_xy('r' , GREEN, 3, 24);
 	pchar_xy(':' , GREEN, 4, 24);
-	
+
 
 }
 

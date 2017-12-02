@@ -6,9 +6,9 @@
 
 
 void sleep(int s){
-//	for(int i = 0 ;i< s*99999; i ++){
-//
-//	}
+	for(int i = 0 ;i< s*99999; i ++){
+
+	}
 }
 /*
 static void memcpy(void* dest, void* src, int count)
@@ -95,7 +95,7 @@ void print_welcome()
     kprintf("\t\t=----Welcome to SBUnix----=\n");
     kprintf("\t\t=----   Version 1.0   ----=\n");
 	kprintf("\t\t===========================\n");
-    
+
 }
 
 void kpanic(const char *fmt, ...)

@@ -39,7 +39,7 @@ int main(int argc, char* argv[], char* envp[]) {
 	gettime(&tm_time);
 
 	//printf("%d\n", tm_time.tm_wday);
-	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayname[tm_time.tm_wday],monthname[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
+	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayname[tm_time.tm_wday-1],monthname[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
 
 
 	return 0;

@@ -403,7 +403,7 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
 
 void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 {
-    klog(INFO, "physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
+    klog(BOOTLOG, "physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
     struct smap_t {
         uint64_t base, length;
@@ -415,7 +415,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     num_pages = 0;
     for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
         if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
-            klog(INFO, "Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            klog(BOOTLOG, "Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             if (smap->base > (uint64_t) physfree) {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
             }
@@ -455,28 +455,28 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
-                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(BOOTLOG, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
                 phy_addr = (uint64_t) physfree;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
-                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(BOOTLOG, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
             else {
                 phy_addr = smap->base;
                 vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
                 size = (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
-                klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+                klog(BOOTLOG, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
                 map_addr_range(pmap_l4, phy_addr, vir_addr, size);
             }
         }
     }
 
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
-    klog(IMP, "PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
+    klog(BOOTLOG, "PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
 
     //uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
@@ -507,7 +507,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     __asm__ __volatile__("movq %%cr4, %0;":"=r"(cr4));
     ia32_efer = rdmsr(MSR_EFER);
 
-    klog(IMP, "CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
+    klog(BOOTLOG, "CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
     //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
     write_cr3((uint64_t) pmap_l4);
@@ -515,7 +515,7 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
 
-    klog(INFO, "Page Table Setup Sucessfull\n");
+    klog(BOOTLOG, "Page Table Setup Sucessfull\n");
 }
 
 uint64_t * kmalloc(uint64_t size)

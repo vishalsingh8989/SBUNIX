@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/env.h>
 
 void remove_extra(char *str, int n);
 void remove_extra(char *str, int n){
@@ -47,7 +48,7 @@ int main(int argc, char **argv, char **envp)
 	char buff[NAME_MAX+1];
 
 
-	//char* m = (char*)malloc(100);
+
 	//printf("allocated :  %p\n", m);
 	if(argc == 1){
 		return 0;
@@ -55,9 +56,13 @@ int main(int argc, char **argv, char **envp)
 		//remove_extra(argv[1], strlen(argv[1]));
 		//getcwd(buff, NAME_MAX+1);
 		if(!strcmp(argv[1], ".")){
-			//printf("Move dir\n");
+			printf("Move dir\n");
+			return 0;
+		}else if( strlen(argv[1]) == 1 && argv[1][0] == '~'){
+			chdir(getenv(ENV_HOME));
 			return 0;
 		}else if( argv[1][0]=='.' && strlen(argv[1]) !=1 && strcmp(argv[1] , "..")){
+
 			//char dir[NAME_MAX+1];
 			getcwd(buff, NAME_MAX+1);
 			char *tokens[12];
@@ -78,9 +83,10 @@ int main(int argc, char **argv, char **envp)
 
 		}else if(!strcmp(argv[1] , "..")){
 			//printf("Current dir\n");
-			char par_dir[NAME_MAX+1];
+			char *par_dir= (char *)malloc(sizeof(char)*(NAME_MAX+1));
 			getcwd(buff, NAME_MAX+1);
 			dirname(buff, par_dir);
+			printf("Move to par dir :  %s \n", buff);
 			chdir(par_dir);
 			return 0;
 		}else if(argv[1][0] == '/'){

@@ -23,44 +23,54 @@ extern char kernmem, physbase;
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
 
-  //hba_mem_t * abar_t = (hba_mem_t *) abar;
-  //probe_port(abar_t);
 
-  /*
-  uint8_t * dwr_buf = (uint8_t *) 0x100000;
-  uint8_t * drd_buf = (uint8_t *) 0x900000;
+        klog(INFO, "tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+        vmm_init(modulep, physbase, physfree);
+        klog(INFO, "VM INIT SUCCUSSFUL\n");
+        sleep(999);
 
-  for(int j = 0; j < 100; j++) {
+        // hba_mem_t * abar_t = (hba_mem_t *) abar;
+        // map_proc(0xa6000, (uint64_t)abar_t);
+        // probe_port(abar_t);
+        // klog(INFO, "Start disk write\n");
+        // uint8_t * dwr_buf = (uint8_t *)kmalloc(4096); //(uint8_t *) 0x100000;
+        // uint8_t * drd_buf = (uint8_t *)kmalloc(4096); //(uint8_t *) 0x900000;
+        // klog(INFO , "dwr_buf :  %p\n", dwr_buf);
+        // klog(INFO , "drd_buf :  %p\n", dwr_buf);
+        //
+        //
+        // for(int j = 0; j < 100; j++) {
+        // for(int i = 0; i < 4096; i++)
+        //     dwr_buf[i] = j;
+        //
+        // kprintf("Writing Sector: %d ", j);
+        // kprintf("dwr_buf[0]: %d ", dwr_buf[0]);
+        // kprintf("dwr_buf[1023]: %d ", dwr_buf[1023]);
+        // kprintf("dwr_buf[4095]: %d\n", dwr_buf[4095]);
+        //
+        // disk_rw(&abar_t->ports[1], j*8, 0, 8, dwr_buf, 1);
+        // disk_rw(&abar_t->ports[1], j*8, 0, 8, drd_buf, 0);
+        //
+        // kprintf("Reading Sector: %d, ", j);
+        // kprintf("drd_buf[0]: %d ", drd_buf[0]);
+        // kprintf("drd_buf[1023]: %d ", drd_buf[1023]);
+        // kprintf("drd_buf[4095]: %d\n", drd_buf[4095]);
+        // kprintf("------Finished Test for Sector %d--------\n", j);
+        // }
 
-    for(int i = 0; i < 4096; i++)
-        dwr_buf[i] = j;
 
-    kprintf("Writing Sector: %d ", j);
-    kprintf("dwr_buf[0]: %d ", dwr_buf[0]);
-    kprintf("dwr_buf[1023]: %d ", dwr_buf[1023]);
-    kprintf("dwr_buf[4095]: %d\n", dwr_buf[4095]);
+  //
 
-    disk_rw(&abar_t->ports[0], j*8, 0, 8, dwr_buf, 1);
-    disk_rw(&abar_t->ports[0], j*8, 0, 8, drd_buf, 0);
 
-    kprintf("Reading Sector: %d, ", j);
-    kprintf("drd_buf[0]: %d ", drd_buf[0]);
-    kprintf("drd_buf[1023]: %d ", drd_buf[1023]);
-    kprintf("drd_buf[4095]: %d\n", drd_buf[4095]);
-    kprintf("------Finished Test for Sector %d--------\n", j);
-  }
-  */
+    init_env();
+    init_users();
+    init_syscall();
+    init_tarfs();
+    init_time();
+    clr_term();
+    print_welcome();
 
-  klog(INFO, "tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-  vmm_init(modulep, physbase, physfree);
 
-  clr_term();
-  print_welcome();
-  init_env();
-  init_users();
-  init_syscall();
-  init_tarfs();
-  init_time();
 
   __asm__ __volatile__("sti;");
   init_proc("bin/init", 0);

@@ -1,5 +1,6 @@
 #include <sys/pic.h>
 #include <sys/defs.h>
+#include <sys/kprintf.h>
 
 //From osdev
 void pic_send_eoi(unsigned char irq) {
@@ -10,7 +11,7 @@ void pic_send_eoi(unsigned char irq) {
 }
 
 void init_pic() {
-
+    klog(BOOTLOG, "Intialize Programmable Interrupt Controller.\n");
     unsigned char a1, a2;
 
     a1 = inb(0x21);
@@ -18,7 +19,7 @@ void init_pic() {
 
     outb(0x20, 0x11);
     outb(0xa0, 0x11);
-    outb(0x21, 0x20); 
+    outb(0x21, 0x20);
     outb(0xa1, 0x28);
     outb(0x21, 0x04);
     outb(0xa1, 0x02);
@@ -27,5 +28,6 @@ void init_pic() {
 
     outb(0x21, a1);
     outb(0xa1, a2);
+    klog(BOOTLOG, "Intialize Programmable Interrupt Controller: Successful\n");
 
 }

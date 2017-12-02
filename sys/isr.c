@@ -7,6 +7,7 @@
 #include <sys/vmm.h>
 #include <sys/process.h>
 #include <sys/asm_utils.h>
+#include <sys/utils.h>
 #include <sys/syscall.h>
 #include <sys/terminal.h>
 #include <sys/time.h>
@@ -186,6 +187,7 @@ uint64_t syscall_handler(cpu_regs* regs)
 
 void init_syscall()
 {
+    klog(BOOTLOG, "Intialize syscalls.\n");
     uint64_t efer;
 
     efer = rdmsr(EFER);
@@ -194,6 +196,7 @@ void init_syscall()
 
     wrmsr(LSTAR, (uint64_t)_isr128);
     wrmsr(SFMASK, 0xC0000084);
+    klog(BOOTLOG, "Intialize syscalls. : Successful\n");
 }
 
 //void pnum_xy (uint64_t value, int base, int x) {
@@ -308,16 +311,16 @@ void timer_int_handler() {
     pchar_xy(uhh, GREEN, 45, 24);
 
     pchar_xy(' ', GREEN, 44, 24);
-    pchar_xy(monthname[utc.tm_mon][2], GREEN, 43, 24);
-	pchar_xy(monthname[utc.tm_mon][1] , GREEN, 42, 24);
-	pchar_xy(monthname[utc.tm_mon][0] , GREEN, 41, 24);
+    pchar_xy(monthname[utc.tm_mon-1][2], GREEN, 43, 24);
+	pchar_xy(monthname[utc.tm_mon-1][1] , GREEN, 42, 24);
+	pchar_xy(monthname[utc.tm_mon-1][0] , GREEN, 41, 24);
 
 
-    //kprintf("month name: %s\n", weekdayname[utc.tm_wday]);
+    //kprintf("month name: %d\n", monthname[utc.tm_mon-1]);
 	pchar_xy(' ' , GREEN, 40, 24);
-	pchar_xy(weekdayname[utc.tm_wday][2] , GREEN, 39, 24);
-	pchar_xy(weekdayname[utc.tm_wday][1] , GREEN, 38, 24);
-	pchar_xy(weekdayname[utc.tm_wday][0] , GREEN, 37, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][2] , GREEN, 39, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][1] , GREEN, 38, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][0] , GREEN, 37, 24);
     //UTC set end
 
 
@@ -400,7 +403,6 @@ void page_fault_handler(cpu_regs *regs) {
 
     uint64_t fault_addr = read_cr2();
     klog(INFO,"Faulting address: %p\n", fault_addr);
-
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
     //uint64_t p_user_err  = error & PF_U;

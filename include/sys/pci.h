@@ -12,6 +12,12 @@
 #define PCI_SUB_CLASS   0xB
 #define PCI_SEC_BUS     0x19
 
+#define NETWORK_CONTROLLER	0x02
+#define ETHERNET_CONTROLLER 0x00
+
+
+#define NETIF_IO	0
+#define NETIF_MEM	1
 void init_pci(void);
 void pci_scan_bus(int bus);
 
