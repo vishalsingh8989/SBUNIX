@@ -31,10 +31,10 @@ void print_task_list()
     task_struct_t * temp =  curr_task->next_task;
     kprintf("PID      TIME    CMD\n");
     while(temp != curr_task) {
-        kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
+        kprintf("%d   %s  %s\n", temp->pid, temp->start_time, temp->pcmd_name);
         temp = temp->next_task;
     }
-    kprintf("%d   %s  %s\n", temp->pid,temp->start_time, temp->pcmd_name);
+    kprintf("%d   %s  %s\n", temp->pid, temp->start_time, temp->pcmd_name);
 }
 
 pid_t get_pid() {
@@ -183,10 +183,10 @@ void switch_to_userspace(task_struct_t *task)
             "sti;"
             "movq %0, %%cr3;"
             "movq $0x23, %%rax;"
-            "movq %%rax, %%ds;"
-            "movq %%rax, %%es;"
-            "movq %%rax, %%fs;"
-            "movq %%rax, %%gs;"
+            //"movq %%rax, %%ds;"
+            //"movq %%rax, %%es;"
+            //"movq %%rax, %%fs;"
+            //"movq %%rax, %%gs;"
 
             "pushq %%rax;"
             "pushq %1;"

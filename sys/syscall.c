@@ -9,14 +9,12 @@
 #include <sys/elf64.h>
 #include <sys/terminal.h>
 #include <sys/tarfs.h>
-#include <sys/kprintf.h>
 #include <sys/user.h>
 #include <sys/env.h>
-#include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #include <sys/idt.h>
-#include <sys/time.h>
 #include <sys/gdt.h>
 
 extern void fork_return(void);
@@ -125,6 +123,7 @@ uint64_t sys_fork()
 
     child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
     child_task->rip = (uint64_t) fork_return;
+
     schedule();
 
     return child_task->pid;
@@ -193,8 +192,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 
 uint64_t sys_read(uint64_t fd, void* addr, uint64_t size)
 {
-
-
 	//klog(INFO,"Inside syscall read start: %d ,  %p\n", fd, addr);
 
     if(fd == STDIN) {
@@ -202,7 +199,6 @@ uint64_t sys_read(uint64_t fd, void* addr, uint64_t size)
         return 1;
     }else{
     			file_node_t* fnode_ptr  = (file_node_t*)curr_task->fd[fd];
-
 
     			if( fnode_ptr->fseek < fnode_ptr->fsize){
     				//debug("\nIn read : size : %d, seek : %d.", fnode_ptr->fsize, fnode_ptr->fseek);
@@ -214,11 +210,7 @@ uint64_t sys_read(uint64_t fd, void* addr, uint64_t size)
     			//TODO. init other values in fnode_ptr. At this point .I don't care.
     			return -1;
     }
-
-
     //klog(INFO,"Inside syscall read end: %d ,  %p\n", fd, addr);
-
-
 }
 
 uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
@@ -358,10 +350,8 @@ uint64_t sys_open(char * pathname, uint64_t flags){
 
 uint64_t sys_close(uint64_t fd)
 {
-
-	curr_task->fd[fd] = NULL;
-
-    return 0;
+	 curr_task->fd[fd] = NULL;
+   return 0;
 }
 
 void sys_sched_yield()
@@ -400,37 +390,33 @@ uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
     return 0;
 
 }
+
 uint64_t sys_fstat(int fidx, fstat_t* statbuf){
 	klog(INFO,"Inside sys_fstat*****\n");
 	memset(statbuf,  '\0', sizeof(statbuf));
 	statbuf->st_size  = tarfs_size(fidx);
 	//statbuf->st_size  = tarfs_owner(fidx);
 	return (uint64_t)statbuf;
-
 }
 
 uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence){
-    //TODO : handle rootdir. idc not required not working.
+  //TODO : handle rootdir. idc not required not working.
 	klog(INFO,"lseek offset :  %d\n", offset);
 	tarfs_fds[fildes].offset = offset;
     return 0;
 }
 
 uint64_t syscall_ps(){
-	//debug("");
 	print_task_list();
-	//if(buff){}
 	return 0;
 }
 
 uint64_t sys_gettimeofday(struct tm* tm_time){
 	read_rtc(tm_time);
-
-
 	return 1;
 }
-uint64_t syscall_clear_term(){
 
-    clr_term();
-    return 0;
+uint64_t syscall_clear_term(){
+  clr_term();
+  return 0;
 }

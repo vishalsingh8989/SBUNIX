@@ -10,23 +10,6 @@ void sleep(int s){
 //
 //	}
 }
-/*
-static void memcpy(void* dest, void* src, int count)
-{
-    uint8_t * dest_t = (uint8_t *) dest;
-    uint8_t * src_t = (uint8_t *) src;
-
-    for(int i = 0; i < count; i++)
-        *dest_t++ = *src_t++;
-}
-
-static void memset(void* dest, int value, int count)
-{
-    uint8_t *dest_t = (uint8_t *) dest;
-    for(int i = 0; i < count; i++)
-        *dest_t++ = value;
-}
-*/
 
 int dir_match(char *dirname, char *patt){
 	if (strlen(dirname) > strlen(patt)){
