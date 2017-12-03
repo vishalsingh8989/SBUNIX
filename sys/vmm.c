@@ -145,7 +145,7 @@ void setup_child_ptables(uint64_t cpml4)
     child_pml4  = (struct page_map_level_4 *) pa_to_va(child_pml4);
 
     volatile int pml4_idx = 0;
-    for(;  pml4_idx < 511; pml4_idx++) {
+    for(;  pml4_idx < 510; pml4_idx++) {
         uint64_t p_pml4_entry = parent_pml4->pml4e[pml4_idx];
         uint64_t c_pml4_entry = 0;
         if(p_pml4_entry & _PAGE_PRESENT) {
@@ -217,7 +217,7 @@ void setup_child_ptables(uint64_t cpml4)
         }
     }
 
-    //child_pml4->pml4e[510] = parent_pml4->pml4e[510];
+    child_pml4->pml4e[510] = parent_pml4->pml4e[510];
     child_pml4->pml4e[511] = parent_pml4->pml4e[511];
 }
 
@@ -353,7 +353,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         pdir_p = (struct page_directory_pointer *) page_alloc();
         entry = (uint64_t) pdir_p;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pmap_l4->pml4e[PML4_IDX(vaddr)] = entry;
     }
 
@@ -364,7 +364,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         pdir = (struct page_directory *) page_alloc();
         entry = (uint64_t) pdir;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pdir_p->pdpe[PDPT_IDX(vaddr)] = entry;
     }
 
@@ -375,7 +375,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         ptable = (struct page_table *) page_alloc();
         entry = (uint64_t) ptable;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pdir->pde[PDE_IDX(vaddr)] = entry;
     }
 
@@ -385,7 +385,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     }
     else {
         entry = paddr;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }
 

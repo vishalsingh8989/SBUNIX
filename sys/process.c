@@ -10,7 +10,7 @@
 #include <sys/asm_utils.h>
 #include <sys/time.h>
 
-uint64_t g_pid = 1500;
+uint64_t g_pid = 1000;
 struct mm_struct *kern_mm;
 
 uint64_t kern_stack;
@@ -38,7 +38,7 @@ void print_task_list()
 }
 
 pid_t get_pid() {
-    if(g_pid == MAX_PID)
+    if(g_pid == 1000+MAX_PID)
         g_pid = 1000;
     return g_pid++;
 }
@@ -119,7 +119,19 @@ void remove_from_queue(task_struct_t *task)
 
      prev_task->next_task = next_task;
      next_task->prev_task = prev_task;
-     //task->next_task = prev_task;
+
+     if(task->parent != NULL) {
+       prev_task = task;
+       curr_task = task->parent;
+     }
+     else {
+       prev_task = task;
+       curr_task = next_task;
+     }
+
+     write_cr3(curr_task->pml4);
+     context_switch(prev_task, curr_task);
+
 }
 
 void reap_zombies()
@@ -304,18 +316,18 @@ void delete_task(task_struct_t *task)
           vma = vma->vm_next;
           kfree((uint64_t*) temp);
         }
+        kfree((uint64_t *) task->mm);
     }
-    kfree((uint64_t *) task->mm);
 
     //Remove stack.
     klog(INFO, "Freeing kernal STACK for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
-    kfree((uint64_t *) align_down(task->kern_stack));
+    if(task->kern_stack != 0) kfree((uint64_t *) align_down(task->kern_stack));
 
     //Remove page tables.
     //klog(INFO, "Freeing page tables for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
-    //delete_ptables(task->pml4); //This throws error, Need to debug this.
+    //if(task->pml4 != 0) delete_ptables(task->pml4); //This throws error, Need to debug this.
 
     //Remove task_struct.
     klog(INFO, "Freeing task structure for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
-    kfree((uint64_t *) task);
+    if(task != 0) kfree((uint64_t *) task);
 }

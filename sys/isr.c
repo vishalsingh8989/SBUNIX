@@ -258,7 +258,7 @@ void page_fault_handler(cpu_regs *regs) {
         vma = vma->vm_next;
     }
 
-    
+
 
     if(vma == NULL) {
         klog(IMP, "Growing Stack! -- Addr: %p\n", fault_addr);
@@ -280,12 +280,19 @@ void page_fault_handler(cpu_regs *regs) {
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
+        /*
         klog(IMP, "Copy On Write! -- Addr: %p\n", fault_addr);
-        //uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
-        //page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
         map_proc(falign_addr, falign_addr);
-        //memcpy((void *) page_addr, (void*) falign_addr, PAGE_SIZE);
+        tlb_flush(curr_task->pml4);
+        */
+
+        klog(IMP, "Copy On Write! -- Addr: %p\n", fault_addr);
+        uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+        uint64_t falign_addr = align_down(fault_addr);
+        memcpy((void *) page_addr, (void *) falign_addr, PAGE_SIZE);
+        page_addr = page_addr - KERNAL_BASE_ADDRESS;
+        map_proc(page_addr, falign_addr);
         tlb_flush(curr_task->pml4);
         return;
     }

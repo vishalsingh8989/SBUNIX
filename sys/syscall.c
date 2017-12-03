@@ -24,7 +24,7 @@ extern string users[5];
 void sys_exit()
 {
     remove_from_queue(curr_task);
-    schedule();
+    //schedule();
 }
 
 uint64_t sys_fork()
@@ -87,13 +87,13 @@ uint64_t sys_fork()
     //write_cr3(curr_task->pml4);
     //tlb_flush(curr_task->pml4);
 
-    //volatile uint64_t stack_loc;
+    volatile uint64_t stack_loc;
     //volatile uint64_t rip_loc;
     //curr_task = prev_task;
 
     //TODO: make these are functions in asm utils.h
     //__asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
-    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
+    __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
 
     /*
     if(curr_task == prev_task) {
@@ -121,7 +121,9 @@ uint64_t sys_fork()
     }
     */
 
-    child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
+    //child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
+    child_task->kern_stack = child_task->kern_stack - 80; //Working one
+    child_task->stack_p = child_task->kern_stack;
     child_task->rip = (uint64_t) fork_return;
 
     schedule();
@@ -137,7 +139,6 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
         klog(INFO, "Loading %s was sucessfull\n", fname);
     else {
         klog(ERR, "Error loading %s\n", fname);
-        //remove_from_queue(curr_task);
         return -1;
     }
 

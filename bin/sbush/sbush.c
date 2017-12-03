@@ -243,6 +243,7 @@ int main(int argc, char* argv[], char* envp[]) {
                 int ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
                        puts("Command not found!!\n");
+											 exit(1);
                 }
             }
             else {
