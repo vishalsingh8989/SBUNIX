@@ -4,7 +4,7 @@
 #include <sys/defs.h>
 
 #define EN_INFO  0
-#define EN_IMP   1
+#define EN_IMP   0
 #define EN_ERR   1
 #define EN_FATAL 1
 

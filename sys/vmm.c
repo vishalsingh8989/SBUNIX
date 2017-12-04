@@ -145,7 +145,7 @@ void setup_child_ptables(uint64_t cpml4)
     child_pml4  = (struct page_map_level_4 *) pa_to_va(child_pml4);
 
     volatile int pml4_idx = 0;
-    for(;  pml4_idx < 510; pml4_idx++) {
+    for(;  pml4_idx < 511; pml4_idx++) {
         uint64_t p_pml4_entry = parent_pml4->pml4e[pml4_idx];
         uint64_t c_pml4_entry = 0;
         if(p_pml4_entry & _PAGE_PRESENT) {
@@ -207,7 +207,7 @@ void setup_child_ptables(uint64_t cpml4)
                                     pte  = p_pt_entry & 0xfffffffffffff000;
                                     pte |= (_PAGE_PRESENT | _PAGE_USER);
                                     c_pt->pte[pt_idx] = pte;
-                                    p_pt->pte[pt_idx] = pte;
+                                    //p_pt->pte[pt_idx] = pte; //TODO: Have to understand this.
                                 }
                             }
                         }
@@ -217,7 +217,7 @@ void setup_child_ptables(uint64_t cpml4)
         }
     }
 
-    child_pml4->pml4e[510] = parent_pml4->pml4e[510];
+    //child_pml4->pml4e[510] = parent_pml4->pml4e[510];
     child_pml4->pml4e[511] = parent_pml4->pml4e[511];
 }
 
@@ -326,7 +326,8 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        klog(INFO, "Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
+        klog(IMP, "Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, paddr | 0x7);
+        entry = paddr;
         entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }

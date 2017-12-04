@@ -131,7 +131,6 @@ void remove_from_queue(task_struct_t *task)
 
      write_cr3(curr_task->pml4);
      context_switch(prev_task, curr_task);
-
 }
 
 void reap_zombies()
@@ -195,10 +194,6 @@ void switch_to_userspace(task_struct_t *task)
             "sti;"
             "movq %0, %%cr3;"
             "movq $0x23, %%rax;"
-            //"movq %%rax, %%ds;"
-            //"movq %%rax, %%es;"
-            //"movq %%rax, %%fs;"
-            //"movq %%rax, %%gs;"
 
             "pushq %%rax;"
             "pushq %1;"

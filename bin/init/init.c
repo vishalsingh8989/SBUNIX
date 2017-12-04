@@ -22,7 +22,7 @@ int main(int argc, char **argv, char **envp)
         execvpe(sargv[0], sargv, senvp);
     }
     else {
-        puts("Executing waitpid()");
+        puts("Executing waitpid() in init");
         waitpid(pid, &status);
     }
 

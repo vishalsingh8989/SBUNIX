@@ -36,9 +36,11 @@ uint64_t sys_fork()
         kpanic("Not able to allocate stack!!");
     }
 
+
     child_task = (task_struct_t *) kmalloc(PAGE_SIZE);
     child_task->pml4 = (uint64_t) kmalloc(PAGE_SIZE) - KERNAL_BASE_ADDRESS;
     child_task->mm = (mm_struct_t *) kmalloc(PAGE_SIZE);
+
     child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
 
     get_system_uptime(child_task->start_time);
@@ -54,12 +56,9 @@ uint64_t sys_fork()
     //Set up virtual memory.
     setup_child_ptables(child_task->pml4);
 
-    //queue the child after parent task. TODO: add function "add_child_to_queue"
     curr_task->child      = child_task;
     child_task->parent    = curr_task;
     add_to_queue(child_task);
-
-    //write_cr3(child_task->pml4);
 
     //Deep copy
     uint64_t * chld_stack = (uint64_t *) child_task->kern_stack;
@@ -84,51 +83,51 @@ uint64_t sys_fork()
        child_task->mm->mmap = NULL;
     }
 
-    //write_cr3(curr_task->pml4);
-    //tlb_flush(curr_task->pml4);
+    /*
+    //copying user stack
+    uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+    uint64_t page_addr2 = (uint64_t) kmalloc(PAGE_SIZE);
+    uint64_t falign_addr = STACK_TOP-4096;
+    uint64_t falign_addr2 = STACK_TOP;
+    memcpy((void *) page_addr, (void *) falign_addr, PAGE_SIZE);
+    memcpy((void *) page_addr2, (void *) falign_addr2, PAGE_SIZE);
+    page_addr = page_addr - KERNAL_BASE_ADDRESS;
+    page_addr2 = page_addr2 - KERNAL_BASE_ADDRESS;
+    write_cr3(child_task->pml4);
+    map_proc(page_addr, falign_addr);
+    map_proc(page_addr2, falign_addr2);
+    write_cr3(curr_task->pml4);
+    */
 
-    volatile uint64_t stack_loc;
     //volatile uint64_t rip_loc;
     //curr_task = prev_task;
 
     //TODO: make these are functions in asm utils.h
     //__asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(rip_loc));
-    __asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
+    //volatile uint64_t stack_loc;
+    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(stack_loc));
+
+    //__asm__ __volatile__("movq $2f, %0;" "2:\t" : "=g"(child_task->rip));
+    //__asm__ __volatile__("movq %%rsp, %0" : "=r"(child_task->stack_p));
 
     /*
     if(curr_task == prev_task) {
-      //stack[510] = rip_loc;
-      //child_task->stack_p = child_task->kern_stack = (uint64_t) &stack[510];
-      //child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-      //child_task->stack_p = child_task->kern_stack;
-      //uint64_t * temp = (uint64_t *) child_task->kern_stack;
-      //temp[0] = rip_loc;
-      //kprintf("In Parent!\n");
-      //schedule();
-
       kprintf("In Parent!\n");
-      *(uint64_t *) child_task->kern_stack = rip_loc;
-      child_task->stack_p = child_task->kern_stack;
-      child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
-      child_task->kern_stack = child_task->kern_stack - (curr_task->kern_stack - stack_loc);
-      child_task->rip = rip_loc;
+      child_task->kern_stack = child_task->kern_stack - 128;
       return child_task->pid;
     }
     else {
       kprintf("In Child!\n");
-      //outb(0x20, 0x20);
       return 0;
     }
     */
 
-    //child_task->kern_stack = child_task->kern_stack - 16 - 56 - 8; //Working one
-    child_task->kern_stack = child_task->kern_stack - 80; //Working one
+    child_task->kern_stack = child_task->kern_stack - 80;
     child_task->stack_p = child_task->kern_stack;
     child_task->rip = (uint64_t) fork_return;
-
     schedule();
-
     return child_task->pid;
+
 }
 
 uint64_t sys_execve(char *fname, char *argv[], char *envp[])
@@ -227,7 +226,7 @@ uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 {
     curr_task->state = TASK_WAITING;
 
-    schedule();
+    //schedule();
 
     return 0;
 }
