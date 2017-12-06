@@ -247,7 +247,7 @@ int main(int argc, char* argv[], char* envp[]) {
                 }
             }
             else {
-                puts("Executing waitpid() in Sbush");
+                //puts("Executing waitpid() in Sbush");
                 waitpid(pid, &status);
             }
 
