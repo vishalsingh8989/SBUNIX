@@ -28,4 +28,5 @@ int main(int argc, char* argv[], char* envp[]) {
 
 	 printf("\n");
 	 close(fd);
+   exit(0);
 }

@@ -170,6 +170,12 @@ uint64_t sys_execve(char *fname, char *argv[], char *envp[])
 
     write_cr3(new_task->pml4);
 
+    //char bin_name[64];
+    //strcpy(bin_name, PWD+1);
+    //strconcat(bin_name, args[0]);
+    //klog(IMP, "bin_name: %s\n", bin_name);
+    //load_elf(new_task, bin_name);
+
     //Load process.
     load_elf(new_task, args[0]);
 
@@ -225,9 +231,6 @@ uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
 uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 {
     curr_task->state = TASK_WAITING;
-
-    //schedule();
-
     return 0;
 }
 
