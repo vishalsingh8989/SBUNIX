@@ -284,7 +284,7 @@ void delete_ptables(uint64_t addr)
             kfree((uint64_t *) pdir_p);
         }
     }
-    //kfree((uint64_t *) addr);
+    kfree((uint64_t *) pml4);
 }
 
 void map_proc(uint64_t paddr, uint64_t vaddr)

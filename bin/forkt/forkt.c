@@ -23,7 +23,6 @@ int main(int argc, char **argv, char **envp)
         }
       }
       else {
-        puts("Executing waitpid() in Forkt");
         waitpid(pid, &status);
       }
     }
