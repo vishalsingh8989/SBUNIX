@@ -284,7 +284,7 @@ uint64_t sys_read(uint64_t fd, void* addr, uint64_t size)
 {
 
 
-	//klog(INFO,"Inside syscall read start: %d ,  %p\n", fd, addr);
+	//kprintf("Inside syscall read start: %d ,  %p\n", fd, addr);
 
     if(fd == STDIN) {
         term_read((uint64_t)addr, size);
@@ -384,7 +384,7 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 
 			}
 			else{
-				klog(INFO,"cd: %s: No such file or directory\n",pathname);
+				klog(ERR,"cd: %s: No such file or directory\n",pathname);
 			}
 			return 0;
 		}

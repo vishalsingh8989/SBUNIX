@@ -2,6 +2,12 @@
 #include <sys/kprintf.h>
 #include <stdio.h>
 
+char PWD[MAX_NAME+1];
+char PS1[MAX_NAME+1];
+char HOME[MAX_NAME+1];
+char USER[MAX_NAME+1];
+char PATH[MAX_NAME+1];
+
 void init_env(){
 	klog(BOOTLOG, "Set environment variable.\n");
 	strcpy(PS1, "#sbush>");

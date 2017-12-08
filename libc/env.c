@@ -2,11 +2,35 @@
 #include <sys/env.h>
 #include <stdio.h>
 
-extern char PWD[MAX_NAME+1];
-extern char PS1[MAX_NAME+1];
-extern char HOME[MAX_NAME+1];
-extern char USER[MAX_NAME+1];
-extern char PATH[MAX_NAME+1];
+
+char PWD[MAX_NAME+1];
+char PS1[MAX_NAME+1];
+char HOME[MAX_NAME+1];
+char USER[MAX_NAME+1];
+char PATH[MAX_NAME+1];
+
+
+
+char* getenvp(int env){
+
+
+	switch(env){
+	case ENV_PWD:
+		return PWD;
+	case ENV_PS1:
+		//printf("get env :  %s.\n", PS1);
+		return PS1;
+	case ENV_HOME:
+		return HOME;
+	case ENV_USER:
+		return USER;
+	case ENV_PATH:
+		printf("get HOME :  %s.\n", PATH);
+		return PATH;
+	}
+	return  "";
+
+}
 
 char* getenv(int env){
 

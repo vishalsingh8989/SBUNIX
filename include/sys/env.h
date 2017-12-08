@@ -11,11 +11,7 @@
 #define ENV_USER 	3
 #define ENV_PATH 	4
 
-char PWD[MAX_NAME+1];
-char PS1[MAX_NAME+1];
-char HOME[MAX_NAME+1];
-char USER[MAX_NAME+1];
-char PATH[MAX_NAME+1];
+
 
 
 
@@ -23,5 +19,7 @@ char PATH[MAX_NAME+1];
 void init_env();
 char* getenv(int env);
 void setenv(int env, char* env_val);
+
+char* getenvp(int env);
 
 #endif

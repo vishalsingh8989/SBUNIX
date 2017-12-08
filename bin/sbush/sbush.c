@@ -19,11 +19,15 @@ char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
 char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
 
+
+//env start
+
+
+
+//env end
 int   err;
 char* perr;
 
-extern char PWD[MAX_NAME+1];
-extern char PS1[MAX_NAME+1];
 char weekdayn[7][4] = {
     "Mon",
     "Tue",
@@ -100,15 +104,18 @@ int main(int argc, char* argv[], char* envp[]) {
 			break;
 		}
 
-        // With 3 users prompt is messed up. #weird.
-        // if(!strcmp("user1", username) && !strcmp("root", password)){
-        //     printf("Welcome user1 .\n");
-        //     setenv(ENV_HOME, "/usr/user1/");
-        //     chdir("/usr/user1/");
-        //     break;
-        // }
+        //With 3 users prompt is messed up. #weird.
+        if(!strcmp("user1", username) && !strcmp("root", password)){
+            printf("Welcome user1 .\n");
+            setenv(ENV_HOME, "/usr/user1/");
+            chdir("/usr/user1/");
+            break;
+        }
 
-		puts("Incorrect username or password.\n");
+        printf("username/password :  %s    ,  %s\n", username, password);
+
+		printf("Incorrect username or password.\nTry again.\n");
+        printf("Users : jvishal, aahangir, user1. Password is root.\n");
 
 
 	}
@@ -131,6 +138,7 @@ int main(int argc, char* argv[], char* envp[]) {
             setprompt();
 
             perr = gets(str_buf);
+            //printf("cmd  :  %s \n", str_buf);
             if(strlen(str_buf)==0){
             		continue;
             }else if(!strcmp("logout", str_buf)){
@@ -144,13 +152,13 @@ int main(int argc, char* argv[], char* envp[]) {
 				++idx;
 				tokens[idx] = strtok(NULL, " ");
 			}
-pid_t pid = fork();
-int status;
+            pid_t pid = fork();
+            int status;
 
             char *curr_path;
             memset(paths, '\0', sizeof(paths));
             strcpy(paths, getenv(ENV_PATH));
-
+            //printf("path : %s\n", paths);
             curr_path = strtok(paths, ":");
 
             int flag = 0;
@@ -204,7 +212,8 @@ int status;
                 ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
                     printf("Command not found!!\n");
-                }
+                    //exit(1);
+                    }
             }
             else {
                 puts("Executing waitpid()");

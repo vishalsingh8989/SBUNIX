@@ -120,6 +120,31 @@ void remove_from_queue(task_struct_t *task)
 
      prev_task->next_task = next_task;
      next_task->prev_task = prev_task;
+
+    if(task->parent != NULL) {
+       prev_task = task;
+       curr_task = task->parent;
+     }
+     else {
+       prev_task = task;
+       curr_task = next_task;
+     }
+
+     //print_task_list();
+     /*
+     kprintf("Removing T: %s:%d\n", task->pcmd_name, task->pid);
+     kprintf("NT: %s:%d, PT: %s:%d, CT: %s:%d\n", next_task->pcmd_name, next_task->pid,
+                                                  prev_task->pcmd_name, prev_task->pid,
+                                                  curr_task->pcmd_name, curr_task->pid);
+     */
+
+     if(curr_task != prev_task) {
+        set_tss_rsp((void *) curr_task->kern_stack);
+        kern_stack = curr_task->kern_stack;
+        write_cr3(curr_task->pml4);
+        context_switch(prev_task, curr_task);
+     }
+
 }
 
 void reap_zombies()

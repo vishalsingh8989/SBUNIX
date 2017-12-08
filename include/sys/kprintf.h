@@ -5,7 +5,7 @@
 
 #define EN_INFO  0
 #define EN_IMP   0
-#define EN_ERR   0
+#define EN_ERR   1
 #define EN_FATAL 1
 
 
@@ -49,4 +49,6 @@ void pnum (uint64_t value, int base);
 void kprintf(const char *fmt, ...);
 void klog(int severity, const char *fmt, ...);
 void reset_cord();
+void update_cursor(int x, int y);
+void move_cursor_up();
 #endif

@@ -56,7 +56,7 @@ int main(int argc, char **argv, char **envp)
 		//remove_extra(argv[1], strlen(argv[1]));
 		//getcwd(buff, NAME_MAX+1);
 		if(!strcmp(argv[1], ".")){
-			printf("Move dir\n");
+			//printf("Move dir\n");
 			return 0;
 		}else if( strlen(argv[1]) == 1 && argv[1][0] == '~'){
 			chdir(getenv(ENV_HOME));
@@ -86,7 +86,7 @@ int main(int argc, char **argv, char **envp)
 			char *par_dir= (char *)malloc(sizeof(char)*(NAME_MAX+1));
 			getcwd(buff, NAME_MAX+1);
 			dirname(buff, par_dir);
-			printf("Move to par dir :  %s \n", buff);
+			//printf("Move to par dir :  %s \n", buff);
 			chdir(par_dir);
 			return 0;
 		}else if(argv[1][0] == '/'){

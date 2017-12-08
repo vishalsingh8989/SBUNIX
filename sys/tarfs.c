@@ -14,7 +14,11 @@
 #include<logger.h>
 
 
-
+extern char PWD[MAX_NAME+1];
+extern char PS1[MAX_NAME+1];
+extern char HOME[MAX_NAME+1];
+extern char USER[MAX_NAME+1];
+extern char PATH[MAX_NAME+1];
 
 void test_tarfs_init(int upper){
 

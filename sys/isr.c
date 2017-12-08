@@ -368,7 +368,7 @@ void keyboard_int_handler() {
 
         //if(termidx  > prompt_len && c == BACKSPACE){
 
-        		upd_term_buf(c);
+        upd_term_buf(c);
         //}else if()
 
     }

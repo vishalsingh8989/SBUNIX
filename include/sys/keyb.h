@@ -38,11 +38,14 @@ char getchar() {
    static int caps_on = 0;
 
    int c = kread();
-   //kprintf("c: %d\n", c);
+   //kprintf("c: %p\n", c);
 
    char result;
 
    switch (c) {
+       case 0xC8:
+       case 0x48:
+            return 'A';
        case 0x2A:
        case 0x36:
            shift_pressed = 1;
@@ -71,7 +74,7 @@ char getchar() {
            result = (shift_pressed || caps_on) ? keymap[c]-32 : keymap[c];
            shift_pressed = 0;
    }
-
+   //kprintf("result : %c\n", result);
    if (c & 0x80)
        return 0;
    else

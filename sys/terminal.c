@@ -15,11 +15,14 @@ void upd_term_buf(char c)
 {
     //TODO: don't use static storage, use kmalloc for each process.
 
-    term_buf[term_idx % 64] = c;
 
-    if(c == BACKSPACE) {
+	term_buf[term_idx % 64] = c;
+    if(c == BACKSPACE ) {
     		//if(term_idx >= 0){
+				term_buf[term_idx % 64] = '\0';
     			term_idx--;
+				read_idx--;
+
     	//	}
        //kprintf("\nBInput Ready! in Buf : %s\n", term_buf);
     }
@@ -32,7 +35,8 @@ void upd_term_buf(char c)
        //kprintf("\nEInput Ready! in Buf : %s\n", term_buf);
     }
     else {
-       term_idx++;
+
+		term_idx++;
        //kprintf("\nNInput Ready! in Buf : %s\n", term_buf);
     }
 
