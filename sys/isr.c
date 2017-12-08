@@ -91,7 +91,7 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_getdents:
-            //klog(INFO, "Executing getdents Syscall\n");
+            klog(INFO, "Executing getdents Syscall\n");
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
@@ -134,13 +134,16 @@ uint64_t syscall_handler(cpu_regs* regs)
         		klog(INFO,"Executing __NR_syslog Syscall\n");
         		ret = syscall_ps();
         		return  ret;
+
         case __NR_gettimeofday:
         		klog(INFO,"Executing __NR_gettimeofday Syscall\n");
         		ret = sys_gettimeofday((struct tm*)arg1);
         		return ret;
+
         case __NR_clearterm:
-                klog(INFO,"Executing __NR_gettimeofday Syscall\n");
-                ret =  syscall_clear_term();
+            klog(INFO,"Executing __NR_gettimeofday Syscall\n");
+            ret =  syscall_clear_term();
+
         default:
             return -1;
     }
@@ -160,11 +163,13 @@ void init_syscall()
 
 void timer_int_handler() {
    static int i = 0, s = 0, m = 0, h = 0;
+   int sched = 0;
 
    i++;
    if(i == 18) {
        s++;
        i = 0;
+       sched = 1;
    }
    if(s == 60) {
        m++;
@@ -199,6 +204,10 @@ void timer_int_handler() {
    pnum_xy(total_pages, 10, RED, 60, STATUS);
 
    pic_send_eoi(0);
+
+   if(sched == 1) {
+     schedule();
+   }
 }
 
 void keyboard_int_handler() {
@@ -257,8 +266,6 @@ void page_fault_handler(cpu_regs *regs) {
         if(fault_addr >= vma->vm_start && fault_addr <= vma->vm_end) break;
         vma = vma->vm_next;
     }
-
-
 
     if(vma == NULL) {
         klog(IMP, "Growing Stack! -- Addr: %p\n", fault_addr);

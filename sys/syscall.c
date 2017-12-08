@@ -24,7 +24,6 @@ extern string users[5];
 void sys_exit()
 {
     remove_from_queue(curr_task);
-    //schedule();
 }
 
 uint64_t sys_fork()
@@ -35,7 +34,6 @@ uint64_t sys_fork()
     if(!stack) {
         kpanic("Not able to allocate stack!!");
     }
-
 
     child_task = (task_struct_t *) kmalloc(PAGE_SIZE);
     child_task->pml4 = (uint64_t) kmalloc(PAGE_SIZE) - KERNAL_BASE_ADDRESS;
@@ -231,6 +229,11 @@ uint64_t sys_write(uint64_t fd, uint64_t addr, uint64_t size)
 uint64_t sys_waitpid(uint64_t pid, uint64_t status, uint64_t options)
 {
     curr_task->state = TASK_WAITING;
+
+    if(zombie_task->pid == pid) return 0;
+
+    schedule();
+
     return 0;
 }
 
@@ -238,7 +241,7 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
 {
 
     char buf[512] = {0};
-    strcpy(buf ,PWD);
+    strcpy(buf, PWD);
     uint32_t child_fidx ;
     child_fidx = get_child(fd, dir->offset);
     if(child_fidx == -1){
@@ -272,7 +275,7 @@ uint64_t sys_pipe(uint64_t* fds)
 uint64_t sys_getcwd(char *buf, uint64_t size)
 {
   //klog(INFO,"Inside sys_getcwd\n");
-	strcpy(buf ,PWD);
+	strcpy(buf, PWD);
 	//klog(INFO,"cwd: %s\n", cwd);
 	klog(INFO,"Buff from getcwd      : %s\n", buf);
 	return 0;
@@ -295,7 +298,6 @@ uint64_t sys_access(char * pathname, uint64_t mode)
 			return 0;
 		}
 	}
-
 
 	//PWD = (char *)pathname;
 	klog(INFO,"Not found Change dir :  %s\n",pathname);

@@ -46,6 +46,7 @@ pid_t get_pid() {
 void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
 {
 
+    //print_task_list();
     set_tss_rsp((void *) next_task->kern_stack);
     kern_stack = next_task->kern_stack;
 
@@ -54,6 +55,7 @@ void context_switch(task_struct_t *prev_task, task_struct_t *next_task)
               next_task->pcmd_name, next_task->rip, next_task->pid, next_task->pml4, next_task->stack_p);
 
     __asm__ __volatile__ (
+      "cli;"
       "movq $1f, %0;"
       :"=g"(prev_task->rip)
     );
@@ -111,11 +113,15 @@ void remove_from_queue(task_struct_t *task)
 {
      task->state = TASK_ZOMBIE;
      klog(IMP, "Adding %s to zombie queue\n", curr_task->pcmd_name);
-     zombie_task = task; //TODO: used add_to_zombie_queue
-     //add_to_zombie_queue(curr_task);
+
 
      task_struct_t *prev_task = task->prev_task;
      task_struct_t *next_task = task->next_task;
+
+     task->prev_task = NULL;
+     task->next_task = zombie_task;
+     zombie_task = task; //TODO: used add_to_zombie_queue
+     //add_to_zombie_queue(curr_task);
 
      prev_task->next_task = next_task;
      next_task->prev_task = prev_task;
@@ -129,8 +135,20 @@ void remove_from_queue(task_struct_t *task)
        curr_task = next_task;
      }
 
-     write_cr3(curr_task->pml4);
-     context_switch(prev_task, curr_task);
+     //print_task_list();
+     /*
+     kprintf("Removing T: %s:%d\n", task->pcmd_name, task->pid);
+     kprintf("NT: %s:%d, PT: %s:%d, CT: %s:%d\n", next_task->pcmd_name, next_task->pid,
+                                                  prev_task->pcmd_name, prev_task->pid,
+                                                  curr_task->pcmd_name, curr_task->pid);
+     */
+
+     if(curr_task != prev_task) {
+        set_tss_rsp((void *) curr_task->kern_stack);
+        kern_stack = curr_task->kern_stack;
+        write_cr3(curr_task->pml4);
+        context_switch(prev_task, curr_task);
+     }
 }
 
 void reap_zombies()
@@ -143,7 +161,7 @@ void reap_zombies()
       zombie_task = zombie_task->next_task;
       klog(IMP, "Reaper is freeing memory of %s\n", temp->pcmd_name);
       delete_task(temp);
-      //reap_zombies();
+      reap_zombies();
     }
 
 }
@@ -151,6 +169,15 @@ void reap_zombies()
 //TODO: replace this with better schedular
 task_struct_t *get_next_task()
 {
+    if(curr_task->next_task == NULL && curr_task->prev_task == NULL) {
+      print_task_list();
+      kpanic("Both next and prev tasks are NULL!!");
+    }
+    else if (curr_task->next_task == NULL) {
+      print_task_list();
+      kpanic("Next task is NULL!!");
+    }
+
     return curr_task->next_task;
 }
 
@@ -171,8 +198,10 @@ void schedule()
 void idle_proc()
 {
 
+    zombie_task = NULL;
+
     while(1) {
-        klog(IMP, "--Inside IDLE Process--\n");
+        //klog(IMP, "--Inside IDLE Process--\n");
         if (zombie_task != NULL) {
            reap_zombies(); //Not safe.
         }
@@ -191,7 +220,7 @@ void switch_to_userspace(task_struct_t *task)
     kern_stack = task->kern_stack;
 
     __asm__ __volatile__(
-            "sti;"
+            "cli;"
             "movq %0, %%cr3;"
             "movq $0x23, %%rax;"
 
@@ -243,7 +272,6 @@ task_struct_t *init_proc(const char *name, int type)
     if(!stack) {
         kpanic("Not able to allocate stack for init\n");
     }
-
 
     get_system_uptime(init_task->start_time);
     init_task->state     = TASK_RUNNABLE;
@@ -319,8 +347,8 @@ void delete_task(task_struct_t *task)
     if(task->kern_stack != 0) kfree((uint64_t *) align_down(task->kern_stack));
 
     //Remove page tables.
-    //klog(INFO, "Freeing page tables for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
-    //if(task->pml4 != 0) delete_ptables(task->pml4); //This throws error, Need to debug this.
+    klog(INFO, "Freeing page tables for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);
+    if(task->pml4 != 0) delete_ptables(task->pml4); //This throws error, Need to debug this.
 
     //Remove task_struct.
     klog(INFO, "Freeing task structure for task %s, Curr Task: %s\n", task->pcmd_name, curr_task->pcmd_name);

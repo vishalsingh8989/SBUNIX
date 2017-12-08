@@ -32,7 +32,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe 
-00000000000i[MEM0 ] allocated memory at 0x7fe14ca3b010. after alignment, vector=0x7fe14ca3c000
+00000000000i[MEM0 ] allocated memory at 0x7fc199daf010. after alignment, vector=0x7fc199db0000
 00000000000i[MEM0 ] 512.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=512
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/home/aahangar/my_soft/share/bochs/BIOS-bochs-latest')
@@ -42,7 +42,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Sun Dec  3 17:50:07 2017 (time0=1512341407)
+00000000000i[CMOS ] Setting initial clock to: Thu Dec  7 14:18:59 2017 (time0=1512674339)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -186,197 +186,191 @@
 00001529815i[BXVGA] VBE known Display Interface b0c5
 00001532740i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
 00001872352i[BIOS ] ata0-0: PCHS=130/16/63 translation=none LCHS=130/16/63
-00002209166i[TGUI ] ips = 2.209M
 00005749558i[BIOS ] IDE time out
 00017824976i[BIOS ] Booting from 0000:7c00
 00017988330i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x100
 00017988368i[MEM0 ] allocate_block: block=0x3 used 0x4 of 0x100
 00018810123i[MEM0 ] allocate_block: block=0x2 used 0x5 of 0x100
-00033177850i[MEM0 ] allocate_block: block=0x25 used 0x6 of 0x100
-00040992631i[MEM0 ] allocate_block: block=0x4 used 0x7 of 0x100
-00041810832i[MEM0 ] allocate_block: block=0x5 used 0x8 of 0x100
-00042629126i[MEM0 ] allocate_block: block=0x6 used 0x9 of 0x100
-00043447300i[MEM0 ] allocate_block: block=0x7 used 0xa of 0x100
-00044265501i[MEM0 ] allocate_block: block=0x8 used 0xb of 0x100
-00044772359i[TGUI ] ips = 42.563M
-00045083702i[MEM0 ] allocate_block: block=0x9 used 0xc of 0x100
-00045901876i[MEM0 ] allocate_block: block=0xa used 0xd of 0x100
-00046754908i[MEM0 ] allocate_block: block=0xb used 0xe of 0x100
-00047573109i[MEM0 ] allocate_block: block=0xc used 0xf of 0x100
-00048391403i[MEM0 ] allocate_block: block=0xd used 0x10 of 0x100
-00049209577i[MEM0 ] allocate_block: block=0xe used 0x11 of 0x100
-00050027871i[MEM0 ] allocate_block: block=0xf used 0x12 of 0x100
-00050846072i[MEM0 ] allocate_block: block=0x10 used 0x13 of 0x100
-00051664273i[MEM0 ] allocate_block: block=0x11 used 0x14 of 0x100
-00052482447i[MEM0 ] allocate_block: block=0x12 used 0x15 of 0x100
-00053335386i[MEM0 ] allocate_block: block=0x13 used 0x16 of 0x100
-00054153680i[MEM0 ] allocate_block: block=0x14 used 0x17 of 0x100
-00054971881i[MEM0 ] allocate_block: block=0x15 used 0x18 of 0x100
-00055573351i[TGUI ] ips = 10.801M
-00055790055i[MEM0 ] allocate_block: block=0x16 used 0x19 of 0x100
-00056608256i[MEM0 ] allocate_block: block=0x17 used 0x1a of 0x100
-00057426457i[MEM0 ] allocate_block: block=0x18 used 0x1b of 0x100
-00058244658i[MEM0 ] allocate_block: block=0x19 used 0x1c of 0x100
-00059062832i[MEM0 ] allocate_block: block=0x1a used 0x1d of 0x100
-00059915864i[MEM0 ] allocate_block: block=0x1b used 0x1e of 0x100
-00060734065i[MEM0 ] allocate_block: block=0x1c used 0x1f of 0x100
-00061552266i[MEM0 ] allocate_block: block=0x1d used 0x20 of 0x100
-00062370440i[MEM0 ] allocate_block: block=0x1e used 0x21 of 0x100
-00063188641i[MEM0 ] allocate_block: block=0x1f used 0x22 of 0x100
-00064006842i[MEM0 ] allocate_block: block=0x20 used 0x23 of 0x100
-00064825136i[MEM0 ] allocate_block: block=0x21 used 0x24 of 0x100
-00065643310i[MEM0 ] allocate_block: block=0x22 used 0x25 of 0x100
-00066496249i[MEM0 ] allocate_block: block=0x23 used 0x26 of 0x100
-00067314450i[MEM0 ] allocate_block: block=0x24 used 0x27 of 0x100
-00068402356i[MEM0 ] allocate_block: block=0x1de used 0x28 of 0x100
-00068630926i[MEM0 ] allocate_block: block=0x1df used 0x29 of 0x100
-00068893070i[MEM0 ] allocate_block: block=0x1e0 used 0x2a of 0x100
-00069155214i[MEM0 ] allocate_block: block=0x1e1 used 0x2b of 0x100
-00069417358i[MEM0 ] allocate_block: block=0x1e2 used 0x2c of 0x100
-00069679502i[MEM0 ] allocate_block: block=0x1e3 used 0x2d of 0x100
-00069941646i[MEM0 ] allocate_block: block=0x1e4 used 0x2e of 0x100
-00070203790i[MEM0 ] allocate_block: block=0x1e5 used 0x2f of 0x100
-00070267717i[TGUI ] ips = 14.694M
-00070465934i[MEM0 ] allocate_block: block=0x1e6 used 0x30 of 0x100
-00070728078i[MEM0 ] allocate_block: block=0x1e7 used 0x31 of 0x100
-00070990222i[MEM0 ] allocate_block: block=0x1e8 used 0x32 of 0x100
-00071252366i[MEM0 ] allocate_block: block=0x1e9 used 0x33 of 0x100
-00071514510i[MEM0 ] allocate_block: block=0x1ea used 0x34 of 0x100
-00071776654i[MEM0 ] allocate_block: block=0x1eb used 0x35 of 0x100
-00072038798i[MEM0 ] allocate_block: block=0x1ec used 0x36 of 0x100
-00072300942i[MEM0 ] allocate_block: block=0x1ed used 0x37 of 0x100
-00072563086i[MEM0 ] allocate_block: block=0x1ee used 0x38 of 0x100
-00072825230i[MEM0 ] allocate_block: block=0x1ef used 0x39 of 0x100
-00073087374i[MEM0 ] allocate_block: block=0x1f0 used 0x3a of 0x100
-00073349518i[MEM0 ] allocate_block: block=0x1f1 used 0x3b of 0x100
-00073611662i[MEM0 ] allocate_block: block=0x1f2 used 0x3c of 0x100
-00073873806i[MEM0 ] allocate_block: block=0x1f3 used 0x3d of 0x100
-00074135950i[MEM0 ] allocate_block: block=0x1f4 used 0x3e of 0x100
-00074398094i[MEM0 ] allocate_block: block=0x1f5 used 0x3f of 0x100
-00074660238i[MEM0 ] allocate_block: block=0x1f6 used 0x40 of 0x100
-00074922382i[MEM0 ] allocate_block: block=0x1f7 used 0x41 of 0x100
-00075184526i[MEM0 ] allocate_block: block=0x1f8 used 0x42 of 0x100
-00075446670i[MEM0 ] allocate_block: block=0x1f9 used 0x43 of 0x100
-00075708814i[MEM0 ] allocate_block: block=0x1fa used 0x44 of 0x100
-00075970958i[MEM0 ] allocate_block: block=0x1fb used 0x45 of 0x100
-00076233102i[MEM0 ] allocate_block: block=0x1fc used 0x46 of 0x100
-00076495246i[MEM0 ] allocate_block: block=0x1fd used 0x47 of 0x100
-00076757390i[MEM0 ] allocate_block: block=0x1fe used 0x48 of 0x100
-00078258305i[BIOS ] int13_cdrom: function 08, unmapped device for ELDL=e0
-00078261965i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
-00078265622i[BIOS ] int13_cdrom: function 15, unmapped device for ELDL=e0
-00078269281i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
-00078272943i[BIOS ] int13_cdrom: function 41, unmapped device for ELDL=e0
-00078276602i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
-00079307342i[MEM0 ] allocate_block: block=0x1db used 0x49 of 0x100
-00091618565i[TGUI ] ips = 21.351M
-00118920474i[MEM0 ] allocate_block: block=0x1da used 0x4a of 0x100
-00118920474i[MEM0 ] allocate_block: block=0x1da used 0x4a of 0x100
-00118920474i[TGUI ] ips = 27.302M
-00163140230i[TGUI ] ips = 44.220M
-00202644534i[MEM0 ] allocate_block: block=0x1d9 used 0x4b of 0x100
-00206509140i[TGUI ] ips = 43.369M
-00250278428i[TGUI ] ips = 43.769M
-00294013771i[TGUI ] ips = 43.735M
-00336329573i[TGUI ] ips = 42.316M
-00379095970i[TGUI ] ips = 42.766M
-00421684738i[TGUI ] ips = 42.589M
-00466662132i[TGUI ] ips = 44.977M
-00511765453i[TGUI ] ips = 45.103M
-00555835168i[TGUI ] ips = 44.070M
-00600709607i[TGUI ] ips = 44.874M
-00646444980i[TGUI ] ips = 45.735M
-00686882390i[TGUI ] ips = 40.437M
-00729529576i[TGUI ] ips = 42.647M
-00770561030i[TGUI ] ips = 41.031M
-00809670690i[TGUI ] ips = 39.110M
-00855926517i[TGUI ] ips = 46.256M
-00900523172i[TGUI ] ips = 44.597M
-00942681790i[TGUI ] ips = 42.159M
-00984596485i[TGUI ] ips = 41.915M
-01004857326i[CPU0 ] CPU is in long mode (active)
-01004857326i[CPU0 ] CS.mode = 64 bit
-01004857326i[CPU0 ] SS.mode = 64 bit
-01004857326i[CPU0 ] EFER   = 0x00000501
-01004857326i[CPU0 ] | RAX=ffffffff9da4c000  RBX=ffffffff8021e278
-01004857326i[CPU0 ] | RCX=ffffffff804a0cb2  RDX=000000001da4a000
-01004857326i[CPU0 ] | RSP=ffffffff9da4dfc8  RBP=ffffffff9da50000
-01004857326i[CPU0 ] | RSI=ffffffff80206be0  RDI=000000000001d93f
-01004857326i[CPU0 ] |  R8=00000000000003f7   R9=000000001d927000
-01004857326i[CPU0 ] | R10=0000000000000001  R11=0000000000000002
-01004857326i[CPU0 ] | R12=0000000000000000  R13=ffffffff9d93f000
-01004857326i[CPU0 ] | R14=ffffffff8021e278  R15=0000000000602c20
-01004857326i[CPU0 ] | IOPL=0 id vip vif ac vm RF nt of df if tf sf zf af PF cf
-01004857326i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-01004857326i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 0
-01004857326i[CPU0 ] |  DS:0000( 0002| 0|  0) 00000000 00000000 0 0
-01004857326i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-01004857326i[CPU0 ] |  ES:0000( 0002| 0|  0) 00000000 00000000 0 0
-01004857326i[CPU0 ] |  FS:0000( 0002| 0|  0) 00000000 00000000 0 0
-01004857326i[CPU0 ] |  GS:0000( 0002| 0|  0) 00000000 00000000 0 0
-01004857326i[CPU0 ] |  MSR_FS_BASE:0000000000000000
-01004857326i[CPU0 ] |  MSR_GS_BASE:0000000000000000
-01004857326i[CPU0 ] | RIP=ffffffff8020438f (ffffffff8020438f)
-01004857326i[CPU0 ] | CR0=0xe0000011 CR2=0xffffffff8020a0e0
-01004857326i[CPU0 ] | CR3=0x1da4a000 CR4=0x000000a0
-01004857326e[CPU0 ] exception(): 3rd (14) exception with no resolution, shutdown status is 00h, resetting
-01004857326i[SYS  ] bx_pc_system_c::Reset(HARDWARE) called
-01004857326i[CPU0 ] cpu hardware reset
-01004857326i[APIC0] allocate APIC id=0 (MMIO enabled) to 0x00000000fee00000
-01004857326i[CPU0 ] CPU[0] is the bootstrap processor
-01004857326i[CPU0 ] CPUID[0x00000000]: 00000005 68747541 444d4163 69746e65
-01004857326i[CPU0 ] CPUID[0x00000001]: 00000633 00010800 00002028 17cbfbff
-01004857326i[CPU0 ] CPUID[0x00000002]: 00000000 00000000 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x00000003]: 00000000 00000000 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x00000004]: 00000000 00000000 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x00000005]: 00000040 00000040 00000003 00000020
-01004857326i[CPU0 ] CPUID[0x80000000]: 80000008 68747541 444d4163 69746e65
-01004857326i[CPU0 ] CPUID[0x80000001]: 00000633 00000000 00000101 ebd3f3ff
-01004857326i[CPU0 ] CPUID[0x80000002]: 20444d41 6c687441 74286e6f 7020296d
-01004857326i[CPU0 ] CPUID[0x80000003]: 65636f72 726f7373 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x80000004]: 00000000 00000000 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x80000005]: 01ff01ff 01ff01ff 40020140 40020140
-01004857326i[CPU0 ] CPUID[0x80000006]: 00000000 42004200 02008140 00000000
-01004857326i[CPU0 ] CPUID[0x80000007]: 00000000 00000000 00000000 00000000
-01004857326i[CPU0 ] CPUID[0x80000008]: 00003028 00000000 00000000 00000000
-01004857326i[     ] reset of 'pci' plugin device by virtual method
-01004857326i[     ] reset of 'pci2isa' plugin device by virtual method
-01004857326i[     ] reset of 'cmos' plugin device by virtual method
-01004857326i[     ] reset of 'dma' plugin device by virtual method
-01004857326i[     ] reset of 'pic' plugin device by virtual method
-01004857326i[     ] reset of 'pit' plugin device by virtual method
-01004857326i[     ] reset of 'floppy' plugin device by virtual method
-01004857326i[     ] reset of 'vga' plugin device by virtual method
-01004857326i[     ] reset of 'acpi' plugin device by virtual method
-01004857326i[     ] reset of 'ioapic' plugin device by virtual method
-01004857326i[     ] reset of 'keyboard' plugin device by virtual method
-01004857326i[     ] reset of 'harddrv' plugin device by virtual method
-01004857326i[     ] reset of 'pci_ide' plugin device by virtual method
-01004857326i[     ] reset of 'unmapped' plugin device by virtual method
-01004857326i[     ] reset of 'biosdev' plugin device by virtual method
-01004857326i[     ] reset of 'speaker' plugin device by virtual method
-01004857326i[     ] reset of 'extfpuirq' plugin device by virtual method
-01004857326i[     ] reset of 'parallel' plugin device by virtual method
-01004857326i[     ] reset of 'serial' plugin device by virtual method
-01004857326i[     ] reset of 'iodebug' plugin device by virtual method
-01004857327i[TGUI ] ips = 20.261M
-01004857327i[     ] dbg: Quit
-01004857327i[CPU0 ] CPU is in real mode (active)
-01004857327i[CPU0 ] CS.mode = 16 bit
-01004857327i[CPU0 ] SS.mode = 16 bit
-01004857327i[CPU0 ] EFER   = 0x00000000
-01004857327i[CPU0 ] | EAX=00000000  EBX=00000000  ECX=00000000  EDX=00000000
-01004857327i[CPU0 ] | ESP=00000000  EBP=00000000  ESI=00000000  EDI=00000000
-01004857327i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf zf af pf cf
-01004857327i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-01004857327i[CPU0 ] |  CS:f000( 1e00| 0|  0) ffff0000 0000ffff 0 0
-01004857327i[CPU0 ] |  DS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-01004857327i[CPU0 ] |  SS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-01004857327i[CPU0 ] |  ES:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-01004857327i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-01004857327i[CPU0 ] |  GS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-01004857327i[CPU0 ] | EIP=0000fff0 (0000fff0)
-01004857327i[CPU0 ] | CR0=0x60000010 CR2=0x00000000
-01004857327i[CPU0 ] | CR3=0x00000000 CR4=0x00000000
-01004857327i[CMOS ] Last time is 1512341658 (Sun Dec  3 17:54:18 2017)
-01004857327i[CTRL ] quit_sim called with exit code 0
+00032972440i[TGUI ] ips = 32.972M
+00033177741i[MEM0 ] allocate_block: block=0x25 used 0x6 of 0x100
+00040966900i[MEM0 ] allocate_block: block=0x4 used 0x7 of 0x100
+00041785101i[MEM0 ] allocate_block: block=0x5 used 0x8 of 0x100
+00042603275i[MEM0 ] allocate_block: block=0x6 used 0x9 of 0x100
+00043421476i[MEM0 ] allocate_block: block=0x7 used 0xa of 0x100
+00044239677i[MEM0 ] allocate_block: block=0x8 used 0xb of 0x100
+00045057878i[MEM0 ] allocate_block: block=0x9 used 0xc of 0x100
+00045876052i[MEM0 ] allocate_block: block=0xa used 0xd of 0x100
+00046729084i[MEM0 ] allocate_block: block=0xb used 0xe of 0x100
+00047547285i[MEM0 ] allocate_block: block=0xc used 0xf of 0x100
+00048365486i[MEM0 ] allocate_block: block=0xd used 0x10 of 0x100
+00049183660i[MEM0 ] allocate_block: block=0xe used 0x11 of 0x100
+00050001861i[MEM0 ] allocate_block: block=0xf used 0x12 of 0x100
+00050820062i[MEM0 ] allocate_block: block=0x10 used 0x13 of 0x100
+00051638356i[MEM0 ] allocate_block: block=0x11 used 0x14 of 0x100
+00052456530i[MEM0 ] allocate_block: block=0x12 used 0x15 of 0x100
+00053309469i[MEM0 ] allocate_block: block=0x13 used 0x16 of 0x100
+00054127670i[MEM0 ] allocate_block: block=0x14 used 0x17 of 0x100
+00054945871i[MEM0 ] allocate_block: block=0x15 used 0x18 of 0x100
+00055764045i[MEM0 ] allocate_block: block=0x16 used 0x19 of 0x100
+00056582246i[MEM0 ] allocate_block: block=0x17 used 0x1a of 0x100
+00056759034i[TGUI ] ips = 23.787M
+00057400540i[MEM0 ] allocate_block: block=0x18 used 0x1b of 0x100
+00058218714i[MEM0 ] allocate_block: block=0x19 used 0x1c of 0x100
+00059036915i[MEM0 ] allocate_block: block=0x1a used 0x1d of 0x100
+00059889854i[MEM0 ] allocate_block: block=0x1b used 0x1e of 0x100
+00060708055i[MEM0 ] allocate_block: block=0x1c used 0x1f of 0x100
+00061526349i[MEM0 ] allocate_block: block=0x1d used 0x20 of 0x100
+00062344523i[MEM0 ] allocate_block: block=0x1e used 0x21 of 0x100
+00063162817i[MEM0 ] allocate_block: block=0x1f used 0x22 of 0x100
+00063981018i[MEM0 ] allocate_block: block=0x20 used 0x23 of 0x100
+00064799285i[MEM0 ] allocate_block: block=0x21 used 0x24 of 0x100
+00065617486i[MEM0 ] allocate_block: block=0x22 used 0x25 of 0x100
+00066470425i[MEM0 ] allocate_block: block=0x23 used 0x26 of 0x100
+00067288626i[MEM0 ] allocate_block: block=0x24 used 0x27 of 0x100
+00068325115i[MEM0 ] allocate_block: block=0x1de used 0x28 of 0x100
+00068537301i[MEM0 ] allocate_block: block=0x1df used 0x29 of 0x100
+00068799445i[MEM0 ] allocate_block: block=0x1e0 used 0x2a of 0x100
+00069061589i[MEM0 ] allocate_block: block=0x1e1 used 0x2b of 0x100
+00069323733i[MEM0 ] allocate_block: block=0x1e2 used 0x2c of 0x100
+00069585877i[MEM0 ] allocate_block: block=0x1e3 used 0x2d of 0x100
+00069848021i[MEM0 ] allocate_block: block=0x1e4 used 0x2e of 0x100
+00070110165i[MEM0 ] allocate_block: block=0x1e5 used 0x2f of 0x100
+00070372309i[MEM0 ] allocate_block: block=0x1e6 used 0x30 of 0x100
+00070634453i[MEM0 ] allocate_block: block=0x1e7 used 0x31 of 0x100
+00070896597i[MEM0 ] allocate_block: block=0x1e8 used 0x32 of 0x100
+00071158741i[MEM0 ] allocate_block: block=0x1e9 used 0x33 of 0x100
+00071420885i[MEM0 ] allocate_block: block=0x1ea used 0x34 of 0x100
+00071683029i[MEM0 ] allocate_block: block=0x1eb used 0x35 of 0x100
+00071945173i[MEM0 ] allocate_block: block=0x1ec used 0x36 of 0x100
+00072207317i[MEM0 ] allocate_block: block=0x1ed used 0x37 of 0x100
+00072469461i[MEM0 ] allocate_block: block=0x1ee used 0x38 of 0x100
+00072731605i[MEM0 ] allocate_block: block=0x1ef used 0x39 of 0x100
+00072993749i[MEM0 ] allocate_block: block=0x1f0 used 0x3a of 0x100
+00073255893i[MEM0 ] allocate_block: block=0x1f1 used 0x3b of 0x100
+00073518037i[MEM0 ] allocate_block: block=0x1f2 used 0x3c of 0x100
+00073650275i[TGUI ] ips = 16.891M
+00073780181i[MEM0 ] allocate_block: block=0x1f3 used 0x3d of 0x100
+00074042325i[MEM0 ] allocate_block: block=0x1f4 used 0x3e of 0x100
+00074304469i[MEM0 ] allocate_block: block=0x1f5 used 0x3f of 0x100
+00074566613i[MEM0 ] allocate_block: block=0x1f6 used 0x40 of 0x100
+00074828757i[MEM0 ] allocate_block: block=0x1f7 used 0x41 of 0x100
+00075090901i[MEM0 ] allocate_block: block=0x1f8 used 0x42 of 0x100
+00075353045i[MEM0 ] allocate_block: block=0x1f9 used 0x43 of 0x100
+00075615189i[MEM0 ] allocate_block: block=0x1fa used 0x44 of 0x100
+00075877333i[MEM0 ] allocate_block: block=0x1fb used 0x45 of 0x100
+00076139477i[MEM0 ] allocate_block: block=0x1fc used 0x46 of 0x100
+00076401621i[MEM0 ] allocate_block: block=0x1fd used 0x47 of 0x100
+00076663765i[MEM0 ] allocate_block: block=0x1fe used 0x48 of 0x100
+00078164555i[BIOS ] int13_cdrom: function 08, unmapped device for ELDL=e0
+00078168215i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
+00078171872i[BIOS ] int13_cdrom: function 15, unmapped device for ELDL=e0
+00078175531i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
+00078179193i[BIOS ] int13_cdrom: function 41, unmapped device for ELDL=e0
+00078182852i[BIOS ] int13_cdrom: function 01, unmapped device for ELDL=e0
+00079213592i[MEM0 ] allocate_block: block=0x1db used 0x49 of 0x100
+00104329850i[TGUI ] ips = 30.680M
+00117200632i[MEM0 ] allocate_block: block=0x1dd used 0x4a of 0x100
+00145645597i[TGUI ] ips = 41.316M
+00183397325i[TGUI ] ips = 37.752M
+00225070383i[TGUI ] ips = 41.673M
+00248290605i[MEM0 ] allocate_block: block=0x1dc used 0x4b of 0x100
+00264136363i[TGUI ] ips = 39.066M
+00304660896i[TGUI ] ips = 40.525M
+00344891762i[TGUI ] ips = 40.231M
+00386276637i[TGUI ] ips = 41.385M
+00427623105i[TGUI ] ips = 41.346M
+00468423330i[TGUI ] ips = 40.800M
+00511768015i[TGUI ] ips = 43.345M
+00550856488i[TGUI ] ips = 39.088M
+00591017782i[TGUI ] ips = 40.161M
+00629978797i[TGUI ] ips = 38.961M
+00671975435i[TGUI ] ips = 41.997M
+00712900703i[TGUI ] ips = 40.925M
+00748287918i[TGUI ] ips = 35.387M
+00784891927i[TGUI ] ips = 36.604M
+00794028045i[CPU0 ] CPU is in long mode (active)
+00794028045i[CPU0 ] CS.mode = 64 bit
+00794028045i[CPU0 ] SS.mode = 64 bit
+00794028045i[CPU0 ] EFER   = 0x00000501
+00794028045i[CPU0 ] | RAX=0000000000000001  RBX=0000000000000000
+00794028045i[CPU0 ] | RCX=0000000000000000  RDX=000000000000000e
+00794028045i[CPU0 ] | RSP=ffffffff9dd19000  RBP=0000000000000021
+00794028045i[CPU0 ] | RSI=ffffffff802066f0  RDI=0000000000000001
+00794028045i[CPU0 ] |  R8=0000000000000021   R9=0000000000000000
+00794028045i[CPU0 ] | R10=0000000000000001  R11=0000000000000012
+00794028045i[CPU0 ] | R12=0000000000000021  R13=0000000000000000
+00794028045i[CPU0 ] | R14=0000000000000000  R15=0000000000000000
+00794028045i[CPU0 ] | IOPL=0 id vip vif ac vm RF nt of df if tf sf ZF af PF cf
+00794028045i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+00794028045i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  DS:0000( 0002| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  ES:0000( 0002| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  FS:0000( 0002| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  GS:0000( 0002| 0|  0) 00000000 00000000 0 0
+00794028045i[CPU0 ] |  MSR_FS_BASE:0000000000000000
+00794028045i[CPU0 ] |  MSR_GS_BASE:0000000000000000
+00794028045i[CPU0 ] | RIP=ffffffff802059e0 (ffffffff802059e0)
+00794028045i[CPU0 ] | CR0=0xe0000011 CR2=0xffffffff9dd18ff8
+00794028045i[CPU0 ] | CR3=0x1dd19000 CR4=0x000000a0
+00794028045e[CPU0 ] exception(): 3rd (14) exception with no resolution, shutdown status is 00h, resetting
+00794028045i[SYS  ] bx_pc_system_c::Reset(HARDWARE) called
+00794028045i[CPU0 ] cpu hardware reset
+00794028045i[APIC0] allocate APIC id=0 (MMIO enabled) to 0x00000000fee00000
+00794028045i[CPU0 ] CPU[0] is the bootstrap processor
+00794028045i[CPU0 ] CPUID[0x00000000]: 00000005 68747541 444d4163 69746e65
+00794028045i[CPU0 ] CPUID[0x00000001]: 00000633 00010800 00002028 17cbfbff
+00794028045i[CPU0 ] CPUID[0x00000002]: 00000000 00000000 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x00000003]: 00000000 00000000 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x00000004]: 00000000 00000000 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x00000005]: 00000040 00000040 00000003 00000020
+00794028045i[CPU0 ] CPUID[0x80000000]: 80000008 68747541 444d4163 69746e65
+00794028045i[CPU0 ] CPUID[0x80000001]: 00000633 00000000 00000101 ebd3f3ff
+00794028045i[CPU0 ] CPUID[0x80000002]: 20444d41 6c687441 74286e6f 7020296d
+00794028045i[CPU0 ] CPUID[0x80000003]: 65636f72 726f7373 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x80000004]: 00000000 00000000 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x80000005]: 01ff01ff 01ff01ff 40020140 40020140
+00794028045i[CPU0 ] CPUID[0x80000006]: 00000000 42004200 02008140 00000000
+00794028045i[CPU0 ] CPUID[0x80000007]: 00000000 00000000 00000000 00000000
+00794028045i[CPU0 ] CPUID[0x80000008]: 00003028 00000000 00000000 00000000
+00794028045i[     ] reset of 'pci' plugin device by virtual method
+00794028045i[     ] reset of 'pci2isa' plugin device by virtual method
+00794028045i[     ] reset of 'cmos' plugin device by virtual method
+00794028045i[     ] reset of 'dma' plugin device by virtual method
+00794028045i[     ] reset of 'pic' plugin device by virtual method
+00794028045i[     ] reset of 'pit' plugin device by virtual method
+00794028045i[     ] reset of 'floppy' plugin device by virtual method
+00794028045i[     ] reset of 'vga' plugin device by virtual method
+00794028045i[     ] reset of 'acpi' plugin device by virtual method
+00794028045i[     ] reset of 'ioapic' plugin device by virtual method
+00794028045i[     ] reset of 'keyboard' plugin device by virtual method
+00794028045i[     ] reset of 'harddrv' plugin device by virtual method
+00794028045i[     ] reset of 'pci_ide' plugin device by virtual method
+00794028045i[     ] reset of 'unmapped' plugin device by virtual method
+00794028045i[     ] reset of 'biosdev' plugin device by virtual method
+00794028045i[     ] reset of 'speaker' plugin device by virtual method
+00794028045i[     ] reset of 'extfpuirq' plugin device by virtual method
+00794028045i[     ] reset of 'parallel' plugin device by virtual method
+00794028045i[     ] reset of 'serial' plugin device by virtual method
+00794028045i[     ] reset of 'iodebug' plugin device by virtual method
+00794028046i[TGUI ] ips = 9.136M
+00794028046i[     ] dbg: Quit
+00794028046i[CPU0 ] CPU is in real mode (active)
+00794028046i[CPU0 ] CS.mode = 16 bit
+00794028046i[CPU0 ] SS.mode = 16 bit
+00794028046i[CPU0 ] EFER   = 0x00000000
+00794028046i[CPU0 ] | EAX=00000000  EBX=00000000  ECX=00000000  EDX=00000000
+00794028046i[CPU0 ] | ESP=00000000  EBP=00000000  ESI=00000000  EDI=00000000
+00794028046i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf zf af pf cf
+00794028046i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+00794028046i[CPU0 ] |  CS:f000( 1e00| 0|  0) ffff0000 0000ffff 0 0
+00794028046i[CPU0 ] |  DS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00794028046i[CPU0 ] |  SS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00794028046i[CPU0 ] |  ES:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00794028046i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00794028046i[CPU0 ] |  GS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00794028046i[CPU0 ] | EIP=0000fff0 (0000fff0)
+00794028046i[CPU0 ] | CR0=0x60000010 CR2=0x00000000
+00794028046i[CPU0 ] | CR3=0x00000000 CR4=0x00000000
+00794028046i[CMOS ] Last time is 1512674537 (Thu Dec  7 14:22:17 2017)
+00794028046i[CTRL ] quit_sim called with exit code 0
