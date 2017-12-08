@@ -10,23 +10,50 @@ void sleep(int s){
 
 	}
 }
-/*
-static void memcpy(void* dest, void* src, int count)
-{
-    uint8_t * dest_t = (uint8_t *) dest;
-    uint8_t * src_t = (uint8_t *) src;
+char* strtok(char * str1, const char * str2) {
+   static int pos = 0;
+   static char *str;
+   int start = pos;
 
-    for(int i = 0; i < count; i++)
-        *dest_t++ = *src_t++;
+   //printf("str : %s\n", str1);
+   if (str1 != NULL) {
+      str = str1;
+      pos = 0;
+      start = 0;
+   }
+
+   if (str == NULL) return NULL;
+
+   while(str[pos] != '\0' && str[pos] != EOF) {
+      if (str[pos] == str2[0]) { //TODO: add support for more delimiters.
+          str[pos] = '\0';
+          if (start == pos) { //Skipping the initial delimiters.
+             start++;
+             pos++;
+          }
+          else if (str[start] != '\0') {
+             pos++;
+             //puts("RETURN  not NULL ");
+             //puts(&str[start]);
+             //puts("\n");
+             return &str[start];
+          }
+      }
+      pos++;
+   }
+
+   if (str[start] == '\0') {
+	  //puts("RETURN NULL\n");
+      return NULL;
+   }
+   else{
+	   //puts("RETURN  not NULL ");
+	   //puts(&str[start]);
+	   //puts("\n");
+      return &str[start];
+   }
 }
 
-static void memset(void* dest, int value, int count)
-{
-    uint8_t *dest_t = (uint8_t *) dest;
-    for(int i = 0; i < count; i++)
-        *dest_t++ = value;
-}
-*/
 
 int dir_match(char *dirname, char *patt){
 	if (strlen(dirname) > strlen(patt)){

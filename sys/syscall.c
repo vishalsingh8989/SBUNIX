@@ -256,6 +256,8 @@ uint64_t sys_getdents(uint64_t fd, struct dirent *dir, uint64_t size)
       return -1;
     }
 
+
+
     strcpy(dir->d_name, tarfs_fds[child_fidx].name);// copy name
     dir->inode = child_fidx;
     dir->offset = child_fidx;
@@ -323,17 +325,18 @@ uint64_t sys_chdir(char * pathname)
 			if(tarfs_fds[idx].type == DIRTYPE){
 				strcpy(PWD, pathname);
 				//klog(INFO,"Change dir to         : %s\n",pathname);
+                return 0;
 			}
 			else{
 				kprintf("cd: %s: No such file or directory\n",pathname);
 			}
-			return 0;
+
 		}
 	}
 
 
 	//cwd = (char *)pathname;
-	klog(INFO,"Not found Change dir :  %s\n",pathname);
+		kprintf("cd: %s: No such file or directory\n",pathname);
 	return 0;
 }
 
@@ -448,8 +451,11 @@ uint64_t sys_clear_term(){
 }
 
 uint64_t sys_setuid( uint64_t user_id){
-    kprintf("Inside  sys_setuid :  %d \n", user_id);
+    if(user_id == -1){ //if -1 then get_id called; dirty hack.
+        return get_uid();
+    }
+    klog(INFO,"Inside  sys_setuid :  %d \n", user_id);
     set_uid(user_id);
-    return 0;
+    return user_id;
 
 }

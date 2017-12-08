@@ -27,7 +27,7 @@
 #define __NR_sched_yield 24
 #define __NR_shutdown    48
 #define __NR_setuid		105
-#define __NR_clearterm    117
+#define __NR_clearterm   117
 
 #define __NR_ps		103 //for ps.
 

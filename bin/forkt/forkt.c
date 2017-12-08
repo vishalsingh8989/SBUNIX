@@ -7,7 +7,7 @@ char* const senvp[] = {"PATH=/bin:", NULL};
 
 int main(int argc, char **argv, char **envp)
 {
-    puts(">>Begin Fork Test..");
+    puts(">>Begin Fork Test..\n");
 
     int status;
 
@@ -27,7 +27,7 @@ int main(int argc, char **argv, char **envp)
       }
     }
 
-    puts(">>End Fork Test..");
+    puts(">>End Fork Test..\n");
 
     return 0;
 }

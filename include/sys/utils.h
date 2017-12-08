@@ -2,6 +2,7 @@
 #define _UTILS_H
 
 #include <sys/defs.h>
+static const int EOF = -1;
 
 static inline void memcpy(void* dest, void* src, int count)
 {
@@ -39,4 +40,5 @@ char *strcopy(char *d, const char *s);
 char *strconcat(char *dst, const char *src);
 int dir_match(char *dirname, char *patt);
 int strcmp(const char * str1, const char * str2);
+char* strtok(char * str1, const char * str2) ;
 #endif

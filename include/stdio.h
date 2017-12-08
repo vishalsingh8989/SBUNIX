@@ -2,6 +2,8 @@
 #define _STDIO_H
 
 #include <sys/defs.h>
+typedef char * string;
+
 static const int EOF = -1;
 
 int putchar(int c);

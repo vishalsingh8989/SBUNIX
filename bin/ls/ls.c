@@ -23,8 +23,18 @@ int main(int argc, char* argv[], char* envp[]) {
 	uint32_t size = 0;
 
 	while ((dirent = readdir(dir))) {
-			printf("%crwx--x--x    %4dKB     %s  %s\n", file_type[dirent->type], (dirent->size)/1024,dirent->fowner, dirent->d_name);
-				size = size + dirent->size;
+			 char *fname = strtok(dirent->d_name, "/");
+		     char *prev = NULL;
+		     while (fname != NULL) {
+		         prev = fname;
+		         fname = strtok(NULL, "/");
+		     }
+		     if(dirent->type == 5){// DIRTYPE
+		         strconcat(prev , "/");
+		     }
+			printf("%crwx--x--x    %4dKB     %s     %s\n", file_type[dirent->type], (dirent->size)/1024,dirent->fowner, prev);
+
+			size = size + dirent->size;
 	        //printf("%s  \n", dirent->d_name);
 	    }
 	if(dir != NULL){

@@ -17,7 +17,7 @@ char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
 char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
-
+int user_id = 0;
 
 //env start
 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[], char* envp[]) {
 		perr = gets(password);
 
 
-        int user_id = 0;
+
 		if(!strcmp("jvishal", username) && !strcmp("root", password))
 		{
 			printf("Welcome Vishal.\n");
@@ -143,6 +143,7 @@ int main(int argc, char* argv[], char* envp[]) {
             		continue;
             }else if(!strcmp("logout", str_buf)){
 				printf("Logged out\n");
+                cls_term();
 				goto LOGOUT;
 			}
             int idx = 0;
@@ -212,7 +213,7 @@ int main(int argc, char* argv[], char* envp[]) {
                 ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
                     printf("Command not found!! %s   \n", tokens[0]);
-                    exit(1);
+                    //exit(1);
                     }
                 else{
                     //printf("Command executed ret:  %d   \n", ret);
