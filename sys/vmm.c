@@ -6,18 +6,22 @@
 #include <sys/process.h>
 #include <logger.h>
 
-int num_pages;
+uint64_t num_pages;
+uint64_t page_list_size;
 
 page_stat_t* free_pages_list;
 page_stat_t* pages_list;
 
-static void * preinit_alloc (uint64_t physfree, int size)
+void * physbase;
+void * physfree;
+
+static void * preinit_alloc (int size)
 {
     static char *nextfree;
     char *result;
 
     if(!nextfree) {
-        nextfree = (char *) align_up(KERNAL_BASE_ADDRESS + physfree);
+        nextfree = (char *) align_up(KERNAL_BASE_ADDRESS + (uint64_t) physfree);
     }
     else {
         nextfree = (char *) align_up((uint64_t) nextfree);
@@ -29,20 +33,29 @@ static void * preinit_alloc (uint64_t physfree, int size)
     return result;
 }
 
-void pages_init (void* physbase, void* physfree)
+void pages_init (uint64_t base, uint64_t length)
 {
-    for(int i = 0; i < num_pages; i++) {
-        uint64_t paddr = i*PAGE_SIZE;
-        if (paddr <= (uint64_t) physfree + 2*PAGE_SIZE) {
-            pages_list[i].ref = 1;
-            pages_list[i].next = NULL;
-        }
-        else {
-            pages_list[i].ref = 0;
-            pages_list[i].next = free_pages_list;
-            free_pages_list = &pages_list[i];
-        }
+    static uint64_t laddr = 0;
+    int idx;
+    int num = 0;
+
+    while(laddr < base || laddr < ((uint64_t) physfree + page_list_size)) {
+       idx = laddr/PAGE_SIZE;
+       pages_list[idx].ref = 1;
+       pages_list[idx].next = NULL;
+       laddr += 0x1000;
     }
+
+    while(laddr < base+length) {
+       idx = laddr/PAGE_SIZE;
+       pages_list[idx].ref = 0;
+       pages_list[idx].next = free_pages_list;
+       free_pages_list = &pages_list[idx];
+       laddr += 0x1000;
+       num++;
+    }
+
+    klog(INFO, "Pages Added to free list: %d\n", num);
 }
 
 static uint64_t get_pa(page_stat_t* page)
@@ -64,13 +77,15 @@ uint64_t page_alloc()
     page_stat_t * page = NULL;
 
     if (!free_pages_list) {
-        kprintf("Out of memory in page_alloc()\n");
+        klog(FATAL, "Out of memory in page_alloc()\n");
         return -1;
     }
     else {
         page = free_pages_list;
         free_pages_list = free_pages_list->next;
     }
+
+    //map_proc(get_pa(page), get_va(page));
 
     uint64_t addr = get_va(page);
     memset((void *) addr, 0, PAGE_SIZE);
@@ -91,7 +106,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir_p = (struct page_directory_pointer *) (entry & 0xfffffffffffff000);
     }
     else {
-        klog(INFO,"Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 
@@ -100,7 +115,7 @@ uint64_t get_mapping(struct page_map_level_4* pmap_l4, uint64_t vaddr)
         pdir = (struct page_directory *) (entry & 0xfffffffffffff000);
     }
     else {
-        klog(INFO,"Entry not mapped!!!\n");
+        klog(ERR, "Entry not mapped!!!\n");
         return -1;
     }
 
@@ -205,7 +220,7 @@ void setup_child_ptables(uint64_t cpml4)
                                     pte  = p_pt_entry & 0xfffffffffffff000;
                                     pte |= (_PAGE_PRESENT | _PAGE_USER);
                                     c_pt->pte[pt_idx] = pte;
-                                    p_pt->pte[pt_idx] = pte;
+                                    //p_pt->pte[pt_idx] = pte; //TODO: Have to understand this.
                                 }
                             }
                         }
@@ -258,7 +273,7 @@ void delete_ptables(uint64_t addr)
                                     uint64_t pte;
                                     pte  = pt_entry & 0xfffffffffffff000;
                                     pte  = (uint64_t) pa_to_va((uint64_t *) pte);
-                                    kfree((uint64_t *) pte);
+                                    //kfree((uint64_t *) pte);
                                 }
                             }
                             kfree((uint64_t *) pt);
@@ -270,7 +285,7 @@ void delete_ptables(uint64_t addr)
             kfree((uint64_t *) pdir_p);
         }
     }
-    kfree((uint64_t *) addr);
+    kfree((uint64_t *) pml4);
 }
 
 void map_proc(uint64_t paddr, uint64_t vaddr)
@@ -324,7 +339,8 @@ void map_proc(uint64_t paddr, uint64_t vaddr)
 
     entry = ptable->pte[PT_IDX(vaddr)];
     if(entry & _PAGE_PRESENT) {
-        klog(INFO, "Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, entry | 0x7);
+        klog(IMP, "Page %p -> %p already Mapped, chainging to %p\n", vaddr, entry, paddr | 0x7);
+        entry = paddr;
         entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }
@@ -351,7 +367,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         pdir_p = (struct page_directory_pointer *) page_alloc();
         entry = (uint64_t) pdir_p;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pmap_l4->pml4e[PML4_IDX(vaddr)] = entry;
     }
 
@@ -362,7 +378,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         pdir = (struct page_directory *) page_alloc();
         entry = (uint64_t) pdir;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pdir_p->pdpe[PDPT_IDX(vaddr)] = entry;
     }
 
@@ -373,7 +389,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     else {
         ptable = (struct page_table *) page_alloc();
         entry = (uint64_t) ptable;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         pdir->pde[PDE_IDX(vaddr)] = entry;
     }
 
@@ -383,7 +399,7 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr)
     }
     else {
         entry = paddr;
-        entry |= (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER);
+        entry |= (_PAGE_PRESENT | _PAGE_RW);
         ptable->pte[PT_IDX(vaddr)] = entry;
     }
 
@@ -401,41 +417,67 @@ void map_addr_range(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t v
     }
 }
 
-void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
+void vmm_init(uint32_t* modulep, void* pbase, void* pfree)
 {
+    physbase = pbase;
+    physfree = pfree;
+
     klog(BOOTLOG, "physfree %p, physbase %p\n", (uint64_t)physfree, (uint64_t)physbase);
 
-    struct smap_t {
-        uint64_t base, length;
-        uint32_t type;
-    }__attribute__((packed)) *smap;
+    smap_t *smap;
 
     while(modulep[0] != 0x9001) modulep += modulep[1]+2;
 
     num_pages = 0;
-    for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
+    uint64_t last_base = 0, last_length = 0;
+
+    for(smap = (smap_t*)(modulep+2); smap < (smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
         if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
             klog(BOOTLOG, "Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             if (smap->base > (uint64_t) physfree) {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : smap->length/PAGE_SIZE;
+                last_base = smap->base;
+                last_length = smap->length;
             }
             else if (smap->base + smap->length > (uint64_t) physfree) {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : (smap->base + smap->length - (uint64_t) physfree)/PAGE_SIZE;
+                last_base = smap->base;
+                last_length = smap->length;
             }
             else {
                 num_pages += (smap->length < PAGE_SIZE) ? 1 : (smap->length)/PAGE_SIZE;
+                last_base = smap->base;
+                last_length = smap->length;
             }
         }
     }
     total_pages = num_pages;
 
-    pages_list = preinit_alloc((uint64_t) physfree, num_pages * sizeof(page_stat_t));
+    num_pages = (last_base + last_length)/PAGE_SIZE;
+    page_list_size = num_pages * sizeof(page_stat_t);
 
-    pages_init(physbase, physfree);
+    pages_list = preinit_alloc(num_pages * sizeof(page_stat_t));
+    klog(BOOTLOG, "Memory allocated for page structs: %d\n", (num_pages * sizeof(page_stat_t))/PAGE_SIZE);
+
+    free_pages_list = NULL;
+    for(smap = (smap_t*)(modulep+2); smap < (smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
+        if (smap->type == 1 && (smap->length/PAGE_SIZE) != 0) {
+            klog(BOOTLOG, "Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            if (smap->base > (uint64_t) physfree) {
+                pages_init(smap->base, smap->length);
+            }
+            else if (smap->base + smap->length > (uint64_t) physfree) {
+                pages_init(smap->base, smap->length);
+            }
+            else {
+                pages_init(smap->base, smap->length);
+            }
+        }
+    }
 
     struct page_map_level_4* pmap_l4;
     pmap_l4 = (struct page_map_level_4 *) page_alloc();
-    //pmap_l4 = (struct page_map_level_4 *) preinit_alloc((uint64_t) physfree, PAGE_SIZE);
+    //pmap_l4 = (struct page_map_level_4 *) preinit_alloc(PAGE_SIZE);
     memset((void *) pmap_l4, 0, PAGE_SIZE);
 
     uint64_t phy_addr;
@@ -445,11 +487,11 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
     //Identity Mapping kernal.
     phy_addr = (uint64_t) physbase;
     vir_addr = phy_addr + KERNAL_BASE_ADDRESS;
-    size = (physfree - physbase)/PAGE_SIZE;
-    klog(INFO, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
+    size = (physfree - physbase)/PAGE_SIZE + 4;
+    klog(BOOTLOG, "phy_addr: %p, vir_addr: %p, size: %d\n", phy_addr, vir_addr, size);
     map_addr_range(pmap_l4, phy_addr, vir_addr, size);
 
-    for(smap = (struct smap_t*)(modulep+2); smap < (struct smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
+    for(smap = (smap_t*)(modulep+2); smap < (smap_t*)((char*)modulep+modulep[1]+2*4); ++smap) {
         if (smap->type == 1 && smap->length != 0) { //TODO: fix this
             if (smap->base > (uint64_t) physfree) {
                 phy_addr = smap->base;
@@ -475,8 +517,11 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
         }
     }
 
+
     map_addr_range(pmap_l4, 0xb8000, 0xffffffff800b8000, 1);
     klog(BOOTLOG, "PML4(PHY): %p, PML4(VIR): %p, 511: %p\n", pmap_l4, (uint64_t) pmap_l4 + KERNAL_BASE_ADDRESS, pmap_l4->pml4e[511]);
+    //uint64_t pml4_addr = (uint64_t) pmap_l4;
+    //pmap_l4->pml4e[PML4_IDX(pml4_addr)] = pml4_addr | (_PAGE_PRESENT | _PAGE_RW);
 
     //uint64_t temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
@@ -509,13 +554,13 @@ void vmm_init(uint32_t* modulep, void* physbase, void* physfree)
 
     klog(BOOTLOG, "CR0: %p, CR4: %p, ia32_efer: %p\n", cr0, cr4, ia32_efer);
 
-    //load_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
     write_cr3((uint64_t) pmap_l4);
+    //write_cr3((uint64_t) pmap_l4 - KERNAL_BASE_ADDRESS);
 
     //temp = get_mapping(pmap_l4, 0xffffffff800b8000);
     //kprintf("Temp: %p\n", temp);
 
-    klog(BOOTLOG, "Page Table Setup Sucessfull\n");
+    klog(BOOTLOG, "Page Table Setup Sucessfull!\n");
 }
 
 uint64_t * kmalloc(uint64_t size)
@@ -528,22 +573,26 @@ uint64_t * kmalloc(uint64_t size)
 
     uint64_t * addr = (uint64_t *) get_va(free_pages_list);
 
+    //page_stat_t * page = free_pages_list;
+    //map_proc(get_pa(page), get_va(page));
+
     //TODO: can I do this ?
     for(int i = 0; i < num_pages; i++) {
         if(page_alloc() == -1)
             return NULL;
-        else
-            memset((void *) addr, 0, PAGE_SIZE);
     }
 
     pages_used += num_pages;
-    //kprintf("Pages Used: %d\n", pages_used);
+    //kprintf("Pages Used: %d, Num Pages: %d\n", pages_used, num_pages);
 
     return addr;
 }
 
 void kfree(uint64_t * vaddr)
 {
+
+    if(vaddr == NULL) return;
+
     page_stat_t* page = pages_list + ((uint64_t) vaddr - KERNAL_BASE_ADDRESS) / PAGE_SIZE;
     page->ref = 0;
     page->next = free_pages_list;

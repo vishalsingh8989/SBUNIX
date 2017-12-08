@@ -158,10 +158,10 @@ uint64_t sys_close(uint64_t fd);
 uint64_t sys_fstat(int fidx,fstat_t* statbuf);
 uint64_t sys_mmap(void *start, uint64_t length, int32_t prot,
         int32_t flags, int32_t fd, uint64_t offset);
-uint64_t syscall_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
-uint64_t syscall_ps();
+uint64_t sys_lseek(uint32_t fildes, uint64_t offset, uint32_t whence);
+uint64_t sys_ps();
 uint64_t sys_gettimeofday(struct tm* tim_time);
-uint64_t syscall_clear_term();
+uint64_t sys_clear_term();
 
 uint64_t sys_setuid(uint64_t user_id);
 

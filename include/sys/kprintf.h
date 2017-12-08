@@ -8,7 +8,6 @@
 #define EN_ERR   1
 #define EN_FATAL 1
 
-
 #define INFO  0
 #define IMP   1
 #define ERR   2

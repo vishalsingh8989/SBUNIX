@@ -8,6 +8,5 @@ uint64_t gettime(struct tm* tm_time){
 
 	out = syscall_1(__NR_gettimeofday, (uint64_t)tm_time);
 
-
 	return out;
 }

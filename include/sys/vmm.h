@@ -42,12 +42,18 @@
 #define PF_R   (1 << 3)  //When set, the page fault was caused by reading a 1 in a reserved field.
 #define PF_I   (1 << 4)  //When set, the page fault was caused by an instruction fetch.
 
+struct smap {
+   uint64_t base, length;
+   uint32_t type;
+}__attribute__((packed));
+
 struct PageStat {
     struct PageStat *next;
     uint16_t ref;
 }__attribute__((__packed__));
 
 typedef struct PageStat page_stat_t;
+typedef struct smap smap_t;
 
 struct page_table {
     uint64_t pte[512];
@@ -71,7 +77,6 @@ void map_addr(struct page_map_level_4* pmap_l4, uint64_t paddr, uint64_t vaddr);
 void map_proc(uint64_t paddr, uint64_t vaddr);
 void setup_child_ptables(uint64_t child_pml4);
 void delete_ptables(uint64_t pml4);
-
 uint64_t * kmalloc(uint64_t size);
 void kfree(uint64_t *addr);
 

@@ -3,8 +3,7 @@
 #include <unistd.h>
 #include <sys/defs.h>
 
-
-int strlen( const char *s){
+int strlen(const char *s){
     uint64_t len = 0;
 
     while (*s  !=  '\0') {

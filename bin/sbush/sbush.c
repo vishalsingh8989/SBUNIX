@@ -4,7 +4,6 @@
 #include <sys/defs.h>
 #include <sys/env.h>
 
-
 #define MAX_INPUT 512
 #define TRUE 1
 #define FALSE 0
@@ -72,7 +71,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
     setenv(ENV_PS1, "sbush>");
     setenv(ENV_PATH, "/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin:/usr/sbin");
-	printf("Users : jvishal, aahangir, user1. Password is root.\n");
+	printf("Users : jvishal, aahangar, admin. Password is root.\n");
 
 	char username[30];
 	char password[30];
@@ -84,38 +83,39 @@ int main(int argc, char* argv[], char* envp[]) {
 		perr = gets(password);
 
 
-        //int user_id = 0;
+        int user_id = 0;
 		if(!strcmp("jvishal", username) && !strcmp("root", password))
 		{
 			printf("Welcome Vishal.\n");
 			setenv(ENV_HOME, "/usr/jvishal/");
-            //setuid(user_id);
+            setuid(user_id);
 			chdir("/usr/jvishal/");
 			break;
 
 		}
 
-        if(!strcmp("aahangir", username) && !strcmp("root", password)){
-			puts("Welcome Atif ahangir.\n");
-			setenv(ENV_HOME, "/usr/aahangir/");
-            //user_id = 1;
-            //setuid(user_id);
-			chdir("/usr/aahangir/");
+        if(!strcmp("aahangar", username) && !strcmp("root", password)){
+			puts("Welcome Atif Ahangar.\n");
+			setenv(ENV_HOME, "/usr/aahangar/");
+            user_id = 1;
+            setuid(user_id);
+			chdir("/usr/aahangar/");
 			break;
 		}
 
         //With 3 users prompt is messed up. #weird.
-        if(!strcmp("user1", username) && !strcmp("root", password)){
-            printf("Welcome user1 .\n");
-            setenv(ENV_HOME, "/usr/user1/");
-            chdir("/usr/user1/");
+        if(!strcmp("admin", username) && !strcmp("root", password)){
+            printf("Welcome admin .\n");
+            user_id = 2;
+            setuid(user_id);
+            setenv(ENV_HOME, "/usr/admin/");
+            chdir("/usr/admin/");
             break;
         }
 
         printf("username/password :  %s    ,  %s\n", username, password);
-
 		printf("Incorrect username or password.\nTry again.\n");
-        printf("Users : jvishal, aahangir, user1. Password is root.\n");
+        printf("Users : jvishal, aahangar, admin. Password is root.\n");
 
 
 	}
@@ -211,12 +211,15 @@ int main(int argc, char* argv[], char* envp[]) {
                 //printf("execute : %s  \n",tokens[0]);
                 ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
-                    printf("Command not found!!\n");
-                    //exit(1);
+                    printf("Command not found!! %s   \n", tokens[0]);
+                    exit(1);
                     }
+                else{
+                    //printf("Command executed ret:  %d   \n", ret);
+                }
             }
             else {
-                puts("Executing waitpid()");
+                //puts("Executing waitpid()");
                 waitpid(pid, &status);
             }
 

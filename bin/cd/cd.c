@@ -4,50 +4,12 @@
 #include <dirent.h>
 #include <sys/env.h>
 
-void remove_extra(char *str, int n);
-void remove_extra(char *str, int n){
 
-
-	    int len = strlen(str);
-	    int k = 0; // To store index of result
-	    int i = 0;
-	    // Start from second character and add
-	    // unique ones
-	    for (i =1; i< len; i++)
-	    {
-	        // If different, increment k and add
-	        // previous character
-	        if (str[i-1] != str[i])
-	            str[k++] = str[i-1];
-
-	        else
-	            // Keep skipping (removing) characters
-	            // while they are same.
-	            while (str[i-1] == str[i])
-	                i++;
-	    }
-
-	    // Add last character and terminator
-	    str[k++] = str[i-1];
-	    str[k] =  '\0';
-
-	    // Recur for string if there were some removed
-	    // character
-	    if (k != n)
-	    		remove_extra(str, k);// Shlemial Painter's Algorithm
-
-	    // If all characters were unique
-	    //else return str;
-
-
-}
 
 int main(int argc, char **argv, char **envp)
 {
 
 	char buff[NAME_MAX+1];
-
-
 
 	//printf("allocated :  %p\n", m);
 	if(argc == 1){
