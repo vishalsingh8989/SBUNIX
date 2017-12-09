@@ -17,7 +17,7 @@ char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
 char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
-int user_id = -1;
+int user_id = 0;
 
 //env start
 

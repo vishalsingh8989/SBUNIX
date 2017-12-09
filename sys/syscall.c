@@ -37,7 +37,7 @@ uint64_t sys_fork()
 {
     task_struct_t *child_task;
 
-    uint64_t *stack = (uint64_t *) kmalloc(PAGE_SIZE);
+    uint64_t *stack = (uint64_t *) kmalloc(20*PAGE_SIZE);
     if(!stack) {
         kpanic("Not able to allocate stack!!");
     }

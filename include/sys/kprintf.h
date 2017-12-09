@@ -5,7 +5,7 @@
 
 #define EN_INFO  0
 #define EN_IMP   0
-#define EN_ERR   1
+#define EN_ERR   0
 #define EN_FATAL 1
 
 #define INFO  0

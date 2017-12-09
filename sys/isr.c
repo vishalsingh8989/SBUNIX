@@ -213,6 +213,7 @@ void timer_int_handler() {
     if(i == 18) {
        s++;
        i = 0;
+       sched = 1;
     }
     if(s == 60) {
        m++;
@@ -517,7 +518,7 @@ void invalid_opcode_handler() {
     __asm__ __volatile__("sti;");
 
     init_proc("bin/sbush", 1);
-    
+
 }
 
 void no_device_excep_handler() {

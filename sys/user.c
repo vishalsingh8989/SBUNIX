@@ -29,7 +29,7 @@ void init_users(){
 }
 
 void set_uid(uint64_t user_id){
-	klog(INFO,"Inside  set_uid :  %d ,  %s \n", user_id, users[user_id]);
+	kprintf("Inside  set_uid :  %d ,  %s \n", user_id, users[user_id]);
 	curr_uid =  user_id;
 	for(int idx = 0 ; idx < strlen(users[user_id]); idx++)
 		pchar_xy(users[user_id][idx] , RED, 6 + idx, 24);

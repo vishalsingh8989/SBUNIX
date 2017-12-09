@@ -130,7 +130,7 @@ void klog(int severity, const char *fmt, ...)
         kprintf("BOOT>> ");
         kprintf_log(fmt, args);
         term_color = DEFAULT_COLOR;
-		sleep(100);
+		sleep(1);
 	}
 }
 

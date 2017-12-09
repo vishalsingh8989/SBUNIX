@@ -37,7 +37,7 @@ void print_task_list()
         if(temp->pid == 0){
             break;
         }
-        sleep(100);
+        
     }
     kprintf("%d   %s  %s\n", temp->pid, temp->start_time, temp->pcmd_name);
 }
