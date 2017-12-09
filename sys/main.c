@@ -54,13 +54,15 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   klog(INFO, "tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
   vmm_init(modulep, physbase, physfree);
 
-  clr_term();
-  print_welcome();
+
+
   init_env();
   init_users();
   init_syscall();
   init_tarfs();
   init_time();
+  clr_term();
+  print_welcome();
 
   __asm__ __volatile__("sti;");
   init_proc("bin/init", 0);

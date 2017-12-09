@@ -4,7 +4,6 @@
 #include <sys/defs.h>
 #include <sys/env.h>
 
-
 #define MAX_INPUT 512
 #define TRUE 1
 #define FALSE 0
@@ -17,13 +16,17 @@ char* mod_tokens[64];
 char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
-char* senvp[] = {"PATH=/bin:", NULL};
+char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
+int user_id = 0;
 
+//env start
+
+
+
+//env end
 int   err;
 char* perr;
 
-extern char PWD[MAX_NAME+1];
-extern char PS1[MAX_NAME+1];
 char weekdayn[7][4] = {
     "Mon",
     "Tue",
@@ -67,10 +70,13 @@ void setprompt() {
 int main(int argc, char* argv[], char* envp[]) {
 
     setenv(ENV_PS1, "sbush>");
-	printf("Users : jvishal, aahangir, user1. Password is root.\n");
+    setenv(ENV_PATH, "/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin:/usr/sbin");
+	printf("Users : jvishal, aahangar, admin. Password is root.\n");
+
 
 	char username[30];
 	char password[30];
+
 	printf("\n");
 	LOGOUT:while(1){
 		printf("username:");
@@ -79,35 +85,39 @@ int main(int argc, char* argv[], char* envp[]) {
 		perr = gets(password);
 
 
-        //int user_id = 0;
+
 		if(!strcmp("jvishal", username) && !strcmp("root", password))
 		{
 			printf("Welcome Vishal.\n");
 			setenv(ENV_HOME, "/usr/jvishal/");
-            //setuid(user_id);
+            setuid(user_id);
 			chdir("/usr/jvishal/");
 			break;
 
 		}
 
-        if(!strcmp("aahangir", username) && !strcmp("root", password)){
-			puts("Welcome Atif ahangir.\n");
-			setenv(ENV_HOME, "/usr/aahangir/");
-            //user_id = 1;
-            //setuid(user_id);
-			chdir("/usr/aahangir/");
+        if(!strcmp("aahangar", username) && !strcmp("root", password)){
+			puts("Welcome Atif Ahangar.\n");
+			setenv(ENV_HOME, "/usr/aahangar/");
+            user_id = 1;
+            setuid(user_id);
+			chdir("/usr/aahangar/");
 			break;
 		}
 
-        // With 3 users prompt is messed up. #weird.
-        // if(!strcmp("user1", username) && !strcmp("root", password)){
-        //     printf("Welcome user1 .\n");
-        //     setenv(ENV_HOME, "/usr/user1/");
-        //     chdir("/usr/user1/");
-        //     break;
-        // }
+        //With 3 users prompt is messed up. #weird.
+        if(!strcmp("admin", username) && !strcmp("root", password)){
+            printf("Welcome admin .\n");
+            user_id = 2;
+            setuid(user_id);
+            setenv(ENV_HOME, "/usr/admin/");
+            chdir("/usr/admin/");
+            break;
+        }
 
-		puts("Incorrect username or password.\n");
+        printf("username/password :  %s    ,  %s\n", username, password);
+		printf("Incorrect username or password.\nTry again.\n");
+        printf("Users : jvishal, aahangar, admin. Password is root.\n");
 
 
 	}
@@ -116,21 +126,27 @@ int main(int argc, char* argv[], char* envp[]) {
 	struct tm tm_time;
 	gettime(&tm_time);
 	//printf("%d\n", tm_time.tm_wday);
-	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
-
+	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday-1],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
 
     puts("---Welcome to SBUSH shell---\n");
+    char* paths = (char*)malloc(sizeof(char)*200);
+    char* cmd  = (char*)malloc(sizeof(char)*100);
 
+
+    strcpy(paths, getenv(ENV_PATH));
+    //printf("env found :  %s         \n\n", paths);
     if(argc == 1) {
-        while (TRUE) {
+       while (TRUE) {
 
             setprompt();
 
             perr = gets(str_buf);
+            //printf("cmd 1 :  %s .\n", str_buf);
             if(strlen(str_buf)==0){
             		continue;
             }else if(!strcmp("logout", str_buf)){
 				printf("Logged out\n");
+                cls_term();
 				goto LOGOUT;
 			}
             int idx = 0;
@@ -140,24 +156,79 @@ int main(int argc, char* argv[], char* envp[]) {
 				++idx;
 				tokens[idx] = strtok(NULL, " ");
 			}
-
             pid_t pid = fork();
             int status;
-            char *const senvp[] = {"PATH=/bin:", NULL};
 
-            if(pid == 0) {
+            char *curr_path;
+            memset(paths, '\0', sizeof(paths));
+            strcpy(paths, getenv(ENV_PATH));
+            //printf("path : %s\n", paths);
+            curr_path = strtok(paths, ":");
 
-            		int ret = 0;
-            		ret = execvpe(tokens[0], tokens, senvp);
+            int flag = 0;
+            int fd;
 
-                if(ret < 0) {
-                       puts("Command not found!!\n");
+            while(curr_path != NULL){
+                curr_path = strtok(NULL, ":");
+                memset(cmd, '\0', 100);
+                strconcat(cmd, curr_path+1);
+                if(strlen(curr_path) != 0){
+                    strconcat(cmd, "/");
+                    strconcat(cmd, tokens[0]);
+                }else{
+
+                    strconcat(cmd, tokens[0]+1);
                 }
+                fd = open(cmd, O_RDONLY);
+                if(fd !=-1){
+                    flag = 1;
+                    close(fd);
+                    break;
+                }else{
+
+                }
+
+            }
+            //printf("cmd 2 :  %s .\n", str_buf);
+
+            tokens[0] = cmd;
+            if(flag == 0){
+                memset(cmd, '\0', sizeof(cmd));
+                if(tokens[0][0] =='/'){
+                    cmd++;
+                }
+
+                fd = open(tokens[0], O_RDONLY);
+                close(fd);
+                if(fd !=-1){
+                    tokens[0] = cmd;
+                }else{
+                    printf("CONTINUE\n");
+                    continue;
+                    }
+            }
+
+
+            char* senvp[] = {"PATH=/home/jvishal/bin /home/jvishal/.local/bin /shared/bin:", NULL};
+            if(pid == 0) {
+                int ret = 0;
+                //printf("execute : %s  \n",tokens[0]);
+                ret = execvpe(tokens[0], tokens, senvp);
+                if(ret < 0) {
+                    printf("Command not found!! %s   \n", tokens[0]);
+
+                    }
+                else{
+                    //printf("Command executed ret:  %d   \n", ret);
+                }
+                exit(1);
             }
             else {
-                puts("Executing waitpid()");
+                //puts("Executing waitpid()");
                 waitpid(pid, &status);
+
             }
+
 
             //while(1); //Put execve here for now, until pipe is implemented.
 

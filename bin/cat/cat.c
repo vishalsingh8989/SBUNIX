@@ -12,15 +12,13 @@ int main(int argc, char* argv[], char* envp[]) {
 
    if(argc == 2) {
       fd = open(argv[1], O_RDONLY);
-      //printf("fd is : %d\n", fd);
    }
    else {
-	   //fd = open(argv[1], O_RDONLY);
-	   //TODO check this.
+	    //TODO check this.
       return 0;
    }
    if(fd == -1) {
-	   printf("File :  %s not found\n", argv[1]);
+	   printf("File : %s not found!\n", argv[1]);
 	   return 1;
    }
    while(size != EOF) {

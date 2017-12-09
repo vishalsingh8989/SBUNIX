@@ -25,4 +25,4 @@ char *strconcat(char *dst, const char *src)
     }
     *dest_iter = '\0';
     return dest_iter;
-    }
+}

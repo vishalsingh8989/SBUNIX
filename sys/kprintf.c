@@ -5,6 +5,12 @@
 #include <sys/env.h>
 #include <stdarg.h>
 
+extern char PWD[MAX_NAME+1];
+extern char PS1[MAX_NAME+1];
+extern char HOME[MAX_NAME+1];
+extern char USER[MAX_NAME+1];
+extern char PATH[MAX_NAME+1];
+
 static int x_cord = 0;
 static int y_cord = 0;
 
@@ -14,6 +20,11 @@ char term_color = LIGHT_GRAY;
 void reset_cord(){
 	x_cord = 0;
 	y_cord = 0;
+}
+
+void move_cursor_up(){
+
+	 update_cursor(x_cord ,y_cord-1);
 }
 
 void update_cursor(int x, int y)
@@ -114,7 +125,13 @@ void klog(int severity, const char *fmt, ...)
         kprintf("FATAL>> ");
         kprintf_log(fmt, args);
         term_color = DEFAULT_COLOR;
-    }
+    }else if(severity == BOOTLOG) {
+        term_color = GREEN;
+        kprintf("BOOT>> ");
+        kprintf_log(fmt, args);
+        term_color = DEFAULT_COLOR;
+		sleep(1);
+	}
 }
 
 void kprintf(const char *fmt, ...)

@@ -13,7 +13,7 @@ void upd_term_buf(char c)
 
 
 
-    if(c == BACKSPACE && (term_buf[term_idx-1 % 128] != '\n')) {
+    if(c == BACKSPACE && (term_buf[(term_idx-1) % 128] != '\n')) {
         term_buf[term_idx % 128] = '\n';
         term_idx--;
 
@@ -32,6 +32,7 @@ void upd_term_buf(char c)
 
     pchar(c);
 }
+
 
 void term_read(uint64_t addr, uint64_t size)
 {

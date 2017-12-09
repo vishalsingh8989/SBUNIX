@@ -1,5 +1,6 @@
 #include <sys/defs.h>
 #include <sys/idt.h>
+#include <sys/kprintf.h>
 
 //Note: From OSdev.
 struct idte_t {
@@ -58,6 +59,7 @@ void set_idt(uint8_t intr_no, uint64_t func, uint8_t type_attr) {
 
 void init_idt() {
 
+    klog(BOOTLOG, "Set up Interrrupt descriptor table.\n");
     for(int i = 0; i < 256; i++) {
        set_idt(i, (uint64_t) &_isrxx  , 0x8e);
     }
@@ -85,6 +87,7 @@ void init_idt() {
     set_idt( 32,  (uint64_t) &_isr32  , 0x8e);
     set_idt( 33,  (uint64_t) &_isr33  , 0x8e);
     set_idt( 128, (uint64_t) &_isr128 , 0xee);
-    
+
     __asm__ __volatile__("lidt  %0\n\t"::"m"(idtr));
+    klog(BOOTLOG, "Set up Interrrupt descriptor table : Successful\n");
 }

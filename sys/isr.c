@@ -7,6 +7,7 @@
 #include <sys/vmm.h>
 #include <sys/process.h>
 #include <sys/asm_utils.h>
+#include <sys/utils.h>
 #include <sys/syscall.h>
 #include <sys/terminal.h>
 #include <sys/time.h>
@@ -67,7 +68,7 @@ uint64_t syscall_handler(cpu_regs* regs)
     switch(s_num) {
 
         case __NR_exit:
-            klog(INFO,"Executing Exit Syscall\n");
+            klog(INFO, "Executing Exit Syscall\n");
             sys_exit();
             return 0;
 
@@ -112,73 +113,75 @@ uint64_t syscall_handler(cpu_regs* regs)
             return ret;
 
         case __NR_pipe:
-            klog(INFO,"Executing pipe Syscall\n");
+            klog(INFO, "Executing pipe Syscall\n");
             ret = sys_pipe((uint64_t*) arg1);
             return ret;
 
         case __NR_dup2:
-            klog(INFO,"Executing dup2 Syscall\n");
+            klog(INFO, "Executing dup2 Syscall\n");
             ret = sys_dup2((uint64_t) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_getdents:
-        		klog(INFO,"Executing getdents Syscall\n");
+            klog(INFO, "Executing getdents Syscall\n");
             ret = sys_getdents((uint64_t) arg1, (struct dirent *) arg2, (uint64_t) arg3);
             return ret;
 
         case __NR_getcwd:
-        		klog(INFO,"Executing getcwd Syscall\n");
+            klog(INFO, "Executing getcwd Syscall\n");
             ret = sys_getcwd((char *) arg1, (uint64_t) arg2);
             return ret;
 
         case __NR_chdir:
-            klog(INFO,"Executing chdir Syscall\n");
+            klog(INFO, "Executing chdir Syscall\n");
             ret = sys_chdir((char *) arg1);
             return ret;
 
         case __NR_sched_yield:
-            klog(INFO,"Executing yield Syscall\n");
+            klog(INFO, "Executing yield Syscall\n");
             sys_sched_yield();
             return 0;
 
         case __NR_shutdown:
-            klog(INFO,"Executing shutdown Syscall\n");
+            klog(INFO, "Executing shutdown Syscall\n");
             sys_shutdown((uint64_t) arg1);
             return 0;
+
         case __NR_mmap:
-        		klog(INFO,"Executing __NR_mmap Syscall\n");
-        		ret = sys_mmap((void *) arg1,
-        					(uint64_t) arg2,
-        		        		(int32_t) arg3,
-						(int32_t) arg3,
-        		            (int32_t) arg5,
-						(uint64_t) arg6);
-        		return ret;
+            klog(INFO, "Executing __NR_mmap Syscall\n");
+            ret = sys_mmap((void *) arg1, (uint64_t) arg2, (int32_t) arg3, (int32_t) arg3, (int32_t) arg5, (uint64_t) arg6);
+            return ret;
+
         case __NR_fstat:
-        		klog(INFO,"Executing __NR_fstat Syscall\n");
-        		ret = sys_fstat((int ) arg1, (fstat_t*) arg2);
-        		return ret;
+          klog(INFO, "Executing __NR_fstat Syscall\n");
+          //ret = sys_fstat((int ) arg1, (fstat_t*) arg2);
+          return 0;
 
         case __NR_lseek:
-        		klog(INFO,"Executing __NR_lseek Syscall\n");
-        		ret = syscall_lseek((uint32_t) arg1, (uint64_t) arg2, (uint32_t) arg3);
-        		return  ret;
+          klog(INFO, "Executing __NR_lseek Syscall\n");
+          ret = sys_lseek((uint32_t) arg1, (uint64_t) arg2, (uint32_t) arg3);
+          return  ret;
+
         case __NR_ps:
         		klog(INFO,"Executing __NR_syslog Syscall\n");
-        		ret = syscall_ps();
+        		ret = sys_ps();
         		return  ret;
+
         case __NR_gettimeofday:
         		klog(INFO,"Executing __NR_gettimeofday Syscall\n");
         		ret = sys_gettimeofday((struct tm*)arg1);
         		return ret;
+
         case __NR_clearterm:
-                klog(INFO,"Executing __NR_gettimeofday Syscall\n");
-                ret =  syscall_clear_term();
-                return ret;
+            klog(INFO,"Executing __NR_clearterm Syscall\n");
+            ret =  sys_clear_term();
+            return ret;
+
         case __NR_setuid:
-                kprintf("Executing __NR_setuid Syscall\n");
-                ret = sys_setuid(arg1);
-                return ret;
+           klog(INFO,"Executing __NR_clearterm Syscall\n");
+           ret =  sys_setuid(arg1);
+            return ret;
+
         default:
             return -1;
     }
@@ -186,6 +189,7 @@ uint64_t syscall_handler(cpu_regs* regs)
 
 void init_syscall()
 {
+    klog(BOOTLOG, "Intialize syscalls.\n");
     uint64_t efer;
 
     efer = rdmsr(EFER);
@@ -194,51 +198,42 @@ void init_syscall()
 
     wrmsr(LSTAR, (uint64_t)_isr128);
     wrmsr(SFMASK, 0xC0000084);
+    klog(BOOTLOG, "Intialize syscalls. : Successful\n");
 }
-
-//void pnum_xy (uint64_t value, int base, int x) {
-//    if (value <= (base-1)) {
-//        if (value < 10) pchar_xy((char) (value+48), RED, x++, 24);
-//        else pchar_xy((char) (value+87), RED, x++, 24);
-//    }
-//    else {
-//        pnum_xy(value/base, base, x++);
-//        pnum_xy(value - (value/base)*base, base, x++);
-//    }
-//}
 
 void timer_int_handler() {
 
+    int sched = 0;
+    struct tm utc;
+    read_rtc(&utc);
 
-	struct tm utc;
-	read_rtc(&utc);
+    static int i = 0, s = 0, m = 0, h = 0;
 
-	static int i = 0, s = 0, m = 0, h = 0;
-
-   i++;
-   if(i == 18) {
+    i++;
+    if(i == 18) {
        s++;
        i = 0;
-   }
-   if(s == 60) {
+       sched = 1;
+    }
+    if(s == 60) {
        m++;
        s = 0;
-   }
-   if(m == 60) {
+    }
+    if(m == 60) {
        h++;
        m = 0;
-   }
-   if(h == 24) {
+    }
+    if(h == 24) {
        h = 0;
-   }
+    }
 
     // uptime start
-   char sl = (char) (s%10+48);
-   char sh = (char) (s/10+48);
-   char ml = (char) (m%10+48);
-   char mh = (char) (m/10+48);
-   char hl = (char) (h%10+48);
-   char hh = (char) (h/10+48);
+    char sl = (char) (s%10+48);
+    char sh = (char) (s/10+48);
+    char ml = (char) (m%10+48);
+    char mh = (char) (m/10+48);
+    char hl = (char) (h%10+48);
+    char hh = (char) (h/10+48);
     // uptime end
 
     //UTC start
@@ -308,16 +303,16 @@ void timer_int_handler() {
     pchar_xy(uhh, GREEN, 45, 24);
 
     pchar_xy(' ', GREEN, 44, 24);
-    pchar_xy(monthname[utc.tm_mon][2], GREEN, 43, 24);
-	pchar_xy(monthname[utc.tm_mon][1] , GREEN, 42, 24);
-	pchar_xy(monthname[utc.tm_mon][0] , GREEN, 41, 24);
+    pchar_xy(monthname[utc.tm_mon-1][2], GREEN, 43, 24);
+	pchar_xy(monthname[utc.tm_mon-1][1] , GREEN, 42, 24);
+	pchar_xy(monthname[utc.tm_mon-1][0] , GREEN, 41, 24);
 
 
-    //kprintf("month name: %s\n", weekdayname[utc.tm_wday]);
+    //kprintf("month name: %d\n", monthname[utc.tm_mon-1]);
 	pchar_xy(' ' , GREEN, 40, 24);
-	pchar_xy(weekdayname[utc.tm_wday][2] , GREEN, 39, 24);
-	pchar_xy(weekdayname[utc.tm_wday][1] , GREEN, 38, 24);
-	pchar_xy(weekdayname[utc.tm_wday][0] , GREEN, 37, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][2] , GREEN, 39, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][1] , GREEN, 38, 24);
+	pchar_xy(weekdayname[utc.tm_wday-1][0] , GREEN, 37, 24);
     //UTC set end
 
 
@@ -333,7 +328,9 @@ void timer_int_handler() {
 	time_buff[8] = '\0';
 	set_system_uptime(time_buff);
 
-
+    if(sched == 1) {
+         schedule();
+       }
 
 	pic_send_eoi(0);
 }
@@ -359,14 +356,10 @@ void keyboard_int_handler() {
           pchar_xy(c  , RED, 70, 24);
           pchar_xy(']', RED, 71, 24);
         }
-        //if(c!=1){ //backspace
-        //int prompt_len = strlen(PWD) + strlen(PS1);
-        //int termidx = term_idx();
 
-        //if(termidx  > prompt_len && c == BACKSPACE){
 
-        		upd_term_buf(c);
-        //}else if()
+        upd_term_buf(c);
+
 
     }
 
@@ -396,10 +389,9 @@ void page_fault_handler(cpu_regs *regs) {
     klog(INFO,"-- Page Fault Execption Fired --\n");
 
     uint64_t error = regs->error & 0xf;
-    klog(INFO,"Int Id: %d, Error: %d\n", regs->int_id, error);
-
     uint64_t fault_addr = read_cr2();
-    klog(INFO,"Faulting address: %p\n", fault_addr);
+
+    klog(IMP, "Page Fault! -- ID: %d, Error: %d, Address: %p\n", regs->int_id, error, fault_addr);
 
     uint64_t p_write_err = error & PF_W;
     uint64_t p_prot_err  = error & PF_P;
@@ -409,12 +401,12 @@ void page_fault_handler(cpu_regs *regs) {
 
 
     if(p_prot_err & !p_write_err) {
-        klog(INFO,"Page Fault at addr: %p\n", fault_addr);
+        klog(ERR, "Page Fault at addr: %p\n", fault_addr);
         kpanic("Read permission error");
     }
 
     if(p_rsvd_err) {
-        klog(INFO,"Page Fault at addr: %p\n", fault_addr);
+        klog(ERR, "Page Fault at addr: %p\n", fault_addr);
         kpanic("Reserved page error");
     }
 
@@ -429,30 +421,38 @@ void page_fault_handler(cpu_regs *regs) {
     }
 
     if(vma == NULL) {
-        klog(INFO,"Growing Stack!\n");
+        klog(IMP, "Growing Stack! -- Addr: %p\n", fault_addr);
         uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
         page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
         uint64_t falign_addr = align_down(fault_addr);
         map_proc(page_addr, falign_addr);
+        tlb_flush(curr_task->pml4);
         return;
 
         //TODO: Grow stack
         //TODO: Grow heap
         //TODO: Stack Overflow!
         //TODO: Segmention Fault!
-        //klog(INFO,"TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
+        //kprintf("TODO: Handle growing stack, growing heap, stack overflow, SEGV\n");
         //TODO: this should be for seq fault only
         //kpanic("TODO: Handle growing stack, growing heap, stack overflow, SEGV");
     }
 
     if(p_prot_err && p_write_err) {
         //TODO: Handle COW
-        klog(INFO,"Doing Copy On Write\n");
-        //uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
-        //page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
+        /*
+        klog(IMP, "Copy On Write! -- Addr: %p\n", fault_addr);
         uint64_t falign_addr = align_down(fault_addr);
         map_proc(falign_addr, falign_addr);
-        //memcpy((void *) page_addr, (void*) falign_addr, PAGE_SIZE);
+        tlb_flush(curr_task->pml4);
+        */
+
+        klog(IMP, "Copy On Write! -- Addr: %p\n", fault_addr);
+        uint64_t page_addr = (uint64_t) kmalloc(PAGE_SIZE);
+        uint64_t falign_addr = align_down(fault_addr);
+        memcpy((void *) page_addr, (void *) falign_addr, PAGE_SIZE);
+        page_addr = page_addr - KERNAL_BASE_ADDRESS;
+        map_proc(page_addr, falign_addr);
         tlb_flush(curr_task->pml4);
         return;
     }
@@ -462,6 +462,7 @@ void page_fault_handler(cpu_regs *regs) {
     page_addr = page_addr - KERNAL_BASE_ADDRESS; //TODO: wirte va_to_pa();
     uint64_t falign_addr = align_down(fault_addr);
     map_proc(page_addr, falign_addr);
+    tlb_flush(curr_task->pml4);
 
     if(vma->file == NULL)
         return;
@@ -470,7 +471,7 @@ void page_fault_handler(cpu_regs *regs) {
     uint64_t src, dst;
     int size;
 
-    klog(INFO,"Copying file contents to %p\n", vma->vm_start);
+    klog(INFO, "Copying file contents to %p\n", vma->vm_start);
     if(falign_addr <= vma->vm_start){
         src = vma->file->f_start + vma->file->f_pgoff;
         dst = vma->vm_start;
@@ -494,6 +495,11 @@ void page_fault_handler(cpu_regs *regs) {
 }
 
 
+
+
+
+
+
 void nmi_int_handler() {
     kpanic("-- NMI Interrupt Fired --");
 }
@@ -508,6 +514,11 @@ void range_exeed_excep_handler() {
 
 void invalid_opcode_handler() {
     kpanic("-- Invalid Opcode Exception Fired --");
+
+    __asm__ __volatile__("sti;");
+
+    init_proc("bin/sbush", 1);
+
 }
 
 void no_device_excep_handler() {
@@ -553,6 +564,5 @@ void virtualization_excep_handler() {
 }
 
 void default_int_handler() {
-    //while(1);
     kpanic("-- Unknown Interrupt Fired --");
 }

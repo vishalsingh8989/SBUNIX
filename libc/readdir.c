@@ -5,7 +5,6 @@
 #include <sys/defs.h>
 #include <sys/syscall.h>
 
-
 struct dirent *readdir(DIR * dir)
 {
     struct dirent *curr_dir = dir->ptr_dir;

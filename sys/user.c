@@ -13,7 +13,9 @@
 
 
 uint64_t curr_uid;
+
 void init_users(){
+	klog(BOOTLOG, "Intialize users.\n");
 	users[0] = "jvishal";
 	users[1] = "aahangir";
 	users[2] = "admin";
@@ -22,14 +24,17 @@ void init_users(){
 	pchar_xy('e' , GREEN, 2, 24);
 	pchar_xy('r' , GREEN, 3, 24);
 	pchar_xy(':' , GREEN, 4, 24);
-	
+
 
 }
 
 void set_uid(uint64_t user_id){
-	kprintf("Inside  set_uid :  %d\n", user_id);
+	//ikprintf("Inside  set_uid :  %d ,  %s \n", user_id, users[user_id]);
 	curr_uid =  user_id;
-	// for(int idx = 0 ; idx < strlen(users[user_id]); idx++){
-	// 	pchar_xy(users[user_id][idx] , GREEN, idx + 5, 24);
-	// }
+	for(int idx = 0 ; idx < strlen(users[user_id]); idx++)
+		pchar_xy(users[user_id][idx] , RED, 6 + idx, 24);
+}
+
+uint64_t get_uid(){
+	return curr_uid;
 }

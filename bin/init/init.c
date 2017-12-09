@@ -14,22 +14,22 @@ int main(int argc, char **argv, char **envp)
 
     int status;
 
-    //puts("Executing fork()");
     pid_t pid = fork();
 
     if(pid == 0) {
         //Include the environment facility or change to execve.
-        //puts("Executing execvpe()");
         execvpe(sargv[0], sargv, senvp);
     }
     else {
-        puts("Executing waitpid()");
         waitpid(pid, &status);
     }
 
-    while(1) {
-        yeild();
-    }
+    //while(1) {
+    //    __asm__ __volatile__("cli;");
+    //    __asm__ __volatile__("hlt;");
+    //    __asm__ __volatile__("sti;");
+    //    //yeild();
+    //}
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #define IMP   1
 #define ERR   2
 #define FATAL 3
+#define BOOTLOG 4
 
 #define BLACK            0
 #define BLUE             1
@@ -47,4 +48,6 @@ void pnum (uint64_t value, int base);
 void kprintf(const char *fmt, ...);
 void klog(int severity, const char *fmt, ...);
 void reset_cord();
+void update_cursor(int x, int y);
+void move_cursor_up();
 #endif
