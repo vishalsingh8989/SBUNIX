@@ -21,3 +21,15 @@ gdb ./kernel
 
 At the (gdb) prompt, connect with:
 target remote localhost:9999
+
+
+60 POINT PROJECT:
+
+CMD AVAILABLE: cd, cat, ls , ps, pwd, logout, echo, clear, date.
+
+50 point project with
+(a):Cooperative multi-tasking w/ all functional requirements
+(b):Interrupt handlers, Virtual memory.
+
+10 Points:
+(a):Preemptive multi-tasking.
