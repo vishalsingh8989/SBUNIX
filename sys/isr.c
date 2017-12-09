@@ -515,9 +515,9 @@ void invalid_opcode_handler() {
     kpanic("-- Invalid Opcode Exception Fired --");
 
     __asm__ __volatile__("sti;");
+
+    init_proc("bin/sbush", 1);
     
-    init_proc("bin/init", 0);
-    init_proc("bin/init", 1);
 }
 
 void no_device_excep_handler() {

@@ -91,34 +91,6 @@ void init_tarfs(){
 	//testing
 
 
-	strcpy(tarfs_fds[fd_index].name, "/bin/sbin/");
-	tarfs_fds[fd_index].size = 0;
-	tarfs_fds[fd_index].offset = 0;
-	tarfs_fds[fd_index].data = 0;
-	tarfs_fds[fd_index].type = DIRTYPE;
-
-
-	strcpy(tarfs_fds[fd_index+1].name, "/bin/config/");
-	tarfs_fds[fd_index+1].size = 0;
-	tarfs_fds[fd_index+1].offset = 0;
-	tarfs_fds[fd_index+1].data = 0;
-	tarfs_fds[fd_index+1].type = DIRTYPE;
-
-
-	strcpy(tarfs_fds[fd_index+2].name, "/bin/config/ifconfig");
-	tarfs_fds[fd_index+2].size = 18883;
-	tarfs_fds[fd_index+2].offset = 0;
-	tarfs_fds[fd_index+2].data = 0;
-	tarfs_fds[fd_index+2].type = REGTYPE;
-
-	strcpy(tarfs_fds[fd_index+3].name, "/etc/sbin/config/ifconfig");
-	tarfs_fds[fd_index+3].size = 30270;
-	tarfs_fds[fd_index+3].offset = 0;
-	tarfs_fds[fd_index+3].data = 0;
-	tarfs_fds[fd_index+3].type = DIRTYPE;
-
-	fd_index = fd_index+4;
-
 
 	// if(BOOTLOG)
 	// 	test_tarfs_init(fd_index);
