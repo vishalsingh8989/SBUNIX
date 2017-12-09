@@ -6,7 +6,7 @@
 
 
 void sleep(int s){
-	for(int i = 0 ;i< s*99999; i ++){
+	for(int i = 0 ;i< s*999999; i ++){
 
 	}
 }
@@ -139,9 +139,9 @@ void kpanic(const char *fmt, ...)
     //kprintf("\t     \\___/ / /\\ \\  \n");
     //kprintf("\t          (_ )( _) \n");
     //kprintf("\t            ~  ~   \n");
-    while(1) {
-        __asm__ __volatile__ ("hlt;");
-    }
+   // while(1) {
+     //   __asm__ __volatile__ ("hlt;");
+   // }
 }
 
 uint64_t align_up (uint64_t addr)

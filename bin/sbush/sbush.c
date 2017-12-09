@@ -17,7 +17,7 @@ char  path_var[MAX_INPUT] = "/home/aahangar/workdir/rootfs/bin/";
 char  ps1_var[MAX_INPUT] = "sbush>";
 char* sargv[] = {"bin/ls", NULL};
 char* senvp[] = {"PATH=/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin", NULL};
-int user_id = 0;
+int user_id = -1;
 
 //env start
 
@@ -73,8 +73,10 @@ int main(int argc, char* argv[], char* envp[]) {
     setenv(ENV_PATH, "/home/jvishal/bin:/home/jvishal/.local/bin:/shared/bin:/bin:/usr/sbin");
 	printf("Users : jvishal, aahangar, admin. Password is root.\n");
 
+
 	char username[30];
 	char password[30];
+
 	printf("\n");
 	LOGOUT:while(1){
 		printf("username:");
@@ -126,19 +128,20 @@ int main(int argc, char* argv[], char* envp[]) {
 	//printf("%d\n", tm_time.tm_wday);
 	printf("%s, %s %d  %d :%d :%d,  UTC %d   \n",weekdayn[tm_time.tm_wday-1],monthn[tm_time.tm_mon-1],tm_time.tm_mday,tm_time.tm_hour,tm_time.tm_min,tm_time.tm_sec, tm_time.tm_year);
 
+    puts("---Welcome to SBUSH shell---\n");
     char* paths = (char*)malloc(sizeof(char)*200);
     char* cmd  = (char*)malloc(sizeof(char)*100);
-    puts("---Welcome to SBUSH shell---\n");
+
 
     strcpy(paths, getenv(ENV_PATH));
     //printf("env found :  %s         \n\n", paths);
     if(argc == 1) {
-        while (TRUE) {
+       while (TRUE) {
 
             setprompt();
 
             perr = gets(str_buf);
-            //printf("cmd  :  %s \n", str_buf);
+            //printf("cmd 1 :  %s .\n", str_buf);
             if(strlen(str_buf)==0){
             		continue;
             }else if(!strcmp("logout", str_buf)){
@@ -186,7 +189,7 @@ int main(int argc, char* argv[], char* envp[]) {
                 }
 
             }
-
+            //printf("cmd 2 :  %s .\n", str_buf);
 
             tokens[0] = cmd;
             if(flag == 0){
@@ -213,16 +216,19 @@ int main(int argc, char* argv[], char* envp[]) {
                 ret = execvpe(tokens[0], tokens, senvp);
                 if(ret < 0) {
                     printf("Command not found!! %s   \n", tokens[0]);
-                    //exit(1);
+
                     }
                 else{
                     //printf("Command executed ret:  %d   \n", ret);
                 }
+                exit(1);
             }
             else {
                 //puts("Executing waitpid()");
                 waitpid(pid, &status);
+
             }
+
 
             //while(1); //Put execve here for now, until pipe is implemented.
 
