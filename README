@@ -22,7 +22,9 @@ gdb ./kernel
 At the (gdb) prompt, connect with:
 target remote localhost:9999
 
-
+**************************************************
+**************   Description    ******************
+**************************************************
 60 POINT PROJECT:
 
 CMD AVAILABLE: cd, cat, ls , ps, pwd, logout, echo, clear, date.
@@ -33,3 +35,6 @@ CMD AVAILABLE: cd, cat, ls , ps, pwd, logout, echo, clear, date.
 
 10 Points:
 (a):Preemptive multi-tasking.
+
+**************************************************
+**************************************************

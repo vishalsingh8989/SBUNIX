@@ -8,22 +8,25 @@ int main(int argc, char* argv[], char* envp[]) {
 	printf("What manual page do you want?.  Usage :  man  <cmd>.\n");
 	}else{
 		if(!strcmp(argv[1], "ls")){
-			printf("Detail about ls\n");
-			
+			printf("Usage : ls. list content of current directory\n");
 		}else if(!strcmp(argv[1], "ps")){
-			printf("Detail about ps\n");
+			printf("Usage : ps. list current running processes. \n");
 		}else if (!strcmp(argv[1], "cat")){
-			printf("Detail about cat\n");
+			printf("Usage : cat <file_name>. file name can be fullpath or files in current directory\n");
 		}else if (!strcmp(argv[1], "clear")){
-			printf("Detail about clear\n");
+			printf("Usage : clear \n");
+
 		}else if(!strcmp(argv[1], "date")){
-			printf("Detail about date\n");
+			printf("Usage: date . Print UTC TIME.\n");
 		}else if(!strcmp(argv[1], "cd")){
-			printf("Detail about cd\n");
+			printf("Usage: cd <path>. path can be absolute path/path in current directory/..(parent). \n");
 		}else if(!strcmp(argv[1], "pwd")){
-			printf("Detail about pwd\n");
+			printf("Usage : pwd. print current directory\n");
 		}else if(!strcmp(argv[1], "logout")){
-			printf("Detail about logout\n");
+			printf("Usage : logout. logout current user.\n");
+		}else if(!strcmp(argv[1], "kill")){
+			printf("Usage : kill <process id>. kill running process.\n");
+
 		}else{
 			printf("No manual entry for  %s\n", argv[1]);
 			printf("Commands available: cat, cd, ls, ps , pwd, clear, date\n");
