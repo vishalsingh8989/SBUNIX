@@ -27,7 +27,9 @@ target remote localhost:9999
 **************************************************
 60 POINT PROJECT:
 
-CMD AVAILABLE: cd, cat, ls , ps, pwd, logout, echo, clear, date.
+BINARIES AVAILABLE: cd, cat, ls , ps, pwd, logout, echo, clear, date.
+users:  jvishal, aahangar, admin.
+pass: root
 
 50 point project with
 (a):Cooperative multi-tasking w/ all functional requirements
